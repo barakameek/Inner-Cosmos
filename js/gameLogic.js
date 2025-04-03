@@ -23,7 +23,7 @@ let currentContemplationTask = null;
 let currentConstellationAnalysis = null; // Was tapestryAnalysis
 
 // --- Popup State Management ---
-export function clearPopupState() {
+ function clearPopupState() {
     currentlyDisplayedStarId = null;
     currentReflectionContext = null;
     reflectionTargetStarId = null;
@@ -32,13 +32,13 @@ export function clearPopupState() {
     currentPromptId = null;
     currentContemplationTask = null;
 }
-export function setCurrentPopupConcept(starId) { currentlyDisplayedStarId = starId; } // Renamed param
-export function getCurrentPopupConceptId() { return currentlyDisplayedStarId; } // Keep name for now? Or rename to getCurrentPopupStarId? Let's rename.
-export function getCurrentPopupStarId() { return currentlyDisplayedStarId; }
+ function setCurrentPopupConcept(starId) { currentlyDisplayedStarId = starId; } // Renamed param
+ function getCurrentPopupConceptId() { return currentlyDisplayedStarId; } // Keep name for now? Or rename to getCurrentPopupStarId? Let's rename.
+ function getCurrentPopupStarId() { return currentlyDisplayedStarId; }
 
 
 // --- Insight & Force Strength (Attunement) Management ---
-export function gainInsight(amount, source = "Unknown") {
+ function gainInsight(amount, source = "Unknown") {
     if (typeof amount !== 'number' || isNaN(amount) || amount === 0) return;
     const changed = State.changeInsight(amount);
     if (changed) {
@@ -49,7 +49,7 @@ export function gainInsight(amount, source = "Unknown") {
     }
 }
 
-export function spendInsight(amount, source = "Unknown") {
+ function spendInsight(amount, source = "Unknown") {
     if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) return false;
     if (State.getInsight() >= amount) {
         gainInsight(-amount, source);
@@ -60,7 +60,7 @@ export function spendInsight(amount, source = "Unknown") {
     }
 }
 
-export function gainAttunementForAction(actionType, forceKey = null, amount = 0.5) { // Renamed elementKey to forceKey
+ function gainAttunementForAction(actionType, forceKey = null, amount = 0.5) { // Renamed elementKey to forceKey
     let targetKeys = [];
     let baseAmount = amount;
 
@@ -134,7 +134,7 @@ export function gainAttunementForAction(actionType, forceKey = null, amount = 0.
 
 
 // --- Charting (Questionnaire) Logic ---
-export function handleQuestionnaireInputChange(event) { // Renamed for clarity
+ function handleQuestionnaireInputChange(event) { // Renamed for clarity
     const input = event.target;
     const type = input.dataset.type;
     const currentState = State.getState();
@@ -148,14 +148,14 @@ export function handleQuestionnaireInputChange(event) { // Renamed for clarity
     State.updateAnswers(forceName, currentAnswers);
     UI.updateDynamicFeedback(forceName, currentAnswers);
 }
-export function handleCheckboxChange(event) { // Name kept generic
+ function handleCheckboxChange(event) { // Name kept generic
      const checkbox = event.target; const name = checkbox.name; const maxChoices = parseInt(checkbox.dataset.maxChoices || 2);
      const container = checkbox.closest('.checkbox-options'); if (!container) return;
      const checkedBoxes = container.querySelectorAll(`input[name="${name}"]:checked`);
      if (checkedBoxes.length > maxChoices) { UI.showTemporaryMessage(`Max ${maxChoices} options.`, 2500); checkbox.checked = false; }
      handleQuestionnaireInputChange(event);
 }
-export function calculateElementScore(elementName, answersForElement) { // Keep name, operates on internal data structure
+ function calculateElementScore(elementName, answersForElement) { // Keep name, operates on internal data structure
     const questions = questionnaireGuided[elementName] || []; let score = 5.0;
     questions.forEach(q => {
         const answer = answersForElement[q.qId]; let pointsToAdd = 0; const weight = q.scoreWeight || 1.0;
@@ -167,7 +167,7 @@ export function calculateElementScore(elementName, answersForElement) { // Keep 
     return Math.max(0, Math.min(10, score)); // Clamp
 }
 // Renamed goToNextElement -> goToNextForce
-export function goToNextForce() {
+ function goToNextForce() {
     const currentState = State.getState();
     const currentAnswers = UI.getQuestionnaireAnswers();
     const currentIndex = currentState.currentElementIndex;
@@ -192,7 +192,7 @@ export function goToNextForce() {
     }
 }
 // Renamed goToPrevElement -> goToPrevForce
-export function goToPrevForce() {
+ function goToPrevForce() {
     const currentState = State.getState();
     if (currentState.currentElementIndex > 0) {
         const currentAnswers = UI.getQuestionnaireAnswers();
@@ -208,7 +208,7 @@ export function goToPrevForce() {
     } else { console.log("Cannot go back from the first Force."); }
 }
 // Renamed finalizeQuestionnaire -> finalizeCharting
-export function finalizeCharting() {
+ function finalizeCharting() {
     console.log("Finalizing charting...");
     const finalScores = {};
     const allAnswers = State.getState().userAnswers;
@@ -260,17 +260,17 @@ function determineStarterStarsAndNebula() {
 
 // --- Core Actions (Scanning, Reflection, Alignment, etc.) ---
 // Screen Logic Wrappers
-export function displayConstellationMapScreenLogic() { // Renamed
+ function displayConstellationMapScreenLogic() { // Renamed
     calculateConstellationNarrative(true); // Renamed
     UI.displayConstellationMapScreen(); // Renamed
 }
-export function displayObservatoryScreenLogic() { // Renamed
+ function displayObservatoryScreenLogic() { // Renamed
     UI.displayObservatoryScreenContent(); // Renamed
 }
 
 // Scanning (Research) Actions
 // Renamed handleResearchClick -> handleSectorScanClick
-export function handleSectorScanClick(event) {
+ function handleSectorScanClick(event) {
     const button = event.currentTarget; const forceKey = button.dataset.elementKey; // Still uses elementKey internally
     const cost = parseFloat(button.dataset.cost);
     if (!forceKey || isNaN(cost) || button.disabled) return;
@@ -282,7 +282,7 @@ export function handleSectorScanClick(event) {
     }
 }
 // Renamed handleFreeResearchClick -> handleDailyScanClick
-export function handleDailyScanClick() {
+ function handleDailyScanClick() {
     if (!State.isFreeResearchAvailable()) { UI.showTemporaryMessage("Daily calibration scan done.", 3000); return; }
     const attunement = State.getAttunement(); let targetKey = 'A'; let minAtt = Config.MAX_ATTUNEMENT + 1;
     for (const key in attunement) { if (attunement[key] < minAtt) { minAtt = attunement[key]; targetKey = key; } }
@@ -294,7 +294,7 @@ export function handleDailyScanClick() {
     checkAndUpdateRituals('freeResearch'); // Keep ritual name?
 }
 // Renamed conductResearch -> performSectorScan
-export function performSectorScan(forceKeyToScan) {
+ function performSectorScan(forceKeyToScan) {
     const forceFullName = elementKeyToFullName[forceKeyToScan]; if (!forceFullName) { console.error(`Invalid Force key: ${forceKeyToScan}`); return; }
     console.log(`Scanning Sector: ${forceFullName}`); UI.displayResearchStatus(`Scanning ${elementDetails[forceFullName]?.name || forceFullName} sector...`); // Renamed UI func
     const discoveredIds = new Set(State.getDiscoveredConcepts().keys()); const discoveredRepo = State.getRepositoryItems(); const undiscoveredPool = concepts.filter(c => !discoveredIds.has(c.id));
@@ -347,7 +347,7 @@ export function performSectorScan(forceKeyToScan) {
 
 // Catalog (Grimoire) Actions
 // Renamed addConceptToGrimoireById -> addStarToCatalogById
-export function addStarToCatalogById(starId, buttonElement = null) {
+ function addStarToCatalogById(starId, buttonElement = null) {
     if (State.getDiscoveredConcepts().has(starId)) { UI.showTemporaryMessage("Already in Star Catalog.", 2500); if (buttonElement) UI.updateResearchButtonAfterAction(starId, 'add'); return; } // Rename UI func?
     const concept = concepts.find(c => c.id === starId); if (!concept) { console.error("Cannot catalog Star: Not found. ID:", starId); UI.showTemporaryMessage("Error: Star data not found.", 3000); return; }
     const distance = Utils.euclideanDistance(State.getScores(), concept.elementScores);
@@ -360,7 +360,7 @@ export function addStarToCatalogById(starId, buttonElement = null) {
  }
 
 // Renamed addConceptToGrimoireInternal -> addStarToCatalogInternal
-export function addStarToCatalogInternal(starId) {
+ function addStarToCatalogInternal(starId) {
      const starToAdd = concepts.find(c => c.id === starId); // Still uses concept data internally
      if (!starToAdd) { console.error("Internal catalog fail: Not found. ID:", starId); return; }
      if (State.getDiscoveredConcepts().has(starId)) return; // Already cataloged
@@ -388,7 +388,7 @@ export function addStarToCatalogInternal(starId) {
  }
 
 // Renamed handleToggleFocusConcept -> handleToggleAlignment
-export function handleToggleAlignment() {
+ function handleToggleAlignment() {
     if (currentlyDisplayedStarId === null) return;
     const starId = currentlyDisplayedStarId;
     const initialFocusCount = State.getFocusedConcepts().size;
@@ -431,14 +431,14 @@ export function handleToggleAlignment() {
 }
 
 // Keep handleSellConcept, but rename concept -> star in messages/logic
-export function handleSellConcept(event) {
+ function handleSellConcept(event) {
      const button = event.target.closest('button'); if (!button) return;
      const starId = parseInt(button.dataset.conceptId); // Use conceptId from data attribute
      const context = button.dataset.context;
      if (isNaN(starId)) { console.error("Invalid sell ID:", button.dataset.conceptId); return; }
      sellStar(starId, context); // Renamed internal call
 }
-export function sellStar(starId, context) { // Renamed conceptId -> starId
+ function sellStar(starId, context) { // Renamed conceptId -> starId
     const discovered = State.getDiscoveredConceptData(starId);
     const star = discovered?.concept || concepts.find(c => c.id === starId); // Get concept data
     if (!star) { console.error(`Sell fail: Not found ${starId}`); UI.showTemporaryMessage("Error analyzing signal.", 3000); return; }
@@ -475,7 +475,7 @@ export function sellStar(starId, context) { // Renamed conceptId -> starId
 }
 
 // Reflection Logic (Update Text/Context)
-export function checkTriggerReflectionPrompt(triggerAction = 'other') {
+ function checkTriggerReflectionPrompt(triggerAction = 'other') {
     const currentState = State.getState();
     if (currentState.promptCooldownActive) return;
     if (currentState.onboardingPhase < Config.ONBOARDING_PHASE.REFLECTION_RITUALS) return;
@@ -488,7 +488,7 @@ export function checkTriggerReflectionPrompt(triggerAction = 'other') {
     else if (starsCataloged >= triggerThresh) { console.log("Reflection threshold met."); triggerReflectionPrompt('Standard'); State.resetReflectionTrigger(true); startReflectionCooldown(); }
 }
 function startReflectionCooldown() { /* ... Unchanged ... */ }
-export function triggerReflectionPrompt(context = 'Standard', targetId = null, category = null) {
+ function triggerReflectionPrompt(context = 'Standard', targetId = null, category = null) {
     currentReflectionContext = context;
     reflectionTargetStarId = (context === 'Dissonance' || context === 'SceneMeditation') ? targetId : null; // Use star ID
     currentReflectionSubject = category; // Subject/Category for display
@@ -520,7 +520,7 @@ export function triggerReflectionPrompt(context = 'Standard', targetId = null, c
     if (selPrompt) { const pData = { title, category: promptCatLabel, prompt: selPrompt, showNudge, reward }; UI.displayReflectionPrompt(pData, currentReflectionContext); }
     else { /* ... handle failure, maybe refund for Guided ... */ }
 }
-export function handleConfirmReflection(nudgeAllowed) {
+ function handleConfirmReflection(nudgeAllowed) {
     if (!currentPromptId) { /* ... error ... */ return; }
     State.addSeenPrompt(currentPromptId);
     let rewardAmt = 5.0; let attuneKey = null; let attuneAmt = 1.0; let milestoneAct = 'completeReflection';
@@ -539,7 +539,7 @@ export function handleConfirmReflection(nudgeAllowed) {
     updateMilestoneProgress(milestoneAct, 1); checkAndUpdateRituals('completeReflection');
     UI.hidePopups(); UI.showTemporaryMessage("Reflection complete! Insight gained.", 3000); clearPopupState();
 }
-export function triggerGuidedReflection() { // Renamed to triggerDeepScanSignal
+ function triggerGuidedReflection() { // Renamed to triggerDeepScanSignal
      if (State.getOnboardingPhase() < Config.ONBOARDING_PHASE.REFLECTION_RITUALS) { UI.showTemporaryMessage("Unlock Deep Scan first.", 3000); return; }
      if (spendInsight(Config.GUIDED_REFLECTION_COST, "Deep Scan Signal")) {
          const cats = Object.keys(reflectionPrompts.Guided || {}); // Use internal keys
@@ -549,7 +549,7 @@ export function triggerGuidedReflection() { // Renamed to triggerDeepScanSignal
 }
 
 // Other Actions
-export function attemptArtEvolution() { // Renamed to attemptStellarEvolution
+ function attemptArtEvolution() { // Renamed to attemptStellarEvolution
     if (currentlyDisplayedStarId === null) return; const starId = currentlyDisplayedStarId; const discovered = State.getDiscoveredConceptData(starId);
     if (!discovered?.concept || discovered.artUnlocked) { UI.showTemporaryMessage("Evolution fail: Star state error.", 3000); return; }
     const star = discovered.concept; if (!star.canUnlockArt) return;
@@ -562,31 +562,31 @@ export function attemptArtEvolution() { // Renamed to attemptStellarEvolution
         else { console.error(`State evolveStar fail ${star.name}`); gainInsight(cost, `Refund: Evolution error`); UI.showTemporaryMessage("Error revealing potential.", 3000); }
     }
 }
-export function handleSaveNote() { // Renamed to handleSaveLogEntry
+ function handleSaveNote() { // Renamed to handleSaveLogEntry
     if (currentlyDisplayedStarId === null) return; const notesTA = document.getElementById('logbookTextarea'); // Changed ID
     if (!notesTA) return; const noteText = notesTA.value.trim();
     if (State.updateNotes(currentlyDisplayedStarId, noteText)) { const status = document.getElementById('logSaveStatus'); if (status) { status.textContent = "Entry Saved!"; status.classList.remove('error'); setTimeout(() => { status.textContent = ""; }, 2000); } } // Changed ID
     else { const status = document.getElementById('logSaveStatus'); if (status) { status.textContent = "Error."; status.classList.add('error'); } }
 }
-export function handleUnlockLibraryLevel(event) { /* Renamed to handleUnlockForceInsight - logic mostly same */ }
+ function handleUnlockLibraryLevel(event) { /* Renamed to handleUnlockForceInsight - logic mostly same */ }
 function unlockDeepDiveLevel(forceKey, levelToUnlock) { /* Renamed to unlockForceInsight - logic mostly same */ }
-export function handleMeditateScene(event) { /* Renamed to handleMeditateBlueprint */ }
+ function handleMeditateScene(event) { /* Renamed to handleMeditateBlueprint */ }
 function meditateOnScene(blueprintId) { /* Renamed to meditateOnBlueprint - logic mostly same */ }
-export function handleAttemptExperiment(event) { /* Renamed to handleStabilizeOrbit */ }
+ function handleAttemptExperiment(event) { /* Renamed to handleStabilizeOrbit */ }
 function attemptExperiment(orbitId) { /* Renamed to stabilizeOrbit - logic mostly same */ }
-export function handleSuggestSceneClick() { /* Renamed to handleSuggestBlueprintClick */ }
+ function handleSuggestSceneClick() { /* Renamed to handleSuggestBlueprintClick */ }
 function suggestBlueprint() { /* Renamed logic, uses focusScores, looks for sceneBlueprints */ }
 
 // --- Rituals & Milestones Logic (Helper) ---
-export function checkAndUpdateRituals(action, details = {}) { /* Renamed to checkAndUpdateHarmonics? Logic same */ }
-export function updateMilestoneProgress(trackType, currentValue) { /* Renamed to updateAlignments? Logic same */ }
+ function checkAndUpdateRituals(action, details = {}) { /* Renamed to checkAndUpdateHarmonics? Logic same */ }
+ function updateMilestoneProgress(trackType, currentValue) { /* Renamed to updateAlignments? Logic same */ }
 
 // --- Daily Login ---
-export function checkForDailyLogin() { /* Logic same, update messages/UI calls */ }
+ function checkForDailyLogin() { /* Logic same, update messages/UI calls */ }
 
 // --- Constellation Calculation Logic Helpers ---
-export function calculateFocusScores() { /* Renamed to calculateAlignmentScores - Logic same */ }
-export function calculateConstellationNarrative(forceRecalculate = false) { // Renamed calculateTapestryNarrative
+ function calculateFocusScores() { /* Renamed to calculateAlignmentScores - Logic same */ }
+ function calculateConstellationNarrative(forceRecalculate = false) { // Renamed calculateTapestryNarrative
     const currentHash = _calculateFocusSetHash(); // Recalculate hash here
     // Use cached analysis ONLY if the focus set hasn't changed
     if (currentConstellationAnalysis && !forceRecalculate && currentHash === State.getCurrentFocusSetHash()) {
@@ -600,17 +600,17 @@ export function calculateConstellationNarrative(forceRecalculate = false) { // R
     State.getState().currentFocusSetHash = currentHash; // Directly update hash in current state object (will be saved on next trigger)
     return analysis.fullNarrativeHTML;
  }
-export function calculateFocusThemes() { /* Renamed to calculateDominantForces? Logic same */ }
+ function calculateFocusThemes() { /* Renamed to calculateDominantForces? Logic same */ }
 
 // --- Focus Unlocks ---
-export function checkForFocusUnlocks(silent = false) { /* Renamed to checkForSynergyUnlocks? Logic same */ }
+ function checkForFocusUnlocks(silent = false) { /* Renamed to checkForSynergyUnlocks? Logic same */ }
 
 // --- Tapestry Deep Dive Logic ---
-export function showTapestryDeepDive() { /* Renamed to showConstellationDeepDive */ }
-export function handleDeepDiveNodeClick(nodeId) { /* Renamed to handleConstellationNodeClick - update content based on new theme */ }
-export function handleContemplationNodeClick() { /* Logic same */ }
+ function showTapestryDeepDive() { /* Renamed to showConstellationDeepDive */ }
+ function handleDeepDiveNodeClick(nodeId) { /* Renamed to handleConstellationNodeClick - update content based on new theme */ }
+ function handleContemplationNodeClick() { /* Logic same */ }
 function generateFocusedContemplation() { /* Update text based on new theme */ }
-export function handleCompleteContemplation() { /* Use stored task */ }
+ function handleCompleteContemplation() { /* Use stored task */ }
 
 // --- Exports ---
 // Update export list with RENAMED function names
