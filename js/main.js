@@ -6,18 +6,16 @@ import * as Config from './config.js';
 
 console.log("main.js loading...");
 
-// --- Stub for UI.updateFocusSlotsDisplay ---
-// If UI.updateFocusSlotsDisplay is not defined in ui.js, define it here to avoid errors.
-if (!UI.updateFocusSlotsDisplay) {
-  UI.updateFocusSlotsDisplay = function() {
-    const focusDisplay = document.getElementById('focusSlotsDisplay');
-    if (focusDisplay && State.getFocusSlotsTotal) {
-      focusDisplay.textContent = State.getFocusSlotsTotal();
-    } else {
-      console.log("updateFocusSlotsDisplay: No focusSlotsDisplay element found or getFocusSlotsTotal not defined.");
-    }
-  };
-}
+// --- Local Fallback for updateFocusSlotsDisplay ---
+// If UI.updateFocusSlotsDisplay is not defined, we use this local fallback.
+const updateFocusSlotsDisplay = UI.updateFocusSlotsDisplay || function() {
+  const focusDisplay = document.getElementById('focusSlotsDisplay');
+  if (focusDisplay && State.getFocusSlotsTotal) {
+    focusDisplay.textContent = State.getFocusSlotsTotal();
+  } else {
+    console.log("updateFocusSlotsDisplay: No focusSlotsDisplay element found or getFocusSlotsTotal not defined.");
+  }
+};
 
 // --- Initialization ---
 function initializeApp() {
@@ -41,15 +39,16 @@ function initializeApp() {
           initialScreen = 'starCatalogScreen';
           GameLogic.calculateConstellationNarrative(true);
           UI.updateInsightDisplays();
-          UI.updateFocusSlotsDisplay();
+          updateFocusSlotsDisplay();
           UI.updateGrimoireCounter && UI.updateGrimoireCounter();
           UI.populateGrimoireFilters && UI.populateGrimoireFilters();
           UI.refreshStarCatalogDisplay && UI.refreshStarCatalogDisplay();
-        } else if (tutorialStep === 'grimoire_intro' || tutorialStep === 'grimoire_card_prompt' || tutorialStep === 'focus_prompt' || tutorialStep === 'focus_action_pending') {
+        } else if (tutorialStep === 'grimoire_intro' || tutorialStep === 'grimoire_card_prompt' ||
+                   tutorialStep === 'focus_prompt' || tutorialStep === 'focus_action_pending') {
           initialScreen = 'starCatalogScreen';
           GameLogic.calculateConstellationNarrative(true);
           UI.updateInsightDisplays();
-          UI.updateFocusSlotsDisplay();
+          updateFocusSlotsDisplay();
           UI.updateGrimoireCounter && UI.updateGrimoireCounter();
           UI.populateGrimoireFilters && UI.populateGrimoireFilters();
           UI.refreshStarCatalogDisplay && UI.refreshStarCatalogDisplay();
@@ -70,14 +69,15 @@ function initializeApp() {
         UI.applyOnboardingPhaseUI && UI.applyOnboardingPhaseUI(State.getOnboardingPhase ? State.getOnboardingPhase() : 0);
         GameLogic.calculateConstellationNarrative(true);
         UI.updateInsightDisplays();
-        UI.updateFocusSlotsDisplay();
+        updateFocusSlotsDisplay();
         UI.updateGrimoireCounter && UI.updateGrimoireCounter();
         UI.populateGrimoireFilters && UI.populateGrimoireFilters();
         UI.refreshStarCatalogDisplay && UI.refreshStarCatalogDisplay();
         UI.setupInitialUI && UI.setupInitialUI();
         initialScreen = 'constellationMapScreen';
       }
-      if (loadButton) loadButton.classList.add('hidden');
+      const loadBtn = document.getElementById('loadButton');
+      if (loadBtn) loadBtn.classList.add('hidden');
     } else {
       console.log("Loaded state incomplete (charting not done). Starting charting.");
       State.updateElementIndex && State.updateElementIndex(0);
@@ -91,7 +91,8 @@ function initializeApp() {
       UI.showTemporaryMessage("Error loading voyage data. Starting fresh.", 4000);
       localStorage.removeItem(Config.SAVE_KEY);
     }
-    if (loadButton) loadButton.classList.add('hidden');
+    const loadBtn = document.getElementById('loadButton');
+    if (loadBtn) loadBtn.classList.add('hidden');
   }
 
   // Show the determined initial screen
