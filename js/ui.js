@@ -30,12 +30,12 @@ const settingsButton = document.getElementById('settingsButton');
 const constellationMapScreen = document.getElementById('constellationMapScreen'); // Renamed
 const constellationName = document.getElementById('constellationName');
 const constellationVisualPlaceholder = document.getElementById('constellationVisualPlaceholder');
-const constellationInterpretationText = document.getElementById('constellationInterpretationText');
-const constellationDominantForces = document.getElementById('constellationDominantForces');
+const interpretationTextElement = document.getElementById('constellationInterpretationText'); // Corrected var name
+const dominantForcesElement = document.getElementById('constellationDominantForces'); // Corrected var name
 const userInsightDisplayConstellation = document.getElementById('userInsightDisplayConstellation'); // Renamed
-const constellationForceDetails = document.getElementById('constellationForceDetails'); // Renamed
+const forceDetailsElement = document.getElementById('constellationForceDetails'); // Corrected var name & Renamed
 const discoverMoreButton = document.getElementById('discoverMoreButton');
-const suggestBlueprintButton = document.getElementById('suggestBlueprintButton');
+const suggestBlueprintButton = document.getElementById('suggestBlueprintButton'); // Renamed
 // Star Catalog Screen (Grimoire)
 const starCatalogScreen = document.getElementById('starCatalogScreen'); // Renamed
 const starCountSpan = document.getElementById('starCount'); // Renamed
@@ -125,80 +125,7 @@ const tutorialContent = document.getElementById('tutorialContent');
 const tutorialNextButton = document.getElementById('tutorialNextButton');
 // General Overlay
 const popupOverlay = document.getElementById('popupOverlay'); // Shared overlay
-// Add this function definition to ui.js
 
-export function // Add this entire function definition to your ui.js file
-
-export function applyOnboardingPhaseUI(phase) {
-    console.log(`UI: Applying onboarding phase ${phase}`);
-    const isPhase1 = phase >= Config.ONBOARDING_PHASE.PERSONA_GRIMOIRE; // View Map/Catalog
-    const isPhase2 = phase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT; // Unlock Observatory
-    const isPhase3 = phase >= Config.ONBOARDING_PHASE.REFLECTION_RITUALS; // Unlock Reflection/Harmonics
-    const isPhase4 = phase >= Config.ONBOARDING_PHASE.ADVANCED; // Unlock Cartography/Evolution
-
-    // Ensure navButtons NodeList is available (it should be defined globally in ui.js)
-    if (typeof navButtons !== 'undefined' && navButtons) {
-        navButtons.forEach(button => { // Nav Bar
-            if (!button) return; const target = button.dataset.target; let hide = false;
-            // Use NEW screen IDs for checks
-            if (target === 'observatoryScreen' && !isPhase2) hide = true;
-            else if (target === 'cartographyScreen' && !isPhase4) hide = true;
-            button.classList.toggle('hidden-by-flow', hide);
-        });
-    } else {
-        console.warn("applyOnboardingPhaseUI: navButtons not found.");
-    }
-
-
-    // Toggle visibility for Deep Dive (Force Insight) sections - Placeholder/Removed
-    // const deepDiveContainers = constellationForceDetails?.querySelectorAll('.force-insight-container');
-    // deepDiveContainers?.forEach(container => container.classList.toggle('hidden-by-flow', !isPhase4));
-
-    // Toggle Catalog Filters
-    // Ensure catalogFilterControls is defined globally in ui.js
-    if (typeof catalogFilterControls !== 'undefined' && catalogFilterControls) {
-        catalogFilterControls.classList.toggle('hidden-by-flow', !isPhase2);
-    } else {
-        // console.warn("applyOnboardingPhaseUI: catalogFilterControls not found."); // Might be normal if element doesn't exist yet
-    }
-
-
-    // Toggle Observatory Actions & Rituals
-    // Ensure deepScanButton and observatoryScreen are defined globally
-    if (typeof deepScanButton !== 'undefined' && deepScanButton) {
-        deepScanButton.classList.toggle('hidden-by-flow', !isPhase3);
-    }
-     const ritualsSection = typeof observatoryScreen !== 'undefined' && observatoryScreen ? observatoryScreen.querySelector('.observatory-rituals') : null;
-    if (ritualsSection) {
-        ritualsSection.classList.toggle('hidden-by-flow', !isPhase3);
-    }
-
-    // Update popup elements based on phase (Observatory View)
-    const popupStarId = GameLogic.getCurrentPopupStarId(); // Assumes GameLogic is imported
-    // Ensure observatoryViewPopup and related pop elements are defined globally
-    if (popupStarId !== null && typeof observatoryViewPopup !== 'undefined' && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) {
-        updateAlignStarButtonStatus(popupStarId); // Assumes this function exists
-        const discoveredData = State.getDiscoveredConceptData(popupStarId); // Assumes State is imported
-        const star = concepts.find(c => c.id === popupStarId); // Assumes concepts is imported
-
-        // Ensure scanOutput is defined globally
-        const inScanLog = !discoveredData && typeof scanOutput !== 'undefined' && scanOutput ? scanOutput.querySelector(`.scan-result-item[data-concept-id="${popupStarId}"]`) : false;
-
-        updateCatalogStarButtonStatus(popupStarId, !!inScanLog); // Assumes this function exists
-        updateObservatorySellButton(popupStarId, star, !!discoveredData, !!inScanLog); // Assumes this function exists
-
-        if (typeof logbookSection !== 'undefined' && logbookSection) logbookSection.classList.toggle('hidden', !isPhase2 || !discoveredData);
-        if (typeof stellarEvolutionSection !== 'undefined' && stellarEvolutionSection) stellarEvolutionSection.classList.toggle('hidden', !isPhase4 || !discoveredData || !star?.canUnlockArt || discoveredData?.artUnlocked);
-        if(star && discoveredData && typeof displayStellarEvolutionSection === 'function') displayStellarEvolutionSection(star, discoveredData);
-    }
-
-    // Update Constellation Map buttons
-    // Ensure suggestBlueprintButton and discoverMoreButton are defined globally
-    if (typeof updateSuggestBlueprintButtonState === 'function') updateSuggestBlueprintButtonState();
-    if (typeof discoverMoreButton !== 'undefined' && discoverMoreButton) discoverMoreButton.classList.toggle('hidden-by-flow', !isPhase2);
-
-    // Add checks for other phase-dependent UI elements if needed
-}
 // --- Tutorial State ---
 let currentTutorialTargetId = null; // Stores ID of element being highlighted by tutorial
 
@@ -224,7 +151,13 @@ let milestoneTimeout = null;
 export function showMilestoneAlert(text, milestoneId = null) {
     if (!milestoneAlert || !milestoneAlertText) return;
     // Add intro messages for specific milestones if needed (use correct milestone IDs)
-    // Example: const REPO_UNLOCK_MILESTONE_ID = 'ms73'; if (milestoneId === REPO_UNLOCK_MILESTONE_ID && ...) {}
+    const REPOSITORY_UNLOCK_MILESTONE_ID = 'ms73'; // Example
+    // Add more relevant IDs here
+    if (milestoneId === REPOSITORY_UNLOCK_MILESTONE_ID && State.getOnboardingPhase() < Config.ONBOARDING_PHASE.ADVANCED) {
+         showTemporaryMessage("Cartography unlocked! Access newly discovered cosmic data.", 5000); // Updated text
+         const cartographyNav = document.querySelector('.nav-button[data-target="cartographyScreen"]');
+         if(cartographyNav) temporaryHighlight(cartographyNav); // Highlight the nav button itself
+    }
     milestoneAlertText.textContent = `Legendary Alignment: ${text}`; // Updated text
     milestoneAlert.classList.remove('hidden');
     if (milestoneTimeout) clearTimeout(milestoneTimeout);
@@ -236,57 +169,55 @@ export function hideMilestoneAlert() {
     milestoneTimeout = null;
 }
 export function hidePopups() {
-    if (observatoryViewPopup) observatoryViewPopup.classList.add('hidden'); // Renamed
+    if (observatoryViewPopup) observatoryViewPopup.classList.add('hidden');
     if (reflectionModal) reflectionModal.classList.add('hidden');
     if (settingsPopup) settingsPopup.classList.add('hidden');
-    // if (tapestryDeepDiveModal) tapestryDeepDiveModal.classList.add('hidden'); // Removed
-    if (startingNebulaModal) startingNebulaModal.classList.add('hidden'); // Renamed
-    if (tutorialModal) tutorialModal.classList.add('hidden'); // Hide tutorial modal too
+    if (startingNebulaModal) startingNebulaModal.classList.add('hidden');
+    if (tutorialModal) tutorialModal.classList.add('hidden');
     // Hide overlay only if ALL popups are hidden
     if (popupOverlay && observatoryViewPopup?.classList.contains('hidden') &&
         reflectionModal?.classList.contains('hidden') &&
         settingsPopup?.classList.contains('hidden') &&
-        // tapestryDeepDiveModal?.classList.contains('hidden') && // Removed
         startingNebulaModal?.classList.contains('hidden') &&
         tutorialModal?.classList.contains('hidden'))
     {
         popupOverlay.classList.add('hidden');
-        if (tutorialOverlay) tutorialOverlay.classList.add('hidden'); // Hide tutorial overlay specifically
+        if (tutorialOverlay) tutorialOverlay.classList.add('hidden');
     }
-    GameLogic.clearPopupState(); // Clear temporary state
+    GameLogic.clearPopupState();
+    removeAllHighlights(); // Clear any active highlights when closing popups
 }
 
 
 // --- Onboarding Tutorial System ---
-let highlightTimeouts = {}; // Use object to manage multiple timeouts per element ID
-function temporaryHighlight(elementIdOrElement, duration = 99999, highlightClass = 'highlight-feature-onboarding') { // Default long duration
+let highlightTimeouts = {};
+function temporaryHighlight(elementIdOrElement, duration = Infinity, highlightClass = 'highlight-feature-onboarding') {
     const element = (typeof elementIdOrElement === 'string') ? document.getElementById(elementIdOrElement) : elementIdOrElement;
     if (!element) { console.warn(`Cannot highlight missing element:`, elementIdOrElement); return; }
-    const elementId = element.id || `highlight-target-${Math.random().toString(36).substring(2, 9)}`; // Ensure an ID exists for tracking
-    if (!element.id) { element.id = elementId; } // Assign temp ID if needed
+    const elementId = element.id || element.dataset?.target || `highlight-target-${Math.random().toString(36).substring(2, 9)}`;
+    if (!element.id) { element.id = elementId; }
 
     console.log(`Highlighting: ${elementId} with class ${highlightClass}`);
     element.classList.add(highlightClass);
+    element.style.pointerEvents = 'auto';
 
     if (highlightTimeouts[elementId]) { clearTimeout(highlightTimeouts[elementId]); }
-    if(duration > 0 && duration !== Infinity) { // Only set timeout if duration is finite and positive
+    if(duration > 0 && duration !== Infinity) {
         highlightTimeouts[elementId] = setTimeout(() => {
             removeHighlight(elementId, highlightClass);
         }, duration);
-    } else if (duration <= 0) { // If duration is 0 or less, remove immediately (useful for cleanup)
+    } else if (duration <= 0) {
         removeHighlight(elementId, highlightClass);
     }
-    // If duration is Infinity, the highlight persists until explicitly removed
 }
 
 function removeHighlight(elementId, highlightClass = 'highlight-feature-onboarding') {
     const element = document.getElementById(elementId);
     if (element) {
         element.classList.remove(highlightClass);
+        element.style.pointerEvents = '';
         console.log(`Removing highlight from: ${elementId}`);
-        if (elementId.startsWith('highlight-target-')) { // Remove temporary ID
-            element.removeAttribute('id');
-        }
+        if (elementId.startsWith('highlight-target-')) { element.removeAttribute('id'); }
     }
     if (highlightTimeouts[elementId]) {
         clearTimeout(highlightTimeouts[elementId]);
@@ -297,124 +228,54 @@ function removeHighlight(elementId, highlightClass = 'highlight-feature-onboardi
 function removeAllHighlights(highlightClass = 'highlight-feature-onboarding') {
      document.querySelectorAll(`.${highlightClass}`).forEach(el => {
          el.classList.remove(highlightClass);
-         if (el.id && el.id.startsWith('highlight-target-')) {
-             el.removeAttribute('id');
-         }
+         el.style.pointerEvents = '';
+         if (el.id && el.id.startsWith('highlight-target-')) { el.removeAttribute('id'); }
      });
-     // Clear all highlight timeouts
      Object.keys(highlightTimeouts).forEach(id => clearTimeout(highlightTimeouts[id]));
      highlightTimeouts = {};
      console.log("Cleared all highlights.");
 }
 
 const tutorialSteps = {
-    'start': {}, // Initial state before anything happens
-    'results_seen': { // Set after showing Nebula modal
-        title: "Nebula Revealed",
-        content: "<p>These are your core forces and first Stars.</p>", // Placeholder, content defined below
-        targetElementId: null, // No specific highlight for this step itself
-        nextStep: 'grimoire_intro' // Leads to first Grimoire view
-    },
-    'grimoire_intro': {
-        title: "The Star Catalog",
-        content: "<p>This is your personal **Star Catalog**. It holds every Star (Concept) you've discovered. Think of it as your library of potential identities.</p><p>Click a Star to learn more about its properties and how it **resonates** with your core Forces.</p>",
-        targetElementId: 'starCatalogContent', // Highlight the grid
-        nextStep: 'grimoire_card_prompt'
-    },
-    'grimoire_card_prompt': { // User needs to click a card
-        title: "Examine a Star",
-        content: "<p>Select any Star in your Catalog to view its details in the Observatory.</p>",
-        targetElementId: null, // No highlight, user chooses
-        nextStep: 'focus_prompt' // Next step triggered by viewing details
-    },
-    'focus_prompt': { // Shown when Observatory View opens for the first time
-        title: "Star Properties",
-        content: "<p>Here you can see the Star's detailed description, its resonance with your Nebula, and its unique **Force profile**.</p>",
-        targetElementId: 'observatoryDetailedDescription', // Highlight description area
-        nextStep: 'focus_explained'
-    },
-    'focus_explained': { // Shown after the previous step
-        title: "Aligning Stars",
-        content: "<p>See the **'Align Star'** button? Aligning means you're actively incorporating this Star into your **Constellation Map**. It's like choosing key stars to define your current cosmic pattern.</p><p>Aligning shapes your Constellation interpretation and can unlock synergies. Choose Stars that feel most relevant *now*.</p>",
-        targetElementId: 'alignStarButton', // Highlight the Align button
-        nextStep: 'focus_action_pending'
-    },
-    'focus_action_pending': {}, // Waiting for user to click Align
-    'persona_tapestry_prompt': { // Shown when Constellation Map screen loads after first alignment
-        title: "Your Constellation Map",
-        content: "<p>Welcome to your Constellation Map! The Star you aligned now appears here.</p>",
-        targetElementId: 'constellationVisualPlaceholder', // Highlight map area
-        nextStep: 'persona_narrative_prompt'
-    },
-     'persona_narrative_prompt': {
-        title: "Emergent Patterns",
-        content: "<p>Notice how aligning Stars changes the **Emergent Patterns** interpretation? This reflects the unique combination you're expressing.</p><p>Align more Stars from your Catalog to see how the patterns shift!</p>",
-        targetElementId: 'constellationInterpretationText', // Highlight interpretation area
-        nextStep: 'study_intro_prompt' // Ready for study intro next
-    },
-    'study_intro_prompt': { // Shown when Observatory screen loads for first time
-        title: "The Observatory",
-        content: "<p>Welcome to the Observatory! This is where you expand your understanding of the cosmos.</p><p>You use **Insight** <i class='fas fa-brain insight-icon'></i> as fuel for discovery here.</p>",
-        targetElementId: 'userInsightDisplayObservatory',
-        nextStep: 'study_scan_prompt'
-    },
-    'study_scan_prompt': {
-        title: "Scanning Sectors",
-        content: "<p>Use the **Scan Sector** buttons to probe different **Force** areas of the cosmos. Scanning costs Insight but is the primary way to discover new **Stars** and potentially rare **Cartography** data.</p>",
-        targetElementId: 'sectorScanButtonContainer',
-        nextStep: 'study_results_prompt'
-    },
-    'study_results_prompt': { // Shown after first scan completes
-        title: "Scan Log",
-        content: "<p>Discoveries from your scans appear in the **Scan Log**. Examine new signals: **Catalog** promising Stars to add them permanently, or **Analyze** faint signals for a small Insight gain.</p>",
-        targetElementId: 'scanOutput',
-        nextStep: 'complete' // Basic tutorial sequence ends here
-    },
-    'complete': {} // Final state
+    'start': {},
+    'results_seen': { nextStep: 'grimoire_intro' },
+    'grimoire_intro': { title: "The Star Catalog", content: "<p>This is your personal **Star Catalog**. It holds every Star (Concept) you've discovered. Think of it as your library of potential identities.</p><p>Click a Star to learn more about its properties and how it **resonates** with your core Forces.</p>", targetElementId: 'starCatalogContent', nextStep: 'grimoire_card_prompt' },
+    'grimoire_card_prompt': { title: "Examine a Star", content: "<p>Select any Star in your Catalog to view its details in the Observatory View.</p>", targetElementId: null, nextStep: 'focus_prompt' },
+    'focus_prompt': { title: "Star Properties", content: "<p>Here you can see the Star's detailed description, its resonance with your Nebula, and its unique **Force profile**.</p>", targetElementId: 'observatoryDetailedDescription', nextStep: 'focus_explained' },
+    'focus_explained': { title: "Aligning Stars", content: "<p>See the **'Align Star'** button? Aligning means you're actively incorporating this Star into your **Constellation Map**. It's like choosing key stars to define your current cosmic pattern.</p><p>Aligning shapes your Constellation interpretation and can unlock synergies. Choose Stars that feel most relevant *now*.</p>", targetElementId: 'alignStarButton', nextStep: 'focus_action_pending' },
+    'focus_action_pending': {},
+    'persona_tapestry_prompt': { title: "Your Constellation Map", content: "<p>Welcome to your Constellation Map! The Star you aligned now appears here.</p>", targetElementId: 'constellationVisualPlaceholder', nextStep: 'persona_narrative_prompt' },
+    'persona_narrative_prompt': { title: "Emergent Patterns", content: "<p>Notice how aligning Stars changes the **Emergent Patterns** interpretation? This reflects the unique combination you're expressing.</p><p>Align more Stars from your Catalog to see how the patterns shift!</p>", targetElementId: 'constellationInterpretationText', nextStep: 'study_intro_prompt' },
+    'study_intro_prompt': { title: "The Observatory", content: "<p>Welcome to the Observatory! This is where you expand your understanding of the cosmos.</p><p>You use **Insight** <i class='fas fa-brain insight-icon'></i> as fuel for discovery here.</p>", targetElementId: 'userInsightDisplayObservatory', nextStep: 'study_scan_prompt' },
+    'study_scan_prompt': { title: "Scanning Sectors", content: "<p>Use the **Scan Sector** buttons to probe different **Force** areas of the cosmos. Scanning costs Insight but is the primary way to discover new **Stars** and potentially rare **Cartography** data.</p>", targetElementId: 'sectorScanButtonContainer', nextStep: 'study_results_prompt' },
+    'study_results_prompt': { title: "Scan Log", content: "<p>Discoveries from your scans appear in the **Scan Log**. Examine new signals: **Catalog** promising Stars to add them permanently, or **Analyze** faint signals for a small Insight gain.</p>", targetElementId: 'scanOutput', nextStep: 'complete' },
+    'complete': {}
 };
 
 export function showTutorialStep(stepId) {
     const stepDetails = tutorialSteps[stepId];
     if (!stepDetails || !tutorialModal || !tutorialOverlay || !tutorialTitle || !tutorialContent || !tutorialNextButton) {
         console.warn(`Tutorial step "${stepId}" not found or modal elements missing.`);
-        // Ensure tutorial doesn't get stuck
-        if(State.getOnboardingTutorialStep() !== 'complete') {
-            State.setOnboardingTutorialStep('complete'); // Skip if broken
-        }
+        if(State.getOnboardingTutorialStep() !== 'complete') { State.setOnboardingTutorialStep('complete'); }
         return;
     }
-
     console.log(`Showing Tutorial Step: ${stepId}`);
-
-    // Populate Modal
     tutorialTitle.textContent = stepDetails.title || "Tutorial";
-    // Replace markdown-like **bold** with <strong> tags
-    const formattedContent = stepDetails.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    tutorialContent.innerHTML = formattedContent; // Use innerHTML to render tags like <i>
-
-    // Handle Highlight
-    removeAllHighlights(); // Clear previous highlights
-    currentTutorialTargetId = stepDetails.targetElementId; // Store for removal later
+    const formattedContent = (stepDetails.content || "").replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/<i class='(.*?)'><\/i>/g, '<i class="$1"></i>');
+    tutorialContent.innerHTML = formattedContent;
+    removeAllHighlights();
+    currentTutorialTargetId = stepDetails.targetElementId;
     if (currentTutorialTargetId) {
         const targetElement = document.getElementById(currentTutorialTargetId);
         if(targetElement) {
-             temporaryHighlight(targetElement, Infinity); // Highlight indefinitely until 'Next'
-             // Optional: Scroll element into view
-             targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+             temporaryHighlight(targetElement, Infinity);
+             try { targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }); }
+             catch (e) { console.warn("Could not scroll tutorial target into view:", e); }
         }
     }
-
-    // Configure Next Button
-    const nextStep = stepDetails.nextStep || 'complete'; // Default to complete
-    if (nextStep === 'complete') {
-        tutorialNextButton.textContent = "Got it!";
-    } else {
-        tutorialNextButton.textContent = "Next";
-    }
-    // Assign click handler dynamically
+    const nextStep = stepDetails.nextStep || 'complete';
+    tutorialNextButton.textContent = (nextStep === 'complete') ? "Got it!" : "Next";
     tutorialNextButton.onclick = () => hideTutorialStep(stepId, nextStep);
-
-    // Show Modal & Overlay
     tutorialOverlay.classList.remove('hidden');
     tutorialModal.classList.remove('hidden');
 }
@@ -423,34 +284,20 @@ function hideTutorialStep(currentStepId, nextStepId) {
     console.log(`Hiding Tutorial Step: ${currentStepId}, advancing to: ${nextStepId}`);
     if (tutorialModal) tutorialModal.classList.add('hidden');
     if (tutorialOverlay) tutorialOverlay.classList.add('hidden');
-
-    // Remove highlight associated with the step being hidden
     const stepDetails = tutorialSteps[currentStepId];
-    if (stepDetails && stepDetails.targetElementId) {
-        removeHighlight(stepDetails.targetElementId);
-    }
-    currentTutorialTargetId = null; // Clear stored target
-
-    // Update state to the next step
+    if (stepDetails && stepDetails.targetElementId) { removeHighlight(stepDetails.targetElementId); }
+    currentTutorialTargetId = null;
     State.setOnboardingTutorialStep(nextStepId);
-
-    // If the next step should trigger immediately (e.g., multi-part explanation on same view)
-    if (nextStepId && tutorialSteps[nextStepId] && nextStepId !== 'complete') {
-         // Example: If transitioning between focus_prompt and focus_explained on the same popup
-         if(currentStepId === 'focus_prompt' && nextStepId === 'focus_explained') {
-              // Need a slight delay to allow UI to settle? Or call directly?
-              setTimeout(() => showTutorialStep(nextStepId), 50);
-         }
-         // Add other immediate transitions if needed
-    }
-
-    // Apply phase UI changes based on potential state update
-    applyOnboardingPhaseUI(State.getOnboardingPhase());
+    if (nextStepId && tutorialSteps[nextStepId]?.content && nextStepId !== 'complete') {
+         if( (currentStepId === 'focus_prompt' && nextStepId === 'focus_explained') ||
+             (currentStepId === 'persona_tapestry_prompt' && nextStepId === 'persona_narrative_prompt') ||
+             (currentStepId === 'study_intro_prompt' && nextStepId === 'study_scan_prompt') )
+         { setTimeout(() => showTutorialStep(nextStepId), 50); }
+         else if (currentStepId === 'study_results_prompt' && nextStepId === 'complete') { console.log("Basic tutorial sequence complete."); }
+    } else if (nextStepId === 'complete') { console.log("Tutorial marked as complete."); }
+    applyOnboardingPhaseUI(State.getOnboardingPhase()); // Re-apply UI based on new step/phase
 }
 
-
-// --- Screen Management (Handles Tutorial Triggering) ---
-// js/ui.js
 
 // --- Screen Management (Handles Tutorial Triggering) ---
 export function showScreen(screenId) {
@@ -458,112 +305,113 @@ export function showScreen(screenId) {
     const currentState = State.getState();
     const isPostQuestionnaire = currentState.questionnaireCompleted;
     const currentTutorialStep = State.getOnboardingTutorialStep();
-
-    // --- Tutorial Checks & Triggers ---
-    let blockScreenChange = false; // Flag to prevent screen change if tutorial needs to show first
+    let blockScreenChange = false;
     let targetTutorialStep = null;
 
-    // Check if the requested screen corresponds to a tutorial step that needs showing
-    if (screenId === 'starCatalogScreen' && isPostQuestionnaire && currentTutorialStep === 'grimoire_intro') {
-        targetTutorialStep = 'grimoire_intro';
-    } else if (screenId === 'constellationMapScreen' && isPostQuestionnaire && currentTutorialStep === 'persona_tapestry_prompt') {
-        targetTutorialStep = 'persona_tapestry_prompt';
-    } else if (screenId === 'observatoryScreen' && currentState.onboardingPhase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT && currentTutorialStep === 'study_intro_prompt') {
-        targetTutorialStep = 'study_intro_prompt';
-    }
-    // Add more checks here for other steps triggered by specific screen loads if needed
+    if (screenId === 'starCatalogScreen' && isPostQuestionnaire && currentTutorialStep === 'grimoire_intro') { targetTutorialStep = 'grimoire_intro'; }
+    else if (screenId === 'constellationMapScreen' && isPostQuestionnaire && currentTutorialStep === 'persona_tapestry_prompt') { targetTutorialStep = 'persona_tapestry_prompt'; }
+    else if (screenId === 'observatoryScreen' && currentState.onboardingPhase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT && currentTutorialStep === 'study_intro_prompt') { targetTutorialStep = 'study_intro_prompt'; }
+    // Add tutorial step for scan results? Triggered from performSectorScan instead.
 
-    // Show tutorial INSTEAD of changing screen if applicable
     if(targetTutorialStep) {
         console.log(`UI: Intercepting screen change to show tutorial: ${targetTutorialStep}`);
-        showTutorialStep(targetTutorialStep); // Function defined elsewhere in ui.js
-        blockScreenChange = true; // Don't change the background screen yet
+        showTutorialStep(targetTutorialStep);
+        blockScreenChange = true;
     }
 
-    // Only change screen visibility if not blocked by tutorial
     if (!blockScreenChange) {
-        screens.forEach(screen => {
-            screen?.classList.toggle('current', screen.id === screenId);
-            screen?.classList.toggle('hidden', screen.id !== screenId);
-        });
+        screens.forEach(screen => { screen?.classList.toggle('current', screen?.id === screenId); screen?.classList.toggle('hidden', screen?.id !== screenId); });
     } else {
-         // If blocked, at least hide all *other* screens
-         screens.forEach(screen => {
-            if(screen.id !== screenId) screen?.classList.add('hidden');
-            // Keep the intended target screen technically 'current' but maybe visually obscured by tutorial
-            screen?.classList.toggle('current', screen.id === screenId);
-         });
+         screens.forEach(screen => { if(screen?.id !== screenId) screen?.classList.add('hidden'); screen?.classList.toggle('current', screen?.id === screenId); });
     }
 
-
-    // Show/Hide Nav Bar based on whether the TUTORIAL has progressed past the start
     if (mainNavBar) {
-        // *** CORRECTED CONDITION ***
-        const showNav = State.getOnboardingTutorialStep() !== 'start' && isPostQuestionnaire; // Show if tutorial started AND questionnaire done
-        // *** END CORRECTION ***
-         mainNavBar.classList.toggle('hidden', !showNav || screenId === 'welcomeScreen' || screenId === 'chartingScreen'); // Also check chartingScreen ID
+        const showNav = State.getOnboardingTutorialStep() !== 'start' && isPostQuestionnaire;
+        mainNavBar.classList.toggle('hidden', !showNav || screenId === 'welcomeScreen' || screenId === 'chartingScreen');
     }
     navButtons.forEach(button => {
-        if(button) {
-            button.classList.toggle('active', button.dataset.target === screenId);
-            // Assign ID dynamically if needed for highlighting, ensure it's unique
-            if (!button.id && button.dataset.target) {
-                button.id = `navButton-${button.dataset.target}`;
-            }
-        }
+        if(button) { button.classList.toggle('active', button.dataset.target === screenId); if (!button.id && button.dataset.target) { button.id = `navButton-${button.dataset.target}`; } }
     });
 
-    // Apply onboarding phase UI AFTER toggling screen visibility/showing tutorial
-    // Ensure applyOnboardingPhaseUI exists and is exported or available in this scope
-    if (typeof applyOnboardingPhaseUI === 'function') {
-        applyOnboardingPhaseUI(State.getOnboardingPhase());
-    } else {
-        console.error("applyOnboardingPhaseUI function is not defined or accessible in ui.js");
-    }
+    applyOnboardingPhaseUI(State.getOnboardingPhase()); // Apply after screen toggles
 
-
-    // Refresh content for relevant screens (only if screen wasn't blocked by tutorial)
     if (!blockScreenChange && isPostQuestionnaire) {
-        // Ensure these GameLogic functions exist and are correctly imported/exported
         if (screenId === 'constellationMapScreen' && typeof GameLogic.displayConstellationMapScreenLogic === 'function') GameLogic.displayConstellationMapScreenLogic();
         else if (screenId === 'observatoryScreen' && typeof GameLogic.displayObservatoryScreenLogic === 'function') GameLogic.displayObservatoryScreenLogic();
-        else if (screenId === 'starCatalogScreen' && typeof refreshStarCatalogDisplay === 'function') refreshStarCatalogDisplay(); // Assumes refreshStarCatalogDisplay exists
-        else if (screenId === 'cartographyScreen' && typeof displayCartographyContent === 'function') displayCartographyContent(); // Assumes displayCartographyContent exists
+        else if (screenId === 'starCatalogScreen' && typeof refreshStarCatalogDisplay === 'function') refreshStarCatalogDisplay(); // Renamed? refreshStarCatalogDisplay?
+        else if (screenId === 'cartographyScreen' && typeof displayCartographyContent === 'function') displayCartographyContent(); // Renamed? displayCartographyContent?
     }
 
-    // Scroll to top only if screen actually changed
     if (!blockScreenChange && ['chartingScreen', 'starCatalogScreen', 'constellationMapScreen', 'observatoryScreen', 'cartographyScreen'].includes(screenId)) {
         window.scrollTo(0, 0);
     }
 }
 
+// --- Onboarding UI Adjustments ---
+export function applyOnboardingPhaseUI(phase) {
+    console.log(`UI: Applying onboarding phase ${phase}`);
+    const isPhase1 = phase >= Config.ONBOARDING_PHASE.PERSONA_GRIMOIRE;
+    const isPhase2 = phase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT;
+    const isPhase3 = phase >= Config.ONBOARDING_PHASE.REFLECTION_RITUALS;
+    const isPhase4 = phase >= Config.ONBOARDING_PHASE.ADVANCED;
+
+    // Ensure navButtons NodeList is available
+    if (typeof navButtons !== 'undefined' && navButtons) {
+        navButtons.forEach(button => {
+            if (!button) return; const target = button.dataset.target; let hide = false;
+            if (target === 'observatoryScreen' && !isPhase2) hide = true;
+            else if (target === 'cartographyScreen' && !isPhase4) hide = true;
+            button.classList.toggle('hidden-by-flow', hide);
+        });
+    } else { console.warn("applyOnboardingPhaseUI: navButtons not found."); }
+
+    // Toggle Catalog Filters
+    if (typeof catalogFilterControls !== 'undefined' && catalogFilterControls) { catalogFilterControls.classList.toggle('hidden-by-flow', !isPhase2); }
+
+    // Toggle Observatory Actions & Rituals
+    if (typeof deepScanButton !== 'undefined' && deepScanButton) { deepScanButton.classList.toggle('hidden-by-flow', !isPhase3); }
+    const ritualsSection = typeof observatoryScreen !== 'undefined' && observatoryScreen ? observatoryScreen.querySelector('.observatory-rituals') : null;
+    if (ritualsSection) { ritualsSection.classList.toggle('hidden-by-flow', !isPhase3); }
+
+    // Update popup elements based on phase (Observatory View)
+    const popupStarId = GameLogic.getCurrentPopupStarId();
+    if (popupStarId !== null && typeof observatoryViewPopup !== 'undefined' && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) {
+        if(typeof updateAlignStarButtonStatus === 'function') updateAlignStarButtonStatus(popupStarId);
+        const discoveredData = State.getDiscoveredConceptData(popupStarId);
+        const star = concepts.find(c => c.id === popupStarId);
+        const inScanLog = !discoveredData && typeof scanOutput !== 'undefined' && scanOutput ? scanOutput.querySelector(`.scan-result-item[data-concept-id="${popupStarId}"]`) : false;
+        if(typeof updateCatalogStarButtonStatus === 'function') updateCatalogStarButtonStatus(popupStarId, !!inScanLog);
+        if(typeof updateObservatorySellButton === 'function') updateObservatorySellButton(popupStarId, star, !!discoveredData, !!inScanLog);
+        if (typeof logbookSection !== 'undefined' && logbookSection) logbookSection.classList.toggle('hidden', !isPhase2 || !discoveredData);
+        if (typeof stellarEvolutionSection !== 'undefined' && stellarEvolutionSection) stellarEvolutionSection.classList.toggle('hidden', !isPhase4 || !discoveredData || !star?.canUnlockArt || discoveredData?.artUnlocked);
+        if(star && discoveredData && typeof displayStellarEvolutionSection === 'function') displayStellarEvolutionSection(star, discoveredData);
+    }
+
+    // Update Constellation Map buttons
+    if(typeof updateSuggestBlueprintButtonState === 'function') updateSuggestBlueprintButtonState();
+    if (typeof discoverMoreButton !== 'undefined' && discoverMoreButton) discoverMoreButton.classList.toggle('hidden-by-flow', !isPhase2);
+}
 
 // --- Insight Display ---
 export function updateInsightDisplays() {
     const insight = State.getInsight().toFixed(1);
-    if (userInsightDisplayConstellation) userInsightDisplayConstellation.textContent = insight; // Renamed ID
-    if (userInsightDisplayObservatory) userInsightDisplayObservatory.textContent = insight; // Renamed ID
-    displayScanButtons(); // Renamed function
-    if (deepScanButton) deepScanButton.disabled = State.getInsight() < Config.GUIDED_REFLECTION_COST; // Renamed button
-    if (deepScanCostDisplay) deepScanCostDisplay.textContent = Config.GUIDED_REFLECTION_COST; // Renamed ID
-    // Refresh Deep Dive (Force Insight) unlock buttons if Constellation Map is visible
-    if (constellationMapScreen?.classList.contains('current') && State.getOnboardingPhase() >= Config.ONBOARDING_PHASE.ADVANCED) {
-        // Assuming displayForceInsightLevels replaces displayElementDeepDive
-        // const forceInsightContainers = constellationForceDetails?.querySelectorAll('.force-insight-container'); // Adjust selector
-        // forceInsightContainers?.forEach(container => {
-        //     const forceKey = container.dataset.forceKey;
-        //     if (forceKey) displayForceInsightLevels(forceKey, container);
-        // });
+    if (userInsightDisplayConstellation) userInsightDisplayConstellation.textContent = insight;
+    if (userInsightDisplayObservatory) userInsightDisplayObservatory.textContent = insight;
+    if (typeof displayScanButtons === 'function') displayScanButtons(); // Check if function exists
+    if (deepScanButton) deepScanButton.disabled = State.getInsight() < Config.GUIDED_REFLECTION_COST;
+    if (deepScanCostDisplay) deepScanCostDisplay.textContent = Config.GUIDED_REFLECTION_COST;
+    // ... (Refresh Force Insight / Deep Dive - Currently removed) ...
+    if (cartographyScreen && cartographyScreen.classList.contains('current')) {
+        if(typeof displayCartographyContent === 'function') displayCartographyContent();
     }
-    if (cartographyScreen && cartographyScreen.classList.contains('current')) { displayCartographyContent(); } // Refresh Cartography costs/reqs
     const popupStarId = GameLogic.getCurrentPopupStarId();
     if (popupStarId !== null && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) {
           const star = concepts.find(c => c.id === popupStarId);
           const discoveredData = State.getDiscoveredConceptData(popupStarId);
-          if(star && discoveredData) displayStellarEvolutionSection(star, discoveredData); // Renamed
+          if(star && discoveredData && typeof displayStellarEvolutionSection === 'function') displayStellarEvolutionSection(star, discoveredData);
     }
-    // updateContemplationButtonState(); // Removed, deep dive modal removed
-    updateSuggestBlueprintButtonState(); // Renamed
+    // updateContemplationButtonState(); // Removed
+    if(typeof updateSuggestBlueprintButtonState === 'function') updateSuggestBlueprintButtonState();
 }
 
 
