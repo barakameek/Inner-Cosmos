@@ -127,6 +127,8 @@ const tutorialNextButton = document.getElementById('tutorialNextButton');
 const popupOverlay = document.getElementById('popupOverlay'); // Shared overlay
 // Add this function definition to ui.js
 
+export function // Add this entire function definition to your ui.js file
+
 export function applyOnboardingPhaseUI(phase) {
     console.log(`UI: Applying onboarding phase ${phase}`);
     const isPhase1 = phase >= Config.ONBOARDING_PHASE.PERSONA_GRIMOIRE; // View Map/Catalog
@@ -134,45 +136,66 @@ export function applyOnboardingPhaseUI(phase) {
     const isPhase3 = phase >= Config.ONBOARDING_PHASE.REFLECTION_RITUALS; // Unlock Reflection/Harmonics
     const isPhase4 = phase >= Config.ONBOARDING_PHASE.ADVANCED; // Unlock Cartography/Evolution
 
-    navButtons.forEach(button => { // Nav Bar
-        if (!button) return; const target = button.dataset.target; let hide = false;
-        // Use NEW screen IDs for checks
-        if (target === 'observatoryScreen' && !isPhase2) hide = true;
-        else if (target === 'cartographyScreen' && !isPhase4) hide = true;
-        button.classList.toggle('hidden-by-flow', hide);
-    });
+    // Ensure navButtons NodeList is available (it should be defined globally in ui.js)
+    if (typeof navButtons !== 'undefined' && navButtons) {
+        navButtons.forEach(button => { // Nav Bar
+            if (!button) return; const target = button.dataset.target; let hide = false;
+            // Use NEW screen IDs for checks
+            if (target === 'observatoryScreen' && !isPhase2) hide = true;
+            else if (target === 'cartographyScreen' && !isPhase4) hide = true;
+            button.classList.toggle('hidden-by-flow', hide);
+        });
+    } else {
+        console.warn("applyOnboardingPhaseUI: navButtons not found.");
+    }
 
-    // Toggle visibility for Deep Dive (Force Insight) sections - Requires rework for new theme if kept
-    // const deepDiveContainers = constellationForceDetails?.querySelectorAll('.force-insight-container'); // Adjust selector if needed
+
+    // Toggle visibility for Deep Dive (Force Insight) sections - Placeholder/Removed
+    // const deepDiveContainers = constellationForceDetails?.querySelectorAll('.force-insight-container');
     // deepDiveContainers?.forEach(container => container.classList.toggle('hidden-by-flow', !isPhase4));
 
     // Toggle Catalog Filters
-    if (catalogFilterControls) catalogFilterControls.classList.toggle('hidden-by-flow', !isPhase2);
+    // Ensure catalogFilterControls is defined globally in ui.js
+    if (typeof catalogFilterControls !== 'undefined' && catalogFilterControls) {
+        catalogFilterControls.classList.toggle('hidden-by-flow', !isPhase2);
+    } else {
+        // console.warn("applyOnboardingPhaseUI: catalogFilterControls not found."); // Might be normal if element doesn't exist yet
+    }
+
 
     // Toggle Observatory Actions & Rituals
-    if (deepScanButton) deepScanButton.classList.toggle('hidden-by-flow', !isPhase3); // Renamed button
-    const ritualsSection = observatoryScreen?.querySelector('.observatory-rituals'); // Use new selector
-    if (ritualsSection) ritualsSection.classList.toggle('hidden-by-flow', !isPhase3);
+    // Ensure deepScanButton and observatoryScreen are defined globally
+    if (typeof deepScanButton !== 'undefined' && deepScanButton) {
+        deepScanButton.classList.toggle('hidden-by-flow', !isPhase3);
+    }
+     const ritualsSection = typeof observatoryScreen !== 'undefined' && observatoryScreen ? observatoryScreen.querySelector('.observatory-rituals') : null;
+    if (ritualsSection) {
+        ritualsSection.classList.toggle('hidden-by-flow', !isPhase3);
+    }
 
     // Update popup elements based on phase (Observatory View)
-    const popupStarId = GameLogic.getCurrentPopupStarId(); // Use renamed getter
-    if (popupStarId !== null && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) { // Use renamed popup selector
-        updateAlignStarButtonStatus(popupStarId); // Renamed button func (Depends on Phase 1/discovery)
-        const discoveredData = State.getDiscoveredConceptData(popupStarId);
-        const star = concepts.find(c => c.id === popupStarId); // Use internal name
-        const inScanLog = !discoveredData && scanOutput?.querySelector(`.scan-result-item[data-concept-id="${popupStarId}"]`); // Use renamed selector
+    const popupStarId = GameLogic.getCurrentPopupStarId(); // Assumes GameLogic is imported
+    // Ensure observatoryViewPopup and related pop elements are defined globally
+    if (popupStarId !== null && typeof observatoryViewPopup !== 'undefined' && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) {
+        updateAlignStarButtonStatus(popupStarId); // Assumes this function exists
+        const discoveredData = State.getDiscoveredConceptData(popupStarId); // Assumes State is imported
+        const star = concepts.find(c => c.id === popupStarId); // Assumes concepts is imported
 
-        updateCatalogStarButtonStatus(popupStarId, !!inScanLog); // Renamed button func (Always relevant)
-        updateObservatorySellButton(popupStarId, star, !!discoveredData, !!inScanLog); // Renamed button func (Depends on Phase 2)
+        // Ensure scanOutput is defined globally
+        const inScanLog = !discoveredData && typeof scanOutput !== 'undefined' && scanOutput ? scanOutput.querySelector(`.scan-result-item[data-concept-id="${popupStarId}"]`) : false;
 
-        if (logbookSection) logbookSection.classList.toggle('hidden', !isPhase2 || !discoveredData); // Use new selector (Show only if cataloged)
-        if (stellarEvolutionSection) stellarEvolutionSection.classList.toggle('hidden', !isPhase4 || !discoveredData || !star?.canUnlockArt || discoveredData?.artUnlocked); // Use new selector
-        if(star && discoveredData) displayStellarEvolutionSection(star, discoveredData); // Renamed display func
+        updateCatalogStarButtonStatus(popupStarId, !!inScanLog); // Assumes this function exists
+        updateObservatorySellButton(popupStarId, star, !!discoveredData, !!inScanLog); // Assumes this function exists
+
+        if (typeof logbookSection !== 'undefined' && logbookSection) logbookSection.classList.toggle('hidden', !isPhase2 || !discoveredData);
+        if (typeof stellarEvolutionSection !== 'undefined' && stellarEvolutionSection) stellarEvolutionSection.classList.toggle('hidden', !isPhase4 || !discoveredData || !star?.canUnlockArt || discoveredData?.artUnlocked);
+        if(star && discoveredData && typeof displayStellarEvolutionSection === 'function') displayStellarEvolutionSection(star, discoveredData);
     }
 
     // Update Constellation Map buttons
-    updateSuggestBlueprintButtonState(); // Renamed
-    if(discoverMoreButton) discoverMoreButton.classList.toggle('hidden-by-flow', !isPhase2);
+    // Ensure suggestBlueprintButton and discoverMoreButton are defined globally
+    if (typeof updateSuggestBlueprintButtonState === 'function') updateSuggestBlueprintButtonState();
+    if (typeof discoverMoreButton !== 'undefined' && discoverMoreButton) discoverMoreButton.classList.toggle('hidden-by-flow', !isPhase2);
 
     // Add checks for other phase-dependent UI elements if needed
 }
