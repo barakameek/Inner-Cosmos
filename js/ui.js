@@ -125,7 +125,57 @@ const tutorialContent = document.getElementById('tutorialContent');
 const tutorialNextButton = document.getElementById('tutorialNextButton');
 // General Overlay
 const popupOverlay = document.getElementById('popupOverlay'); // Shared overlay
+// Add this function definition to ui.js
 
+export function applyOnboardingPhaseUI(phase) {
+    console.log(`UI: Applying onboarding phase ${phase}`);
+    const isPhase1 = phase >= Config.ONBOARDING_PHASE.PERSONA_GRIMOIRE; // View Map/Catalog
+    const isPhase2 = phase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT; // Unlock Observatory
+    const isPhase3 = phase >= Config.ONBOARDING_PHASE.REFLECTION_RITUALS; // Unlock Reflection/Harmonics
+    const isPhase4 = phase >= Config.ONBOARDING_PHASE.ADVANCED; // Unlock Cartography/Evolution
+
+    navButtons.forEach(button => { // Nav Bar
+        if (!button) return; const target = button.dataset.target; let hide = false;
+        // Use NEW screen IDs for checks
+        if (target === 'observatoryScreen' && !isPhase2) hide = true;
+        else if (target === 'cartographyScreen' && !isPhase4) hide = true;
+        button.classList.toggle('hidden-by-flow', hide);
+    });
+
+    // Toggle visibility for Deep Dive (Force Insight) sections - Requires rework for new theme if kept
+    // const deepDiveContainers = constellationForceDetails?.querySelectorAll('.force-insight-container'); // Adjust selector if needed
+    // deepDiveContainers?.forEach(container => container.classList.toggle('hidden-by-flow', !isPhase4));
+
+    // Toggle Catalog Filters
+    if (catalogFilterControls) catalogFilterControls.classList.toggle('hidden-by-flow', !isPhase2);
+
+    // Toggle Observatory Actions & Rituals
+    if (deepScanButton) deepScanButton.classList.toggle('hidden-by-flow', !isPhase3); // Renamed button
+    const ritualsSection = observatoryScreen?.querySelector('.observatory-rituals'); // Use new selector
+    if (ritualsSection) ritualsSection.classList.toggle('hidden-by-flow', !isPhase3);
+
+    // Update popup elements based on phase (Observatory View)
+    const popupStarId = GameLogic.getCurrentPopupStarId(); // Use renamed getter
+    if (popupStarId !== null && observatoryViewPopup && !observatoryViewPopup.classList.contains('hidden')) { // Use renamed popup selector
+        updateAlignStarButtonStatus(popupStarId); // Renamed button func (Depends on Phase 1/discovery)
+        const discoveredData = State.getDiscoveredConceptData(popupStarId);
+        const star = concepts.find(c => c.id === popupStarId); // Use internal name
+        const inScanLog = !discoveredData && scanOutput?.querySelector(`.scan-result-item[data-concept-id="${popupStarId}"]`); // Use renamed selector
+
+        updateCatalogStarButtonStatus(popupStarId, !!inScanLog); // Renamed button func (Always relevant)
+        updateObservatorySellButton(popupStarId, star, !!discoveredData, !!inScanLog); // Renamed button func (Depends on Phase 2)
+
+        if (logbookSection) logbookSection.classList.toggle('hidden', !isPhase2 || !discoveredData); // Use new selector (Show only if cataloged)
+        if (stellarEvolutionSection) stellarEvolutionSection.classList.toggle('hidden', !isPhase4 || !discoveredData || !star?.canUnlockArt || discoveredData?.artUnlocked); // Use new selector
+        if(star && discoveredData) displayStellarEvolutionSection(star, discoveredData); // Renamed display func
+    }
+
+    // Update Constellation Map buttons
+    updateSuggestBlueprintButtonState(); // Renamed
+    if(discoverMoreButton) discoverMoreButton.classList.toggle('hidden-by-flow', !isPhase2);
+
+    // Add checks for other phase-dependent UI elements if needed
+}
 // --- Tutorial State ---
 let currentTutorialTargetId = null; // Stores ID of element being highlighted by tutorial
 
