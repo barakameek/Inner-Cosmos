@@ -140,22 +140,22 @@ function attachEventListeners() {
     if (settingsBtn) settingsBtn.addEventListener('click', UI.showSettings);
 
     // --- Starting Nebula Modal Listener ---
-    const nebulaModalBtn = document.getElementById('goToCatalogButton'); // Renamed ID
+     const nebulaModalBtn = document.getElementById('goToCatalogButton'); // Renamed ID
     const closeNebulaBtn = document.getElementById('closeNebulaModalButton'); // Renamed ID
     if (nebulaModalBtn) {
         nebulaModalBtn.addEventListener('click', () => {
             console.log("Navigating from Nebula Modal to Catalog.");
-            UI.hideExperimentResultsModal(); // Renamed? hideNebulaModal?
-            State.setOnboardingTutorialStep('grimoire_intro'); // Set step before showing screen
-            UI.showScreen('starCatalogScreen'); // Renamed ID
+            UI.hideStartingNebulaModal(); // *** Use new hide function ***
+            State.setOnboardingTutorialStep('grimoire_intro');
+            UI.showScreen('starCatalogScreen');
         });
     } else { console.error("Go To Catalog button not found!"); }
     if (closeNebulaBtn) {
          closeNebulaBtn.addEventListener('click', () => {
             console.log("Nebula modal closed via 'X', navigating to Catalog.");
-            UI.hideExperimentResultsModal(); // Renamed? hideNebulaModal?
-            State.setOnboardingTutorialStep('grimoire_intro'); // Set step before showing screen
-            UI.showScreen('starCatalogScreen'); // Renamed ID
+            UI.hideStartingNebulaModal(); // *** Use new hide function ***
+            State.setOnboardingTutorialStep('grimoire_intro');
+            UI.showScreen('starCatalogScreen');
          });
     }
     // --- End Starting Nebula Modal Listener ---
