@@ -5,10 +5,17 @@ import * as Config from './config.js';
 import * as Utils from './utils.js';
 import * as UI from './ui.js';
 // Import specific data structures needed (names kept same internally for now)
-import { elementDetails, elementKeyToFullName, elementNameToKey, concepts, questionnaireGuided, reflectionPrompts, elementDeepDive, dailyRituals, milestones, focusRituals, sceneBlueprints, alchemicalExperiments, elementalInsights, focusDrivenUnlocks, cardTypeKeys, elementNames, elementInteractionThemes, starTypeThemes } from '../data.js'; // Renamed cardTypeThemes -> starTypeThemes
+import {
+    elementDetails, elementKeyToFullName, elementNameToKey,
+    concepts, questionnaireGuided, reflectionPrompts, elementDeepDive,
+    dailyRituals, milestones, focusRituals, sceneBlueprints,
+    alchemicalExperiments, elementalInsights, focusDrivenUnlocks,
+    cardTypeKeys, elementNames,
+    forceInteractionThemes, // <<< Corrected name here
+    starTypeThemes // Renamed from cardTypeThemes
+} from '../data.js';
 
 console.log("gameLogic.js loading...");
-
 // --- Temporary State (Theme Specific) ---
 let currentlyDisplayedStarId = null;
 let currentReflectionContext = null;
