@@ -535,6 +535,8 @@ export function displayConstellationMapScreen() { // Renamed
 
 
     // 3. Display Interpretation / Narrative
+ // In displayConstellationMapScreen (Constellation Map UI logic):
+    // 3. Display Interpretation / Narrative
     if(interpretationTextElement) {
          const narrative = GameLogic.calculateConstellationNarrative(); // Fetch latest narrative
          interpretationTextElement.innerHTML = narrative || 'Align Stars to see emergent patterns...';
@@ -542,43 +544,123 @@ export function displayConstellationMapScreen() { // Renamed
 
     // 4. Display Dominant Forces (Based on focused stars)
     if(dominantForcesElement) {
-         const themes = GameLogic.calculateFocusThemes(); // Renamed? calculateDominantForces?
-         dominantForcesElement.innerHTML = ''; // Clear previous
+         const themes = GameLogic.calculateDominantForces();  // (was calculateFocusThemes)
+         dominantForcesElement.innerHTML = '';
          if (themes.length > 0) {
               themes.slice(0, 3).forEach(theme => {
-                   dominantForcesElement.innerHTML += `<p><strong>${theme.name}</strong> (${theme.count} Star${theme.count > 1 ? 's' : ''})</p>`;
+                   dominantForcesElement.innerHTML += 
+                      `<p><strong>${theme.name}</strong> (${theme.count} Star${theme.count !== 1 ? 's' : ''})</p>`;
               });
          } else {
               dominantForcesElement.innerHTML = '<p>No dominant forces detected in current alignment.</p>';
          }
     }
+… 
+// New functions for Constellation updates and Nebula modal:
 
-    // 5. Display Core Force Details (Scores)
-    if(forceDetailsElement) {
-         forceDetailsElement.innerHTML = '';
-         const scores = State.getScores();
-         elementNames.forEach(forceName => {
-              const key = elementNameToKey[forceName];
-              const score = scores[key];
-              const forceData = elementDetails[forceName] || {};
-              const scoreLabel = Utils.getScoreLabel(score);
-              const color = Utils.getElementColor(forceName);
-              const item = document.createElement('div');
-              item.classList.add('force-detail-entry');
-              item.style.borderColor = color;
-              item.innerHTML = `
-                   <div class="force-detail-header">
-                        <strong>${forceData.name || forceName}:</strong>
-                        <div>
-                             <span class="score-value">${score?.toFixed(1) ?? '?'}</span>
-                             <span class="score-label">(${scoreLabel})</span>
-                        </div>
-                   </div>
-                   `;
-               // Add attunement/deep dive integration here if desired for this view
-              forceDetailsElement.appendChild(item);
-         });
+export function displayConstellationNarrative() {
+    if (!interpretationTextElement) return;
+    const narrative = GameLogic.calculateConstellationNarrative();
+    interpretationTextElement.innerHTML = narrative || 'Align Stars to see emergent patterns...';
+}
+
+export function displayConstellationThemes() {
+    if (!dominantForcesElement) return;
+    const themes = GameLogic.calculateDominantForces();
+    dominantForcesElement.innerHTML = '';
+    if (themes.length > 0) {
+        themes.slice(0, 3).forEach(theme => {
+            dominantForcesElement.innerHTML += 
+                `<p><strong>${theme.name}</strong> (${theme.count} Star${theme.count !== 1 ? 's' : ''})</p>`;
+        });
+    } else {
+        dominantForcesElement.innerHTML = '<p>No dominant forces detected in current alignment.</p>';
     }
+}
+
+export function updateConstellationResonance() {
+    // Placeholder: no separate resonance metric to update in this theme
+}
+
+export function updateConstellationExploreButton() {
+    if (!discoverMoreButton) return;
+    const phase = State.getOnboardingPhase();
+    discoverMoreButton.classList.toggle('hidden-by-flow', phase < Config.ONBOARDING_PHASE.STUDY_INSIGHT);
+}
+
+export function showStartingNebulaModal(scores, starterStarConcepts) {
+    if (!startingNebulaModal) return;
+    // 1. Display core force scores
+    nebulaScoresDisplay.innerHTML = "";
+    if (scores && typeof scores === 'object') {
+        let scoresHTML = "";
+        for (const key in scores) {
+            if (!scores.hasOwnProperty(key)) continue;
+            const forceName = elementKeyToFullName[key] || key;
+            const scoreVal = scores[key];
+            const scoreLabel = Utils.getScoreLabel(scoreVal);
+            scoresHTML += `
+                <div class="nebula-score-item">
+                    <div class="element-name">${forceName}</div>
+                    <div class="score-value">${scoreVal.toFixed(1)}</div>
+                    <div class="score-label">(${scoreLabel})</div>
+                </div>`;
+        }
+        nebulaScoresDisplay.innerHTML = scoresHTML;
+    }
+    // 2. Display interpretation text
+    if (nebulaInterpretation) {
+        let interpText = "";
+        const sortedForces = scores 
+            ? Object.entries(scores).sort((a,b) => b[1] - a[1]) 
+            : [];
+        if (sortedForces.length > 0) {
+            const topForce = elementKeyToFullName[sortedForces[0][0]] || sortedForces[0][0];
+            if (sortedForces.length > 1) {
+                const secondForce = elementKeyToFullName[sortedForces[1][0]] || sortedForces[1][0];
+                interpText = `Your core profile is strongly influenced by ${topForce} and ${secondForce}.`;
+            } else {
+                interpText = `Your core profile is defined by a strong ${topForce} influence.`;
+            }
+        }
+        nebulaInterpretation.textContent = interpText;
+    }
+    // 3. Display starter stars (initial concepts)
+    nebulaStarterStarsDisplay.innerHTML = "";
+    if (Array.isArray(starterStarConcepts)) {
+        starterStarConcepts.forEach(concept => {
+            const cardElement = renderStarCard(concept, 'starCatalog');
+            if (cardElement) nebulaStarterStarsDisplay.appendChild(cardElement);
+        });
+    }
+    // 4. Show the modal
+    startingNebulaModal.classList.remove('hidden');
+    if (popupOverlay) popupOverlay.classList.remove('hidden');
+}
+
+export function hideStartingNebulaModal() {
+    if (startingNebulaModal) startingNebulaModal.classList.add('hidden');
+    if (popupOverlay) popupOverlay.classList.add('hidden');
+}
+
+export function displayAlignedStars() {
+    if (!constellationVisualPlaceholder) return;
+    const alignedStars = State.getFocusedConcepts();
+    if (alignedStars.size > 0) {
+        let starListHTML = "<ul>";
+        alignedStars.forEach(id => {
+            const name = State.getDiscoveredConceptData(id)?.concept?.name || `Star ${id}`;
+            starListHTML += `<li><i class="fas fa-star"></i> ${name}</li>`;
+        });
+        starListHTML += "</ul><p>(Placeholder: Connections not drawn)</p>";
+        constellationVisualPlaceholder.innerHTML = starListHTML;
+    } else {
+        // If no stars aligned, show the placeholder prompt
+        constellationVisualPlaceholder.innerHTML = 
+            `<i class="fas fa-meteor" style="font-size: 3em; color: #555;"></i>
+             <p>(Align Stars from your Catalog to build your Constellation)</p>`;
+    }
+}
 
     updateInsightDisplays(); // Update insight display on this screen
     // applyOnboardingPhaseUI is called by showScreen
