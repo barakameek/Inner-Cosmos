@@ -134,20 +134,42 @@ function goToPrevForce() {
         UI.displayForceQuestions(prevIndex);
     } else { console.log("Cannot go back from the first Force."); }
 }
+// In gameLogic.js
+// Renamed finalizeQuestionnaire -> finalizeCharting
 function finalizeCharting() {
     console.log("Finalizing charting...");
-    const finalScores = {}; const allAnswers = State.getState().userAnswers;
-    elementNames.forEach(elementName => { const score = calculateElementScore(elementName, allAnswers[elementName] || {}); const key = elementNameToKey[elementName]; if (key) finalScores[key] = score; });
-    State.updateScores(finalScores); State.setQuestionnaireComplete(); State.saveAllAnswers(allAnswers);
-    const starterStarConcepts = determineStarterStarsAndNebula();
-    updateMilestoneProgress('completeQuestionnaire', 1);
-    checkForDailyLogin();
-    console.log("Showing starting nebula modal.");
-    UI.showExperimentResultsModal(State.getScores(), starterStarConcepts);
-    console.log("Final Core Forces:", State.getScores());
-    State.saveGameState();
-}
+    const finalScores = {};
+    const allAnswers = State.getState().userAnswers; // Get all answers from state
 
+    // Calculate final scores based on answers
+    elementNames.forEach(elementName => { // Use internal element names
+        const score = calculateElementScore(elementName, allAnswers[elementName] || {}); // Use internal score calc
+        const key = elementNameToKey[elementName]; // Use internal map
+        if (key) {
+             finalScores[key] = score;
+        } else {
+             console.warn(`No key found for Force: ${elementName}`);
+        }
+    });
+
+    State.updateScores(finalScores); // Save the calculated scores
+    State.setQuestionnaireComplete(); // Mark charting as done
+    State.saveAllAnswers(allAnswers); // Save the raw answers
+
+    // Determine and grant the initial set of Stars (Concepts)
+    const starterStarConcepts = determineStarterStarsAndNebula(); // Renamed function
+
+    // Update relevant milestones and check daily login state
+    updateMilestoneProgress('completeQuestionnaire', 1); // Keep internal milestone ID? Or change?
+    checkForDailyLogin();
+
+    // Show the Starting Nebula Modal instead of directly navigating
+    console.log("Showing starting nebula modal.");
+    UI.showStartingNebulaModal(State.getScores(), starterStarConcepts); // Use the NEW UI function name
+
+    console.log("Final Core Forces:", State.getScores());
+    State.saveGameState(); // Ensure final state is saved after charting
+}
 // --- Starter Stars (Starter Hand) ---
 function determineStarterStarsAndNebula() {
     console.log("Determining starter Stars...");
