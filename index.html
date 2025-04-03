@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inner Cosmos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,"> <!-- Prevent favicon error -->
+</head>
+<body>
+    <div class="app-container space-theme">
+
+        <!-- === Saving Indicator === -->
+        <div id="saveIndicator" class="save-indicator hidden"><i class="fas fa-satellite-dish"></i> Transmitting...</div>
+
+        <!-- === Welcome Screen === -->
+        <div id="welcomeScreen" class="screen current welcome-screen-cosmos">
+             <h1>Welcome to Inner Cosmos</h1>
+             <p>Begin your journey of self-discovery by charting your initial coordinates.</p>
+             <i class="fas fa-meteor welcome-icon"></i>
+             <button id="startChartingButton" class="button">Begin Charting</button>
+             <button id="loadButton" class="button secondary-button hidden">Load Previous Voyage</button>
+        </div>
+
+        <!-- === Charting Screen (Questionnaire) === -->
+        <div id="chartingScreen" class="screen hidden charting-screen">
+             <header>
+                 <div id="forceProgressHeader" class="force-progress-header">
+                     <!-- Force tabs injected here -->
+                 </div>
+                 <p id="progressText" class="charting-progress-text"></p>
+                 <div id="dynamicForceFeedback" class="dynamic-force-feedback">
+                    Current Reading - <span id="feedbackForce">Force</span>: <span id="feedbackScore">5.0</span><span class="score-label">(Moderate)</span>
+                    <i class="fas fa-info-circle info-icon" title="Shows the current strength reading for this Fundamental Force based on your responses."></i>
+                    <div class="score-bar-container force-bar-container">
+                        <div id="feedbackScoreBar" style="width: 50%;"></div>
+                    </div>
+                 </div>
+             </header>
+             <main id="questionContent" class="question-content-cosmos"></main>
+             <footer>
+                 <button id="prevForceButton" class="button back-button" style="visibility: hidden;">Previous Force</button>
+                 <button id="nextForceButton" class="button next-button">Next Force / Reveal Nebula</button>
+             </footer>
+        </div>
+
+        <!-- === Starting Nebula Modal === -->
+        <div id="startingNebulaModal" class="popup hidden nebula-modal">
+            <button id="closeNebulaModalButton" class="close-button">×</button>
+            <div class="popup-header">
+                <h3>Your Starting Nebula Revealed</h3>
+            </div>
+            <div class="popup-content">
+                <h4>Fundamental Forces:</h4>
+                <p>Your charting yielded these core gravitational strengths:</p>
+                <div id="nebulaScoresDisplay" class="nebula-scores">
+                    <!-- Scores injected here -->
+                </div>
+                <div class="nebula-visual-placeholder">
+                    <i class="fas fa-atom fa-spin" style="font-size: 5em; color: #aaa; opacity: 0.5;"></i>
+                    <p>(Placeholder: Your unique nebula visual)</p>
+                </div>
+                <p id="nebulaInterpretation" class="nebula-interp">Interpretation will appear here...</p>
+                <hr class="popup-hr">
+                <h4>First Stars Identified:</h4>
+                <p>Within your nebula, these initial Stars (Concepts) are forming:</p>
+                <div id="nebulaStarterStarsDisplay" class="nebula-starter-stars star-grid-condensed">
+                    <!-- Starter star cards injected here -->
+                </div>
+                <hr class="popup-hr">
+                <h4>Next Step:</h4>
+                <p>Your journey continues by examining these Stars in your **Star Catalog**. Understanding them is crucial for mapping your Inner Cosmos.</p>
+            </div>
+            <div class="popup-actions">
+                <button id="goToCatalogButton" class="button">View Star Catalog</button>
+            </div>
+        </div>
+        <!-- === END Starting Nebula Modal === -->
+
+        <!-- === Navigation Bar === -->
+        <nav id="mainNavBar" class="main-nav hidden">
+             <button class="nav-button active" data-target="constellationMapScreen" id="navButton-constellationMapScreen">Constellation Map</button>
+             <button class="nav-button" data-target="starCatalogScreen" id="navButton-starCatalogScreen">Star Catalog (<span id="starCount">0</span>)</button>
+             <button class="nav-button hidden-by-flow" data-target="observatoryScreen" id="navButton-observatoryScreen">Observatory</button> <!-- Study -->
+             <button class="nav-button hidden-by-flow" data-target="cartographyScreen" id="navButton-cartographyScreen">Cartography</button> <!-- Repository -->
+             <button id="settingsButton" class="nav-button settings-button" title="Settings & Save/Load Options"><i class="fas fa-cog"></i></button>
+        </nav>
+
+        <!-- === Constellation Map Screen (Persona) === -->
+        <div id="constellationMapScreen" class="screen hidden constellation-screen">
+             <h1>Your Inner Cosmos</h1>
+             <div class="constellation-overview">
+                  <!-- Left Panel: Interpretation -->
+                  <div class="constellation-interpretation-panel">
+                       <h2 id="constellationName">Your Constellation</h2>
+                       <div id="constellationVisualPlaceholder" class="map-visual-placeholder">
+                           <i class="fas fa-star" style="color: #eee;"></i>
+                           <i class="fas fa-star" style="color: #ccc; margin-left: 50px; margin-top: -30px;"></i>
+                           <i class="fas fa-star" style="color: #ddd; margin-left: -20px; margin-top: 40px;"></i>
+                           <p>(Placeholder: Dynamic Map of Focused Stars & Connections)</p>
+                           <!-- SVG or Canvas would go here -->
+                       </div>
+                       <h3>Emergent Patterns</h3>
+                       <p id="constellationInterpretationText">Align Stars from your Catalog to reveal patterns...</p>
+                       <hr>
+                       <h3>Dominant Forces</h3>
+                       <div id="constellationDominantForces">
+                           <!-- Dominant forces display -->
+                       </div>
+                       <hr>
+                       <p>Insight: <strong id="userInsightDisplayConstellation">0.0</strong> <i class="fas fa-brain insight-icon"></i></p>
+                       <div class="constellation-actions">
+                            <button id="discoverMoreButton" class="button small-button hidden-by-flow">Discover More Stars (Observatory)</button>
+                            <button id="suggestBlueprintButton" class="button small-button hidden-by-flow" title="Suggest Nebula Blueprints (Cost: 12 Insight)">Suggest Blueprints (12 <i class="fas fa-brain insight-icon"></i>)</button>
+                       </div>
+                  </div>
+                  <!-- Right Panel: Core Forces (optional detailed view) -->
+                  <div class="constellation-forces-panel">
+                      <h2>Core Forces <i class="fas fa-info-circle info-icon" title="The fundamental gravitational pulls charted during your initial experiment. Their strength influences resonance."></i></h2>
+                      <div id="constellationForceDetails">
+                          <!-- Core force scores/details injected here -->
+                      </div>
+                      <!-- Deep Dive / Library content removed - might integrate elsewhere or later -->
+                  </div>
+             </div>
+        </div>
+
+        <!-- === Star Catalog Screen (Grimoire) === -->
+        <div id="starCatalogScreen" class="screen hidden star-catalog-screen">
+             <h1>Star Catalog</h1>
+             <div id="catalogControls">
+                 <label for="catalogSortOrder">Sort By:</label>
+                 <select id="catalogSortOrder">
+                     <option value="discovered">Date Cataloged</option>
+                     <option value="name">Name</option>
+                     <option value="type">Type</option>
+                     <option value="rarity">Classification</option>
+                     <option value="resonance">Resonance</option>
+                 </select>
+                 <span class="filter-controls hidden-by-flow">
+                     <label for="catalogTypeFilter">Type:</label>
+                     <select id="catalogTypeFilter"><option value="All">All Types</option></select>
+                     <label for="catalogForceFilter">Force:</label> <!-- Renamed from Element -->
+                     <select id="catalogForceFilter"><option value="All">All Forces</option></select>
+                     <label for="catalogRarityFilter">Class:</label> <!-- Renamed from Rarity -->
+                     <select id="catalogRarityFilter"><option value="All">All Classes</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option></select>
+                     <label for="catalogFocusFilter">Alignment:</label> <!-- Renamed from Focus -->
+                     <select id="catalogFocusFilter"><option value="All">All</option><option value="Aligned">Aligned</option><option value="Not Aligned">Not Aligned</option></select>
+                     <label for="catalogSearchInput">Search:</label>
+                     <input type="text" id="catalogSearchInput" placeholder="Name/Keyword..." />
+                 </span>
+                 <i class="fas fa-info-circle info-icon" title="Filter and sort your cataloged Stars (Concepts)."></i>
+             </div>
+             <div id="starCatalogContent" class="star-catalog-grid">
+                 <!-- Star cards injected here -->
+             </div>
+        </div>
+
+        <!-- === Observatory Screen (Study) === -->
+        <div id="observatoryScreen" class="screen hidden observatory-screen">
+             <h1>Observatory</h1>
+             <div class="observatory-console">
+                  <div class="insight-display-area">
+                     Current Insight: <strong id="userInsightDisplayObservatory">0.0</strong> <i class="fas fa-brain insight-icon"></i>
+                 </div>
+                 <div class="scan-actions-area">
+                      <p>Actions:</p>
+                      <button id="dailyScanButton" class="button daily-scan-button hidden" title="Once per day, perform a free scan of your least understood Force sector.">Perform Daily Calibration Scan</button>
+                      <button id="deepScanButton" class="button deep-scan-button hidden-by-flow" title="Spend Insight for a targeted Deep Scan signal (Guided Reflection).">Request Deep Scan Signal (<span id="deepScanCostDisplay">10</span> <i class="fas fa-brain insight-icon"></i>)</button>
+                 </div>
+                  <div class="sector-scan-area">
+                     <p>Scan Sector:</p>
+                      <div id="sectorScanButtonContainer" class="sector-scan-buttons" title="Spend Insight to scan a specific Force sector, potentially discovering new Stars or Cartography data.">
+                          <!-- Scan buttons injected here -->
+                      </div>
+                 </div>
+             </div>
+             <hr class="observatory-divider">
+             <div class="scan-results-area">
+                  <h2>Scan Log <i class="fas fa-info-circle info-icon" title="Results from your scans appear here. Catalog promising Stars or analyze signals for Insight."></i></h2>
+                  <div id="scanStatus">Begin scanning sectors...</div>
+                  <div id="scanOutput" class="scan-output-grid star-catalog-grid">
+                       <p><i>Scan results will appear here.</i></p>
+                       <!-- Scan result star cards injected here -->
+                  </div>
+             </div>
+              <!-- Rituals might move to Cartography or be a separate smaller panel -->
+              <div class="observatory-rituals hidden-by-flow">
+                   <h3>Stellar Harmonics (Rituals)</h3>
+                   <ul id="observatoryRitualsDisplay"><li>Unlock Harmonics by progressing.</li></ul>
+              </div>
+        </div>
+
+        <!-- === Cartography Screen (Repository) === -->
+        <div id="cartographyScreen" class="screen hidden cartography-screen">
+             <h1>Celestial Cartography</h1>
+             <p>Mapping the rarer phenomena of your Inner Cosmos.</p>
+             <div class="cartography-layout">
+                 <section id="cartographySynergies" class="cartography-section">
+                     <h2><i class="fas fa-atom"></i> Alignment Synergies <i class="fas fa-info-circle info-icon" title="Special Blueprints or Orbits revealed by aligning specific combinations of Stars in your Constellation Map."></i></h2>
+                     <div class="cartography-list">
+                         <p>Align synergistic Stars on your map to reveal discoveries here.</p>
+                         <!-- Synergy unlocks injected here -->
+                     </div>
+                 </section>
+                 <hr>
+                 <section id="cartographyBlueprints" class="cartography-section">
+                     <h2><i class="fas fa-scroll"></i> Nebula Blueprints <i class="fas fa-info-circle info-icon" title="Cosmic events or locations discovered. Meditate on them (costs Insight) to gain deeper understanding through unique prompts."></i></h2>
+                     <div class="cartography-list">
+                         <p>Use 'Suggest Blueprints' on the Constellation Map or find them via scans.</p>
+                         <!-- Blueprints injected here -->
+                     </div>
+                 </section>
+                 <hr>
+                 <section id="cartographyOrbits" class="cartography-section">
+                     <h2><i class="fas fa-meteor"></i> Stable Orbits <i class="fas fa-info-circle info-icon" title="Complex celestial configurations requiring high Force strength (Attunement) and specific Star alignments (Focus) to attempt stabilizing (Experiment)."></i></h2>
+                     <div class="cartography-list">
+                         <p>Achieve high Force strength to reveal complex Orbits to stabilize.</p>
+                         <!-- Orbits injected here -->
+                     </div>
+                 </section>
+                 <hr>
+                 <section id="cartographyWhispers" class="cartography-section">
+                     <h2><i class="fas fa-satellite"></i> Cosmic Whispers <i class="fas fa-info-circle info-icon" title="Fragments of universal truths related to the Core Forces, occasionally picked up during scans."></i></h2>
+                     <div class="cartography-list">
+                         <p>Rare signals occasionally detected during sector scans.</p>
+                         <!-- Whispers injected here -->
+                     </div>
+                 </section>
+                 <hr>
+                 <section id="legendaryAlignmentsSection" class="cartography-section">
+                      <h2><i class="fas fa-award"></i> Legendary Alignments <i class="fas fa-info-circle info-icon" title="Records of significant achievements in mapping your Inner Cosmos."></i></h2>
+                      <ul id="legendaryAlignmentsDisplay"><li>Achieve notable feats to see them recorded here.</li></ul>
+                      <!-- Alignments (Milestones) list injected here -->
+                 </section>
+             </div>
+        </div>
+
+        <!-- === Popups === -->
+
+        <!-- Observatory View (Concept Detail) -->
+        <div id="observatoryViewPopup" class="popup hidden star-popup">
+              <button id="closeObservatoryViewButton" class="close-button">×</button>
+              <div class="popup-header">
+                  <span id="observatoryStarTypeIcon" class="star-type-icon"></span>
+                  <h3 id="observatoryStarName">Star Name</h3>
+                  <p id="observatoryStarType">Star Type</p>
+              </div>
+              <div class="popup-content">
+                  <div id="observatoryVisualContainer" class="popup-visual star-visual-large">
+                      <i id="observatoryStarVisual" class="star-visual-placeholder fas fa-star"></i>
+                  </div>
+                  <div class="popup-details star-details">
+                      <p id="observatoryDetailedDescription" class="detailed-description">Detailed description...</p>
+                       <hr class="popup-hr">
+                      <div class="resonance-summary" id="observatoryResonanceSummary">Resonance info... <i class="fas fa-info-circle info-icon" title="How strongly this Star's energy signature aligns with your core Nebula Forces."></i></div>
+                      <div class="properties-view"> <!-- Replaces recipe view -->
+                          <h4>Stellar Properties <i class="fas fa-info-circle info-icon" title="This Star's gravitational pull across the 6 Fundamental Forces compared to your own."></i></h4>
+                          <div id="observatoryComparisonHighlights">Highlights...</div>
+                          <details class="element-details"> <!-- Keep class name for now -->
+                              <summary>View Full Force Comparison</summary>
+                              <div class="profile-comparison">
+                                  <div class="profile-column"><h5>Star</h5><div id="observatoryStarProfile"></div></div>
+                                  <div class="profile-column"><h5>Nebula</h5><div id="observatoryNebulaComparisonProfile"></div></div>
+                              </div>
+                          </details>
+                      </div>
+                       <hr class="popup-hr">
+                       <div id="observatoryRelatedStars" class="related-stars"> <!-- Renamed -->
+                            <!-- Related stars injected here -->
+                       </div>
+                       <!-- Logbook Section -->
+                       <div id="logbookSection" class="logbook-section hidden">
+                            <hr class="popup-hr">
+                           <h4>Logbook <i class="fas fa-info-circle info-icon" title="Record your personal observations and interpretations regarding this Star."></i></h4>
+                           <textarea id="logbookTextarea" rows="3" placeholder="Add your observations..."></textarea>
+                           <button id="saveLogEntryButton" class="button small-button">Save Entry</button>
+                           <span id="logSaveStatus" class="note-status"></span>
+                       </div>
+                       <!-- Stellar Evolution Section -->
+                      <div id="stellarEvolutionSection" class="evolution-section hidden">
+                          <hr class="popup-hr">
+                          <h4>Stellar Evolution <i class="fas fa-info-circle info-icon" title="Unlock this Star's full potential and visual representation through deeper understanding and alignment."></i></h4>
+                          <button id="evolveStarButton" class="button small-button evolve-button" disabled>Reveal Full Potential (Cost: <span id="evolveCostObs">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
+                          <p id="evolveEligibilityObs" class="evolve-eligibility-text"></p>
+                      </div>
+                  </div>
+              </div>
+              <div class="popup-actions">
+                  <button id="catalogStarButton" class="button small-button catalog-button" title="Add this Star to your permanent Star Catalog.">Catalog Star</button>
+                  <button id="alignStarButton" class="button small-button align-button hidden" title="Toggle alignment of this Star within your Constellation Map.">Align Star</button>
+                  <!-- Sell button added dynamically -->
+              </div>
+        </div>
+
+         <!-- Reflection Modal (Conceptually similar, renamed elements) -->
+         <div id="reflectionModal" class="popup hidden reflection-modal">
+             <button id="closeReflectionModalButton" class="close-button">×</button>
+             <h3 id="reflectionModalTitle">Moment for Reflection <i class="fas fa-info-circle info-icon" title="Pause to consider the signal received. Acknowledge your reflection to gain Insight."></i></h3>
+             <p>Signal regarding <strong id="reflectionSubject">Force/Star</strong>:</p> <!-- Renamed -->
+             <p id="reflectionPromptText" class="prompt-text">Prompt text...</p>
+             <div class="reflection-confirm">
+                 <input type="checkbox" id="reflectionCheckbox">
+                 <label for="reflectionCheckbox">I have taken a moment to reflect on this signal.</label>
+                 <br>
+                 <input type="checkbox" id="scoreNudgeCheckbox" class="hidden">
+                 <label for="scoreNudgeCheckbox" id="scoreNudgeLabel" class="hidden score-nudge-label" title="If checked (only for dissonant signals), allow this reflection to potentially shift your core Force balance towards this Star's signature.">Allow signal to subtly adjust Force balance?</label>
+             </div>
+             <button id="confirmReflectionButton" class="button small-button" disabled>Confirm Reflection (<span id="reflectionRewardAmount">+? Insight</span>)</button>
+         </div>
+
+         <!-- Settings Popup (Mostly unchanged) -->
+         <div id="settingsPopup" class="popup hidden settings-popup">
+             <button id="closeSettingsPopupButton" class="close-button">×</button>
+             <h3>Settings</h3>
+             <div class="settings-content">
+                  <p>Manage your voyage data.</p>
+                  <button id="forceSaveButton" class="button small-button">Force Transmission (Save)</button>
+                  <button id="resetAppButton" class="button small-button back-button">Abandon Voyage (Reset)</button>
+                  <p class="reset-warning"><strong>Warning:</strong> Abandoning the voyage erases all charted data, cataloged stars, insight, and progress permanently.</p>
+             </div>
+         </div>
+
+         <!-- Tutorial Modal (Structure Only) -->
+         <div id="tutorialOverlay" class="overlay hidden tutorial-overlay"></div>
+         <div id="tutorialModal" class="popup hidden tutorial-modal">
+             <h4 id="tutorialTitle">Tutorial Step</h4>
+             <div id="tutorialContent" class="tutorial-content">
+                 <p>Explanation goes here...</p>
+             </div>
+             <div class="popup-actions tutorial-actions">
+                 <button id="tutorialNextButton" class="button small-button">Next</button>
+             </div>
+         </div>
+
+         <!-- Milestone Alert (Renamed) -->
+         <div id="milestoneAlert" class="milestone-alert hidden">
+             <span id="milestoneAlertText">Legendary Alignment Achieved!</span>
+             <button id="closeMilestoneAlertButton">×</button>
+         </div>
+
+         <!-- Toast Notification -->
+         <div id="toastNotification" class="toast hidden">
+             <span id="toastMessage">Message text here</span>
+         </div>
+
+         <!-- General Overlay -->
+         <div id="popupOverlay" class="overlay hidden"></div> <!-- Single overlay for all popups -->
+
+    </div> <!-- End app-container -->
+
+    <!-- SCRIPTS (Order remains the same) -->
+    <script src="data.js" type="module"></script>
+    <script src="js/config.js" type="module"></script>
+    <script src="js/utils.js" type="module"></script>
+    <script src="js/state.js" type="module"></script>
+    <script src="js/ui.js" type="module"></script>
+    <script src="js/gameLogic.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
+
+</body>
+</html>
