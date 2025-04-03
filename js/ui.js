@@ -427,6 +427,9 @@ function hideTutorialStep(currentStepId, nextStepId) {
 
 
 // --- Screen Management (Handles Tutorial Triggering) ---
+// js/ui.js
+
+// --- Screen Management (Handles Tutorial Triggering) ---
 export function showScreen(screenId) {
     console.log(`UI: Requesting screen: ${screenId}`);
     const currentState = State.getState();
@@ -437,6 +440,7 @@ export function showScreen(screenId) {
     let blockScreenChange = false; // Flag to prevent screen change if tutorial needs to show first
     let targetTutorialStep = null;
 
+    // Check if the requested screen corresponds to a tutorial step that needs showing
     if (screenId === 'starCatalogScreen' && isPostQuestionnaire && currentTutorialStep === 'grimoire_intro') {
         targetTutorialStep = 'grimoire_intro';
     } else if (screenId === 'constellationMapScreen' && isPostQuestionnaire && currentTutorialStep === 'persona_tapestry_prompt') {
@@ -444,15 +448,13 @@ export function showScreen(screenId) {
     } else if (screenId === 'observatoryScreen' && currentState.onboardingPhase >= Config.ONBOARDING_PHASE.STUDY_INSIGHT && currentTutorialStep === 'study_intro_prompt') {
         targetTutorialStep = 'study_intro_prompt';
     }
-    // Add more checks as needed for other steps triggered by screen load
+    // Add more checks here for other steps triggered by specific screen loads if needed
 
     // Show tutorial INSTEAD of changing screen if applicable
     if(targetTutorialStep) {
         console.log(`UI: Intercepting screen change to show tutorial: ${targetTutorialStep}`);
-        showTutorialStep(targetTutorialStep);
+        showTutorialStep(targetTutorialStep); // Function defined elsewhere in ui.js
         blockScreenChange = true; // Don't change the background screen yet
-        // Ensure the underlying screen *is* eventually shown after tutorial if needed
-        // This might require the tutorial's 'Next' button to call showScreen again
     }
 
     // Only change screen visibility if not blocked by tutorial
@@ -471,29 +473,39 @@ export function showScreen(screenId) {
     }
 
 
-    // Show/Hide Nav Bar based on whether the *results modal* has been seen
+    // Show/Hide Nav Bar based on whether the TUTORIAL has progressed past the start
     if (mainNavBar) {
-        const showNav = State.getHasSeenResultsModal(); // Tutorial step implies results seen
-         mainNavBar.classList.toggle('hidden', !showNav || screenId === 'welcomeScreen' || screenId === 'chartingScreen');
+        // *** CORRECTED CONDITION ***
+        const showNav = State.getOnboardingTutorialStep() !== 'start' && isPostQuestionnaire; // Show if tutorial started AND questionnaire done
+        // *** END CORRECTION ***
+         mainNavBar.classList.toggle('hidden', !showNav || screenId === 'welcomeScreen' || screenId === 'chartingScreen'); // Also check chartingScreen ID
     }
     navButtons.forEach(button => {
         if(button) {
             button.classList.toggle('active', button.dataset.target === screenId);
-            if (!button.id && button.dataset.target) { // Ensure buttons have IDs for potential highlighting
+            // Assign ID dynamically if needed for highlighting, ensure it's unique
+            if (!button.id && button.dataset.target) {
                 button.id = `navButton-${button.dataset.target}`;
             }
         }
     });
 
     // Apply onboarding phase UI AFTER toggling screen visibility/showing tutorial
-    applyOnboardingPhaseUI(State.getOnboardingPhase());
+    // Ensure applyOnboardingPhaseUI exists and is exported or available in this scope
+    if (typeof applyOnboardingPhaseUI === 'function') {
+        applyOnboardingPhaseUI(State.getOnboardingPhase());
+    } else {
+        console.error("applyOnboardingPhaseUI function is not defined or accessible in ui.js");
+    }
+
 
     // Refresh content for relevant screens (only if screen wasn't blocked by tutorial)
     if (!blockScreenChange && isPostQuestionnaire) {
-        if (screenId === 'constellationMapScreen') GameLogic.displayConstellationMapScreenLogic();
-        else if (screenId === 'observatoryScreen') GameLogic.displayObservatoryScreenLogic();
-        else if (screenId === 'starCatalogScreen') refreshStarCatalogDisplay();
-        else if (screenId === 'cartographyScreen') displayCartographyContent();
+        // Ensure these GameLogic functions exist and are correctly imported/exported
+        if (screenId === 'constellationMapScreen' && typeof GameLogic.displayConstellationMapScreenLogic === 'function') GameLogic.displayConstellationMapScreenLogic();
+        else if (screenId === 'observatoryScreen' && typeof GameLogic.displayObservatoryScreenLogic === 'function') GameLogic.displayObservatoryScreenLogic();
+        else if (screenId === 'starCatalogScreen' && typeof refreshStarCatalogDisplay === 'function') refreshStarCatalogDisplay(); // Assumes refreshStarCatalogDisplay exists
+        else if (screenId === 'cartographyScreen' && typeof displayCartographyContent === 'function') displayCartographyContent(); // Assumes displayCartographyContent exists
     }
 
     // Scroll to top only if screen actually changed
