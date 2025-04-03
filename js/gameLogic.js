@@ -549,17 +549,45 @@ function startReflectionCooldown() { /* ... Unchanged ... */ }
 }
 
 // Other Actions
- function attemptArtEvolution() { // Renamed to attemptStellarEvolution
-    if (currentlyDisplayedStarId === null) return; const starId = currentlyDisplayedStarId; const discovered = State.getDiscoveredConceptData(starId);
-    if (!discovered?.concept || discovered.artUnlocked) { UI.showTemporaryMessage("Evolution fail: Star state error.", 3000); return; }
-    const star = discovered.concept; if (!star.canUnlockArt) return;
-    const cost = Config.ART_EVOLVE_COST; const isAligned = State.getFocusedConcepts().has(starId); const hasReflected = State.getState().seenPrompts.size > 0;
+ function attemptStellarEvolution() { // Added export, Renamed function
+    if (currentlyDisplayedStarId === null) return; // Use new variable name
+    const starId = currentlyDisplayedStarId;
+    const discovered = State.getDiscoveredConceptData(starId);
+    if (!discovered?.concept || discovered.artUnlocked) {
+        UI.showTemporaryMessage("Evolution fail: Star state error.", 3000);
+        return;
+    }
+    const star = discovered.concept; // Use new variable name
+    if (!star.canUnlockArt) return; // Still relevant check
+
+    const cost = Config.ART_EVOLVE_COST; // Config name kept for now
+    const isAligned = State.getFocusedConcepts().has(starId); // Use new variable name
+    const hasReflected = State.getState().seenPrompts.size > 0;
     const phaseOK = State.getOnboardingPhase() >= Config.ONBOARDING_PHASE.ADVANCED;
-    if (!phaseOK) { UI.showTemporaryMessage("Further cartography required to reveal full potential.", 3000); return; }
-    if (!isAligned || !hasReflected) { UI.showTemporaryMessage("Check requirements (Alignment + Reflection).", 3000); return; }
-    if (spendInsight(cost, `Evolve Star: ${star.name}`)) {
-        if (State.unlockArt(starId)) { console.log(`Full potential revealed for ${star.name}!`); UI.showTemporaryMessage(`Full Potential Revealed for ${star.name}!`, 3500); if (currentlyDisplayedStarId === starId) UI.showConceptDetailPopup(starId); UI.refreshGrimoireDisplay(); gainAttunementForAction('artEvolve', star.primaryElement, 1.5); updateMilestoneProgress('evolveArt', 1); checkAndUpdateRituals('artEvolve'); } // Change IDs?
-        else { console.error(`State evolveStar fail ${star.name}`); gainInsight(cost, `Refund: Evolution error`); UI.showTemporaryMessage("Error revealing potential.", 3000); }
+
+    if (!phaseOK) {
+        UI.showTemporaryMessage("Further cartography required to reveal full potential.", 3000); // Updated text
+        return;
+    }
+    if (!isAligned || !hasReflected) {
+        UI.showTemporaryMessage("Check requirements (Alignment + Reflection).", 3000); // Updated text
+        return;
+    }
+
+    if (spendInsight(cost, `Evolve Star: ${star.name}`)) { // Updated text
+        if (State.unlockArt(starId)) { // Keep internal state function name
+            console.log(`Full potential revealed for ${star.name}!`); // Updated text
+            UI.showTemporaryMessage(`Full Potential Revealed for ${star.name}!`, 3500); // Updated text
+            if (currentlyDisplayedStarId === starId) UI.showObservatoryViewPopup(starId); // Use renamed UI function
+            UI.refreshStarCatalogDisplay(); // Use renamed UI function
+            gainAttunementForAction('artEvolve', star.primaryElement, 1.5); // Keep internal action name? Or 'evolveStar'?
+            updateMilestoneProgress('evolveArt', 1); // Keep milestone ID? Or 'evolveStar'?
+            checkAndUpdateRituals('artEvolve'); // Keep ritual action name? Or 'evolveStar'?
+        } else {
+            console.error(`State unlockArt fail ${star.name}`);
+            gainInsight(cost, `Refund: Evolution error`);
+            UI.showTemporaryMessage("Error revealing potential.", 3000); // Updated text
+        }
     }
 }
  function handleSaveNote() { // Renamed to handleSaveLogEntry
