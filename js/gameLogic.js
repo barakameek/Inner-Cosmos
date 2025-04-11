@@ -264,18 +264,33 @@ export function finalizeQuestionnaire() {
     elementNames.forEach(elementName => { const score = calculateElementScore(elementName, allAnswers[elementName] || {}); const key = elementNameToKey[elementName]; if (key) { finalScores[key] = score; } else { console.warn(`No key found for element name: ${elementName}`); } });
     State.updateScores(finalScores);
     State.setQuestionnaireComplete(); // Marks done, saves state
-    State.saveAllAnswers(allAnswers); // Save final answers
+    State.saveAllAnswers(allAnswers);
     determineStarterHandAndEssence();
     updateMilestoneProgress('completeQuestionnaire', 1);
     checkForDailyLogin();
-    UI.updateInsightDisplays(); UI.updateFocusSlotsDisplay(); UI.updateGrimoireCounter(); UI.populateGrimoireFilters(); UI.displayDailyRituals(); UI.refreshGrimoireDisplay();
-    calculateTapestryNarrative(true); // Calculate initial narrative
-    checkSynergyTensionStatus(); // Check initial synergy
-    UI.displayPersonaSummary(); // Display summary view content first
+
+    // Update UI elements needed immediately
+    UI.updateInsightDisplays();
+    UI.updateFocusSlotsDisplay();
+    UI.updateGrimoireCounter();
+    UI.populateGrimoireFilters();
+    UI.displayDailyRituals();
+
+    // Calculate initial narrative/synergy for Persona screen readiness
+    calculateTapestryNarrative(true);
+    checkSynergyTensionStatus();
+
     console.log("Final User Scores:", State.getScores());
-    UI.showScreen('personaScreen'); // Start on Persona screen
     UI.showTemporaryMessage("Experiment Complete! Explore your results.", 4000);
-}
+
+    // --- ADD SPLASH SCREEN LOGIC ---
+    if (!State.hasSeenPostQuestionnaireSplash()) {
+        UI.showPostQuestionnaireSplash(); // Show the splash modal
+        // State.markPostQuestionnaireSplashSeen(); // Mark as seen AFTER user dismisses it (handled in main.js listener)
+    } else {
+        // If splash already seen, go directly to Persona screen
+        UI.showScreen('personaScreen');
+    }
 
 
 // --- Starter Hand ---
