@@ -686,13 +686,37 @@ export function displayPersonaSummary() {
     summaryTapestryInfoDiv.innerHTML = tapestryHTML;
     drawPersonaChart(scores); // Draw the chart
 }
+// --- START OF ui.js MODIFICATIONS ---
 
-// --- Study Screen UI ---
+// Add this new function
+export function showPostQuestionnaireSplash() {
+    const splash = document.getElementById('postQuestionnaireSplash');
+    const overlay = document.getElementById('popupOverlay');
+    if (splash && overlay) {
+        splash.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+    } else {
+        console.error("Splash screen or overlay element not found!");
+    }
+}
+
+// Modify displayStudyScreenContent
 export function displayStudyScreenContent() {
     if (!studyScreen) return;
     console.log(`UI: Displaying Study Screen Content`);
     if (userInsightDisplayStudy) userInsightDisplayStudy.textContent = State.getInsight().toFixed(1);
+
+    // --- UPDATED GUIDANCE TEXT ---
+    if (initialDiscoveryGuidance) {
+        initialDiscoveryGuidance.innerHTML = `
+        <strong>Purpose:</strong> Discover new Concepts by spending <i class="fas fa-brain insight-icon"></i> Insight to Research Elements below.
+        Higher Attunement (from Research/Reflection) may improve results. Complete Daily Rituals for bonuses!
+        <i class="fas fa-info-circle info-icon" title="Click an Element to spend Insight and potentially find related Concept Cards. Check the cost - initial researches are free! High Element Attunement unlocks Experiments in the Repository."></i>`;
+    }
+    // --- END UPDATED GUIDANCE TEXT ---
+
     if (initialDiscoveryElements) {
+        // ... (rest of the element button rendering logic remains the same) ...
         initialDiscoveryElements.innerHTML = '';
         const scores = State.getScores();
         const freeResearchLeft = State.getInitialFreeResearchRemaining();
@@ -708,13 +732,8 @@ export function displayStudyScreenContent() {
             else { costText = `${researchCost} <i class="fas fa-brain insight-icon"></i>`; if (insight < researchCost) { isDisabled = true; titleText = `Research ${elementData.name || elementName} (Requires ${researchCost} Insight)`; } else { isDisabled = false; titleText = `Research ${elementData.name || elementName} (Cost: ${researchCost} Insight)`; } isFreeClick = false; }
             elementDiv.dataset.cost = researchCost;
 
-            // --- ADD RARITY COUNT LOGIC ---
-            // NOTE: This assumes countUndiscoveredByRarity is accessible.
-            // If it's in gameLogic.js, you might need to call GameLogic.countUndiscoveredByRarity(key)
-            // or adjust imports/exports appropriately. For simplicity here, assuming it's callable.
             let rarityCountsHTML = '';
             try {
-                // IMPORTANT: Call the function via the imported module
                 const rarityCounts = GameLogic.countUndiscoveredByRarity(key);
                 rarityCountsHTML = `
                     <div class="rarity-counts-display" title="Undiscovered Concepts (Relevant to Element)">
@@ -727,9 +746,7 @@ export function displayStudyScreenContent() {
                 console.error(`Error getting rarity counts for ${key}:`, error);
                 rarityCountsHTML = '<div class="rarity-counts-display error">Counts N/A</div>';
             }
-            // --- END RARITY COUNT LOGIC ---
 
-            // Modified innerHTML to include rarityCountsHTML
             elementDiv.innerHTML = `
                 <div class="element-header">
                     <i class="${iconClass}" style="color: ${color};"></i>
@@ -737,7 +754,7 @@ export function displayStudyScreenContent() {
                     <span class="element-score">${score.toFixed(1)} (${scoreLabel})</span>
                 </div>
                 <p class="element-concept">${elementData.coreConcept || 'Loading...'}</p>
-                ${rarityCountsHTML} <!-- Inject the rarity counts here -->
+                ${rarityCountsHTML}
                 <div class="element-action ${isDisabled ? 'disabled' : ''}">
                     <span class="element-cost">${costText}</span>
                 </div>
@@ -747,13 +764,12 @@ export function displayStudyScreenContent() {
             initialDiscoveryElements.appendChild(elementDiv);
         });
     }
-    if (initialDiscoveryGuidance) { initialDiscoveryGuidance.textContent = "Research Elements to discover Concepts, complete Rituals, or Seek Guidance."; }
-    if (freeResearchButton) { const freeAvailable = State.isFreeResearchAvailable(); freeResearchButton.disabled = !freeAvailable; freeResearchButton.textContent = freeAvailable ? "Perform Daily Meditation" : "Meditation Performed Today"; freeResearchButton.title = freeAvailable ? "Once per day, perform free research on your least attuned element." : "Daily free meditation already completed."; }
+    // ... (rest of the function: freeResearchButton, seekGuidanceButton, studyResearchDiscoveries check, displayDailyRituals) ...
+     if (freeResearchButton) { const freeAvailable = State.isFreeResearchAvailable(); freeResearchButton.disabled = !freeAvailable; freeResearchButton.textContent = freeAvailable ? "Perform Daily Meditation" : "Meditation Performed Today"; freeResearchButton.title = freeAvailable ? "Once per day, perform free research on your least attuned element." : "Daily free meditation already completed."; }
     if (seekGuidanceButton && guidedReflectionCostDisplay) { const cost = Config.GUIDED_REFLECTION_COST; const canAfford = State.getInsight() >= cost; seekGuidanceButton.disabled = !canAfford; seekGuidanceButton.title = canAfford ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; guidedReflectionCostDisplay.textContent = cost; }
      if (studyResearchDiscoveries) { const placeholder = studyResearchDiscoveries.querySelector('p > i'); if (placeholder && studyResearchDiscoveries.children.length > 1) { placeholder.parentElement.remove(); } else if (!placeholder && studyResearchDiscoveries.children.length === 0) { studyResearchDiscoveries.innerHTML = '<p><i>Discoveries will appear here...</i></p>'; } }
     displayDailyRituals();
 }
-
 // --- Rituals Display ---
 export function displayDailyRituals() {
     // ... (Keep existing displayDailyRituals code) ...
@@ -792,10 +808,31 @@ export function refreshGrimoireDisplay(overrideFilters = {}) {
     if (grimoireScreen && !grimoireScreen.classList.contains('hidden')) { const currentFilters = { filterType: grimoireTypeFilter?.value || "All", filterElement: grimoireElementFilter?.value || "All", sortBy: grimoireSortOrder?.value || "discovered", filterRarity: grimoireRarityFilter?.value || "All", searchTerm: grimoireSearchInput?.value || "", filterFocus: grimoireFocusFilter?.value || "All", filterCategory: overrideFilters.filterCategory !== undefined ? overrideFilters.filterCategory : document.querySelector('.grimoire-shelf.active-shelf')?.dataset.categoryId || "All" }; const finalFilters = { ...currentFilters, ...overrideFilters }; displayGrimoire(finalFilters); }
 }
 function handleFirstGrimoireVisit() {
-    // ... (Keep existing handleFirstGrimoireVisit code) ...
-    if (!State.getState().grimoireFirstVisitDone) { if (grimoireGuidance) { grimoireGuidance.innerHTML = `<i class="fas fa-info-circle"></i> Welcome to your Grimoire! Drag & Drop Concept cards onto the shelves above to categorize them. Click cards for details.`; grimoireGuidance.classList.remove('hidden'); } State.markGrimoireVisited(); } else { if (grimoireGuidance) grimoireGuidance.classList.add('hidden'); }
-}
+    const guidanceElement = document.getElementById('grimoireGuidance'); // Use the existing ID
+    if (!guidanceElement) return;
 
+    if (!State.getState().grimoireFirstVisitDone) {
+        // First visit: Show detailed instructions
+        guidanceElement.innerHTML = `
+            <i class="fas fa-info-circle"></i> <strong>Welcome to your Grimoire!</strong> This is your personal collection of discovered Concepts. <br>
+            <strong>What to do:</strong> Click cards for details. Mark important ones using the ☆ (Focus) button to shape your Persona Tapestry. Drag cards onto the shelves above to categorize them! Sell unwanted Concepts (<i class="fas fa-dollar-sign"></i> button) for Insight.`;
+        guidanceElement.classList.remove('hidden');
+        State.markGrimoireVisited(); // Mark as seen in state
+    } else {
+        // Subsequent visits: Maybe hide it or show shorter text?
+        // Option A: Hide it completely
+        // guidanceElement.classList.add('hidden');
+
+        // Option B: Show shorter, persistent text (Example)
+         guidanceElement.innerHTML = `
+            <i class="fas fa-info-circle"></i> View, Focus (☆), Categorize (Drag), or Sell ($) your discovered Concepts.`;
+         guidanceElement.classList.remove('hidden'); // Ensure it's visible
+         guidanceElement.style.fontStyle = 'italic'; // Make it look less like a banner
+         guidanceElement.style.fontSize = '0.9em';
+         guidanceElement.style.opacity = '0.8';
+
+    }
+}
 // --- Card Rendering ---
 export function renderCard(concept, context = 'grimoire') {
     // ... (Keep existing renderCard code) ...
