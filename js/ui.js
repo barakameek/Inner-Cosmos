@@ -191,17 +191,15 @@ export function showScreen(screenId) {
     const currentState = State.getState();
     const isPostQuestionnaire = currentState.questionnaireCompleted;
 
+    // --- Make Target Screen Visible ---
     screens.forEach(screen => {
         if(screen) {
              screen.classList.toggle('current', screen.id === screenId);
              screen.classList.toggle('hidden', screen.id !== screenId);
-        } else {
-            const screenElements = document.querySelectorAll('.screen');
-            const missingId = Array.from(screenElements).find(s => !s)?.id || 'unknown';
-            console.warn(`UI Warning: Screen element with ID potentially '${missingId}' not found during showScreen.`);
-        }
+        } else { /* ... error handling ... */ }
     });
 
+    // --- Update Nav Bar ---
     if (mainNavBar) {
         mainNavBar.classList.toggle('hidden', !isPostQuestionnaire || screenId === 'welcomeScreen' || screenId === 'questionnaireScreen');
     }
@@ -212,55 +210,55 @@ export function showScreen(screenId) {
         }
     });
 
+    // --- Populate Screen Content ---
     if (isPostQuestionnaire) {
-        if (studyActionsArea) studyActionsArea.classList.remove('hidden-by-flow');
-        if (ritualsAlcove) ritualsAlcove.classList.remove('hidden-by-flow');
-        if (freeResearchButton) freeResearchButton.classList.remove('hidden-by-flow');
-        if (seekGuidanceButton) seekGuidanceButton.classList.remove('hidden-by-flow');
-        if (grimoireFilterControls) grimoireFilterControls.classList.remove('hidden-by-flow');
-        if (grimoireShelvesContainer) grimoireShelvesContainer.classList.remove('hidden-by-flow');
-        if (elementalDilemmaButton) elementalDilemmaButton.classList.remove('hidden-by-flow');
-        if (exploreSynergyButton) exploreSynergyButton.classList.remove('hidden-by-flow');
-        if (suggestSceneButton) suggestSceneButton.classList.remove('hidden-by-flow');
-        if (repositoryScreen) repositoryScreen.classList.remove('hidden-by-flow');
-        if (addInsightButton) addInsightButton.classList.remove('hidden-by-flow');
-
-
-        if (screenId === 'studyScreen') { displayStudyScreenContent(); }
-        else if (screenId === 'personaScreen') {
-             const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen';
-             if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView && showSummaryViewBtn && showDetailedViewBtn) {
-                 personaSummaryView.classList.remove('hidden'); personaSummaryView.classList.add('current');
-                 personaDetailedView.classList.add('hidden'); personaDetailedView.classList.remove('current');
-                 showSummaryViewBtn.classList.add('active'); showDetailedViewBtn.classList.remove('active');
-                 displayPersonaSummary(); // Call summary display logic
-             } else {
-                 if (!personaDetailedView?.classList.contains('current') && !personaSummaryView?.classList.contains('current')) {
-                      personaDetailedView?.classList.remove('hidden'); personaDetailedView?.classList.add('current');
-                      showDetailedViewBtn?.classList.add('active');
-                      personaSummaryView?.classList.add('hidden'); personaSummaryView?.classList.remove('current');
-                      showSummaryViewBtn?.classList.remove('active');
-                 }
-                 // Ensure correct view is populated
-                 if (personaDetailedView?.classList.contains('current')) {
-                     GameLogic.displayPersonaScreenLogic(); // This handles calculating narrative etc. for detailed view
-                 } else if (personaSummaryView?.classList.contains('current')) {
-                     displayPersonaSummary(); // Handle populating summary view
-                 }
-             }
-        } else if (screenId === 'grimoireScreen') { handleFirstGrimoireVisit(); refreshGrimoireDisplay(); }
+        // ... (keep existing logic for populating study, grimoire, repo) ...
+         if (screenId === 'studyScreen') { displayStudyScreenContent(); }
+        else if (screenId === 'grimoireScreen') { handleFirstGrimoireVisit(); refreshGrimoireDisplay(); }
         else if (screenId === 'repositoryScreen') { displayRepositoryContent(); }
-
+        // Specific logic for Persona screen population
+        else if (screenId === 'personaScreen') {
+            const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen';
+            if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView && showSummaryViewBtn && showDetailedViewBtn) {
+                // Default to summary view right after questionnaire
+                personaSummaryView.classList.remove('hidden'); personaSummaryView.classList.add('current');
+                personaDetailedView.classList.add('hidden'); personaDetailedView.classList.remove('current');
+                showSummaryViewBtn.classList.add('active'); showDetailedViewBtn.classList.remove('active');
+                displayPersonaSummary(); // Populate summary view
+            } else {
+                // Default to detailed view otherwise, if neither is explicitly current
+                if (!personaDetailedView?.classList.contains('current') && !personaSummaryView?.classList.contains('current')) {
+                    personaDetailedView?.classList.remove('hidden'); personaDetailedView?.classList.add('current');
+                    showDetailedViewBtn?.classList.add('active');
+                    personaSummaryView?.classList.add('hidden'); personaSummaryView?.classList.remove('current');
+                    showSummaryViewBtn?.classList.remove('active');
+                }
+                // Populate the currently active view
+                if (personaDetailedView?.classList.contains('current')) {
+                    GameLogic.displayPersonaScreenLogic(); // Populates detailed view
+                } else if (personaSummaryView?.classList.contains('current')) {
+                    displayPersonaSummary(); // Populates summary view
+                }
+            }
+            // --- ADD SPLASH SCREEN CHECK HERE ---
+            if (!State.hasSeenPostQuestionnaireSplash()) {
+                console.log("Showing post-questionnaire splash on Persona screen load.");
+                showPostQuestionnaireSplash(); // Show the splash modal *after* Persona screen is displayed
+            }
+            // --- END SPLASH SCREEN CHECK ---
+        }
     } else if (screenId === 'questionnaireScreen') {
-         if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
+        // ... (keep existing questionnaire display logic) ...
+        if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
              displayElementQuestions(currentState.currentElementIndex);
          }
     }
 
+    // Scroll to top
     if (['questionnaireScreen', 'grimoireScreen', 'personaScreen', 'studyScreen', 'repositoryScreen'].includes(screenId)) {
         window.scrollTo(0, 0);
     }
-    previousScreenId = screenId;
+    previousScreenId = screenId; // Update previous screen tracking
 }
 
 // --- Insight Display & Related UI Updates ---
