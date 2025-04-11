@@ -66,7 +66,27 @@ function initializeApp() {
 // --- Event Listeners ---
 function attachEventListeners() {
     console.log("Attaching event listeners...");
-
+ // --- Post-Questionnaire Splash Screen Buttons ---
+    const splashScreen = document.getElementById('postQuestionnaireSplash');
+    if (splashScreen) {
+        splashScreen.addEventListener('click', (event) => {
+            if (event.target.matches('#closeSplashButton') || event.target.matches('#confirmSplashButton')) {
+                State.markPostQuestionnaireSplashSeen(); // Mark as seen when dismissed
+                UI.hidePopups(); // Hide the splash screen and overlay
+                UI.showScreen('personaScreen'); // Now show the persona screen
+            }
+        });
+    }
+// --- Combined close button listener (ensure it covers splash close too if needed, though above handles it) ---
+    document.body.addEventListener('click', (event) => {
+        if (event.target.matches('#closePopupButton, #closeReflectionModalButton, #closeSettingsPopupButton, #closeDeepDiveButton, #closeDilemmaModalButton, #closeInfoPopupButton, #confirmInfoPopupButton, #closeSplashButton')) {
+             // ^ Added #closeSplashButton here just in case, though the listener above should catch it.
+             if (event.target.id === 'closeSplashButton' && !State.hasSeenPostQuestionnaireSplash()){
+                State.markPostQuestionnaireSplashSeen(); // Mark seen if closed via X before confirm
+                UI.showScreen('personaScreen'); // Ensure transition if closed via X
+             }
+             UI.hidePopups();
+        }
     // --- Element References ---
     const startButton = document.getElementById('startGuidedButton');
     const loadButton = document.getElementById('loadButton');
