@@ -298,7 +298,7 @@ function attachEventListeners() {
     }
 
     // --- Settings Popup Actions ---
-    if (settingsPopupElem) {
+     if (settingsPopupElem) {
         settingsPopupElem.addEventListener('click', (event) => {
             if (event.target.matches('#forceSaveButton')) {
                 State.saveGameState();
@@ -306,23 +306,20 @@ function attachEventListeners() {
             } else if (event.target.matches('#resetAppButton')) {
                 if (confirm("Reset ALL progress? This cannot be undone.")) {
                     console.log("Resetting application...");
-                    State.clearGameState(); // Clear state first
-                    // Hide popups *before* re-initializing UI
-                    UI.hidePopups();
-                    // Re-initialize the application state and UI
-                    // Since initializeApp sets up listeners etc., calling it directly IS the correct way
-                    // The error likely stemmed from something else getting corrupted during reset,
-                    // but ensuring popups are hidden first is good practice.
-                    initializeApp(); // Call the function directly - it's in the same module scope
-                    UI.showTemporaryMessage("Progress Reset!", 3000);
-                     // Ensure load button is hidden after reset
-                     const loadBtn = document.getElementById('loadButton');
-                     if(loadBtn) loadBtn.classList.add('hidden');
+                    State.clearGameState(); // Clear state (removes save data)
+                    UI.hidePopups(); // Hide the settings popup
+
+                    // *** CHANGE: Reload the page instead of calling initializeApp directly ***
+                    UI.showTemporaryMessage("Resetting... Reloading Page.", 2000); // Give user feedback
+                    // Use a short delay before reloading to allow the message to be seen
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                    // *** END CHANGE ***
                 }
             }
         });
     }
-
     console.log("All event listeners attached.");
 } // End of attachEventListeners function
 
