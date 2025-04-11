@@ -307,7 +307,9 @@ export function displayStudyScreenLogic() { UI.displayStudyScreenContent(); }
 
 // Research Actions
 export function handleResearchClick({ currentTarget, isFree = false }) {
-    const button = currentTarget; const elementKey = button.dataset.elementKey; const cost = parseFloat(button.dataset.cost);
+    const button = currentTarget;
+    const elementKey = button.dataset.elementKey;
+    const cost = parseFloat(button.dataset.cost);
     if (!elementKey || isNaN(cost)) { console.error("Invalid research button data."); return; }
     if (button.classList.contains('disabled')) { console.log("Research button disabled."); return; }
 
@@ -326,7 +328,7 @@ export function handleResearchClick({ currentTarget, isFree = false }) {
             UI.displayStudyScreenContent(); // Refresh UI (might change button costs/availability if attunement changes)
         }
     }
-}
+} 
 export function handleFreeResearchClick() { if (!State.isFreeResearchAvailable()) { UI.showTemporaryMessage("Daily meditation already performed.", 3000); return; } const attunement = State.getAttunement(); let targetKey = 'A'; // Default fallback
     let minAtt = Config.MAX_ATTUNEMENT + 1; for (const key in attunement) { if (attunement[key] < minAtt) { minAtt = attunement[key]; targetKey = key; } } console.log(`Free meditation on ${targetKey} (${elementKeyToFullName[targetKey]})`); State.setFreeResearchUsed(); UI.displayStudyScreenContent(); // Update button text
     conductResearch(targetKey); updateMilestoneProgress('freeResearch', 1); checkAndUpdateRituals('freeResearch'); }
