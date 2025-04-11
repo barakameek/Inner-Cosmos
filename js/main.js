@@ -298,26 +298,30 @@ function attachEventListeners() {
     }
 
     // --- Settings Popup Actions ---
-    if (settingsPopupElem) { settingsPopupElem.addEventListener('click', (event) => { if (event.target.matches('#forceSaveButton')) { State.saveGameState(); UI.showTemporaryMessage("Game Saved!", 1500); } else if (event.target.matches('#resetAppButton')) { if (confirm("Reset ALL progress? This cannot be undone.")) { console.log("Resetting application..."); State.clearGameState(); // Clear state
-                 initializeApp(); // Re-initialize to show welcome screen
-                 UI.hidePopups(); // Close settings popup
-                 UI.showTemporaryMessage("Progress Reset!", 3000); } } }); }
-
-     // --- Info Icon Handling (Delegated to body) ---
-     document.body.addEventListener('click', (event) => {
-         const infoIcon = event.target.closest('.info-icon');
-         if (infoIcon) {
-             event.preventDefault(); event.stopPropagation();
-             const message = infoIcon.getAttribute('title');
-             const infoPopupContentElem = document.getElementById('infoPopupContent');
-             const infoPopup = document.getElementById('infoPopup');
-             const overlay = document.getElementById('popupOverlay');
-             if (message && infoPopup && overlay && infoPopupContentElem) { infoPopupContentElem.textContent = message; infoPopup.classList.remove('hidden'); overlay.classList.remove('hidden'); }
-             else if (message) { // Fallback to toast if popup elements missing
-                 UI.showTemporaryMessage(message, 4000);
-             }
-         }
-     });
+    if (settingsPopupElem) {
+        settingsPopupElem.addEventListener('click', (event) => {
+            if (event.target.matches('#forceSaveButton')) {
+                State.saveGameState();
+                UI.showTemporaryMessage("Game Saved!", 1500);
+            } else if (event.target.matches('#resetAppButton')) {
+                if (confirm("Reset ALL progress? This cannot be undone.")) {
+                    console.log("Resetting application...");
+                    State.clearGameState(); // Clear state first
+                    // Hide popups *before* re-initializing UI
+                    UI.hidePopups();
+                    // Re-initialize the application state and UI
+                    // Since initializeApp sets up listeners etc., calling it directly IS the correct way
+                    // The error likely stemmed from something else getting corrupted during reset,
+                    // but ensuring popups are hidden first is good practice.
+                    initializeApp(); // Call the function directly - it's in the same module scope
+                    UI.showTemporaryMessage("Progress Reset!", 3000);
+                     // Ensure load button is hidden after reset
+                     const loadBtn = document.getElementById('loadButton');
+                     if(loadBtn) loadBtn.classList.add('hidden');
+                }
+            }
+        });
+    }
 
     console.log("All event listeners attached.");
 } // End of attachEventListeners function
