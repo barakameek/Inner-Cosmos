@@ -24,35 +24,67 @@ function attachEventListeners() {
     const splashScreen = document.getElementById('postQuestionnaireSplash'); // Splash Screen
 
     // --- Welcome Screen ---
+   // --- START OF main.js MODIFICATION ---
+
+// Inside attachEventListeners function:
+
+    // --- Welcome Screen ---
     if (startButton) startButton.addEventListener('click', () => {
         State.clearGameState();
         UI.initializeQuestionnaireUI();
         UI.showScreen('questionnaireScreen');
         if(loadButton) loadButton.classList.add('hidden');
     });
+
+    // *** REVISED Load Button Listener ***
     if (loadButton) {
         loadButton.addEventListener('click', () => {
-            initializeApp(); // Call the function defined in this module's scope
-        });
-    }
+            console.log("Load button clicked. Attempting to load state...");
+            if (State.loadGameState()) { // Try loading state
+                console.log("Load successful via button. Setting up UI...");
+                // Manually perform UI setup steps usually done by initializeApp for loaded state
+                UI.updateInsightDisplays();
+                UI.updateGrimoireCounter();
+                UI.populateGrimoireFilters();
+                const currentState = State.getState();
+                if (currentState.questionnaireCompleted) {
+                    GameLogic.checkForDailyLogin();
+                    GameLogic.calculateTapestryNarrative(true);
+                    GameLogic.checkSynergyTensionStatus();
+                    UI.updateFocusSlotsDisplay();
+                    const activeShelf = document.querySelector('.grimoire-shelf.active-shelf');
+                    const initialCategory = activeShelf ? activeShelf.dataset.categoryId : 'All';
+                    UI.refreshGrimoireDisplay({ filterCategory: initialCategory });
+                    UI.showScreen('personaScreen'); // Go to persona screen after load
+                    UI.hidePopups();
+                } else {
+                    // If load was successful but questionnaire wasn't done, restart questionnaire
+                    console.log("Loaded incomplete state. Restarting questionnaire.");
+                     if (currentState.currentElementIndex < 0 || currentState.currentElementIndex >= elementNames.length) {
+                         State.updateElementIndex(0);
+                     }
+                     UI.initializeQuestionnaireUI();
+                     UI.showScreen('questionnaireScreen');
+                }
+                loadButton.classList.add('hidden'); // Hide load button after successful load
+                UI.showTemporaryMessage("Session Restored", 2000);
 
-    // --- Questionnaire Navigation ---
-    if (nextBtn) nextBtn.addEventListener('click', GameLogic.goToNextElement);
-    if (prevBtn) prevBtn.addEventListener('click', GameLogic.goToPrevElement);
-
-    // --- Main Navigation ---
-    if (mainNavBar) {
-        mainNavBar.addEventListener('click', (event) => {
-            const button = event.target.closest('.nav-button');
-            if (!button) return;
-            if (button.id === 'settingsButton') {
-                UI.showSettings();
             } else {
-                const target = button.dataset.target;
-                if (target) UI.showScreen(target);
+                // Loading failed (either no save or parsing error)
+                UI.showTemporaryMessage("Failed to load session data. Starting fresh.", 4000);
+                // Optionally disable load button if it failed due to error
+                loadButton.disabled = true;
+                loadButton.textContent = "Load Failed";
+                // Do NOT call initializeApp here, let the user click "Start"
             }
         });
     }
+    // *** END REVISED Load Button Listener ***
+
+
+// (Keep the rest of attachEventListeners the same)
+
+// --- END OF main.js MODIFICATION ---
 
     // --- General Popup/Overlay Closing (Excluding Splash Buttons) ---
     if (popupOverlay) popupOverlay.addEventListener('click', UI.hidePopups);
