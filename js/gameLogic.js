@@ -292,10 +292,12 @@ export function finalizeQuestionnaire() {
         UI.showScreen('personaScreen');
     }
 
+    
 
 // --- Starter Hand ---
 export function determineStarterHandAndEssence() { console.log("Determining starter hand..."); if (!concepts || !Array.isArray(concepts) || concepts.length === 0) { console.error("Concepts missing."); return; } const userScores = State.getScores(); let conceptsWithDistance = concepts.map(c => ({ ...c, distance: Utils.euclideanDistance(userScores, c.elementScores) })).filter(c => c.distance !== Infinity && !isNaN(c.distance)); if (conceptsWithDistance.length === 0) { console.error("Distance calculation failed or no valid concepts."); const defaultStarters = concepts.slice(0, 5); defaultStarters.forEach(c => { if (State.addDiscoveredConcept(c.id, c)) gainAttunementForAction('discover', c.primaryElement, 0.3); }); console.warn("Granted default starter concepts."); UI.updateGrimoireCounter(); return; } conceptsWithDistance.sort((a, b) => a.distance - b.distance); const candidates = conceptsWithDistance.slice(0, 25); const starterHand = []; const starterHandIds = new Set(); const targetHandSize = 7; const elementRepTarget = 4; const representedElements = new Set(); // Select top 4 closest concepts for sure
     for (const c of candidates) { if (starterHand.length >= 4) break; if (!starterHandIds.has(c.id)) { starterHand.push(c); starterHandIds.add(c.id); if (c.primaryElement) representedElements.add(c.primaryElement); } } // Prioritize representing elements and diversity
+    
     for (const c of candidates) { if (starterHand.length >= targetHandSize) break; if (starterHandIds.has(c.id)) continue; const needsRep = c.primaryElement && representedElements.size < elementRepTarget && !representedElements.has(c.primaryElement); if (needsRep || starterHand.length < 5) { // Add if needed for representation or to fill minimum spots
         starterHand.push(c); starterHandIds.add(c.id); if (c.primaryElement) representedElements.add(c.primaryElement); } } // Fill remaining spots with closest available
     for (const c of candidates) { if (starterHand.length >= targetHandSize) break; if (!starterHandIds.has(c.id)) { starterHand.push(c); starterHandIds.add(c.id); } } console.log("Starter Hand Selected:", starterHand.map(c => c.name)); starterHand.forEach(c => { if (State.addDiscoveredConcept(c.id, c)) gainAttunementForAction('discover', c.primaryElement, 0.3); }); updateMilestoneProgress('discoveredConcepts.size', State.getDiscoveredConcepts().size); UI.updateGrimoireCounter(); }
@@ -325,7 +327,7 @@ export function handleResearchClick({ currentTarget, isFree = false }) {
             conductResearch(elementKey);
             updateMilestoneProgress('conductResearch', 1);
             checkAndUpdateRituals('conductResearch');
-            UI.displayStudyScreenContent(); // Refresh UI (might change button costs/availability if attunement changes)
+            UI.displayStudyScreenContent(); // Refresh UI
         }
     }
 } 
