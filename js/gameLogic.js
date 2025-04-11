@@ -260,7 +260,7 @@ function countUndiscoveredByRarity(elementKey) {
     } else { console.log("Already at the first element."); }
 }
 
- function finalizeQuestionnaire() {
+function finalizeQuestionnaire() {
     console.log("Finalizing scores...");
     const finalScores = {}; const allAnswers = State.getState().userAnswers;
     elementNames.forEach(elementName => { const score = calculateElementScore(elementName, allAnswers[elementName] || {}); const key = elementNameToKey[elementName]; if (key) { finalScores[key] = score; } else { console.warn(`No key found for element name: ${elementName}`); } });
@@ -285,17 +285,10 @@ function countUndiscoveredByRarity(elementKey) {
     console.log("Final User Scores:", State.getScores());
     UI.showTemporaryMessage("Experiment Complete! Explore your results.", 4000);
 
-    // --- ADD SPLASH SCREEN LOGIC ---
-    if (!State.hasSeenPostQuestionnaireSplash()) {
-        UI.showPostQuestionnaireSplash(); // Show the splash modal
-    } else {
-        // If splash already seen, go directly to Persona screen
-        UI.showScreen('personaScreen');
-    }
-    // --- END SPLASH SCREEN LOGIC ---
+    // --- REMOVED SPLASH SCREEN LOGIC FROM HERE ---
+    // Now, just show the Persona screen directly. The check will happen there.
+    UI.showScreen('personaScreen');
 }
-
-
 // --- Starter Hand ---
  function determineStarterHandAndEssence() { console.log("Determining starter hand..."); if (!concepts || !Array.isArray(concepts) || concepts.length === 0) { console.error("Concepts missing."); return; } const userScores = State.getScores(); let conceptsWithDistance = concepts.map(c => ({ ...c, distance: Utils.euclideanDistance(userScores, c.elementScores) })).filter(c => c.distance !== Infinity && !isNaN(c.distance)); if (conceptsWithDistance.length === 0) { console.error("Distance calculation failed or no valid concepts."); const defaultStarters = concepts.slice(0, 5); defaultStarters.forEach(c => { if (State.addDiscoveredConcept(c.id, c)) gainAttunementForAction('discover', c.primaryElement, 0.3); }); console.warn("Granted default starter concepts."); UI.updateGrimoireCounter(); return; } conceptsWithDistance.sort((a, b) => a.distance - b.distance); const candidates = conceptsWithDistance.slice(0, 25); const starterHand = []; const starterHandIds = new Set(); const targetHandSize = 7; const elementRepTarget = 4; const representedElements = new Set(); // Select top 4 closest concepts for sure
     for (const c of candidates) { if (starterHand.length >= 4) break; if (!starterHandIds.has(c.id)) { starterHand.push(c); starterHandIds.add(c.id); if (c.primaryElement) representedElements.add(c.primaryElement); } } // Prioritize representing elements and diversity
