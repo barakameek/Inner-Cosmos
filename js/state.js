@@ -32,6 +32,7 @@ const createInitialGameState = () => {
         pendingRarePrompts: [],
         unlockedFocusItems: new Set(),
         currentFocusSetHash: '', // Initialize hash
+         postQuestionnaireSplashSeen: false,
         contemplationCooldownEnd: null,
         insightBoostCooldownEnd: null, // Added insight boost cooldown state
     };
@@ -66,6 +67,7 @@ function _triggerSave() {
                 discoveredConcepts: Array.from(gameState.discoveredConcepts.entries()).map(([id, data]) => [id, { // <-- 'data' is the value being mapped
                     discoveredTime: data.discoveredTime,      // Use data.discoveredTime
                     // artUnlocked: data.artUnlocked,         // Still removed
+                    postQuestionnaireSplashSeen: gameState.postQuestionnaireSplashSeen,
                     notes: data.notes,                         // Use data.notes
                     unlockedLoreLevel: data.unlockedLoreLevel, // Use data.unlockedLoreLevel
                     userCategory: data.userCategory,           // Use data.userCategory
@@ -96,7 +98,7 @@ export function loadGameState() {
             const loadedState = JSON.parse(savedData);
             console.log("Saved data found.");
             gameState = createInitialGameState(); // Start fresh before merging
-
+ if (typeof loadedState.postQuestionnaireSplashSeen === 'boolean') gameState.postQuestionnaireSplashSeen = loadedState.postQuestionnaireSplashSeen; 
             // --- Merge loaded state ---
             if (typeof loadedState.userScores === 'object' && loadedState.userScores !== null) gameState.userScores = { ...gameState.userScores, ...loadedState.userScores };
             if (typeof loadedState.userAnswers === 'object' && loadedState.userAnswers !== null) gameState.userAnswers = loadedState.userAnswers;
@@ -173,6 +175,16 @@ export function clearGameState() {
 }
 
 // --- Getters ---
+export function hasSeenPostQuestionnaireSplash() {
+    return gameState.postQuestionnaireSplashSeen;
+}
+
+export function markPostQuestionnaireSplashSeen() {
+    if (!gameState.postQuestionnaireSplashSeen) {
+        gameState.postQuestionnaireSplashSeen = true;
+        saveGameState(); // Save this change
+    }
+}
 export function getState() { return gameState; }
 export function getScores() { return gameState.userScores; }
 export function getAttunement() { return gameState.elementAttunement; }
