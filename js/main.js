@@ -373,9 +373,7 @@ function attachEventListeners() {
      });
 
     console.log("All event listeners attached.");
-         }
-         }
-
+      
 
 // --- Start the App ---
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initializeApp); }
