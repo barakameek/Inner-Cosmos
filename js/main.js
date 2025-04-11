@@ -23,14 +23,18 @@ function attachEventListeners() {
     const splashScreen = document.getElementById('postQuestionnaireSplash'); // Splash Screen
 
     // --- Welcome Screen ---
-    if (startButton) startButton.addEventListener('click', () => {
+        if (startButton) startButton.addEventListener('click', () => {
         State.clearGameState();
         UI.initializeQuestionnaireUI();
         UI.showScreen('questionnaireScreen');
         if(loadButton) loadButton.classList.add('hidden');
     });
-    if (loadButton) loadButton.addEventListener('click', initializeApp);
-
+    // *** CHANGE: Wrap initializeApp in anonymous function ***
+    if (loadButton) {
+        loadButton.addEventListener('click', () => {
+            initializeApp(); // Call the function defined in this module's scope
+        });
+    }
     // --- Questionnaire Navigation ---
     if (nextBtn) nextBtn.addEventListener('click', GameLogic.goToNextElement);
     if (prevBtn) prevBtn.addEventListener('click', GameLogic.goToPrevElement);
