@@ -373,6 +373,8 @@ function attachEventListeners() {
      });
 
     console.log("All event listeners attached.");
+         }
+         }
 
 
 // --- Start the App ---
