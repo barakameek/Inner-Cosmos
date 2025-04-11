@@ -1,9 +1,72 @@
-// --- START OF main.js REVISION ---
+// --- START OF FULL main.js ---
 
+// js/main.js - Application Entry Point, Event Listeners, Initialization
+import * as State from './state.js';
+import * as UI from './ui.js';
+import * as GameLogic from './gameLogic.js';
+import * as Config from './config.js';
+import { elementNames } from '../data.js'; // Assumes data.js is in parent directory
+
+console.log("main.js loading...");
+
+// --- Drag & Drop State ---
+let draggedCardId = null; // Keep track of the card being dragged
+
+// --- DEFINE initializeApp FIRST ---
+function initializeApp() {
+    console.log("Initializing Persona Alchemy Lab...");
+    const loaded = State.loadGameState(); // Load state first
+
+    // Initial UI setup based on loaded state
+    UI.updateInsightDisplays();
+    UI.updateGrimoireCounter();
+    UI.populateGrimoireFilters();
+
+    if (loaded) {
+        console.log("Existing session data found.");
+        const currentState = State.getState();
+        if (currentState.questionnaireCompleted) {
+             console.log("Continuing session post-questionnaire...");
+             GameLogic.checkForDailyLogin();
+             GameLogic.calculateTapestryNarrative(true);
+             GameLogic.checkSynergyTensionStatus();
+             UI.updateFocusSlotsDisplay();
+             const activeShelf = document.querySelector('.grimoire-shelf.active-shelf');
+             const initialCategory = activeShelf ? activeShelf.dataset.categoryId : 'All';
+             UI.refreshGrimoireDisplay({ filterCategory: initialCategory });
+             UI.showScreen('personaScreen');
+             UI.hidePopups();
+        } else {
+             console.log("Loaded state incomplete (Questionnaire not finished). Restarting questionnaire.");
+             if (currentState.currentElementIndex < 0 || currentState.currentElementIndex >= elementNames.length) {
+                 State.updateElementIndex(0);
+             }
+             UI.initializeQuestionnaireUI();
+             UI.showScreen('questionnaireScreen');
+        }
+        const loadBtn = document.getElementById('loadButton');
+        if (loadBtn) loadBtn.classList.add('hidden');
+    } else {
+        console.log("No valid saved session. Starting fresh.");
+        UI.setupInitialUI();
+        if (localStorage.getItem(Config.SAVE_KEY)) {
+             UI.showTemporaryMessage("Error loading previous session. Starting fresh.", 4000);
+             localStorage.removeItem(Config.SAVE_KEY);
+             const loadBtn = document.getElementById('loadButton');
+             if(loadBtn) loadBtn.classList.add('hidden');
+        }
+    }
+    console.log("Initialization complete. Attaching event listeners.");
+    // Attach listeners *after* initial setup
+    attachEventListeners();
+    console.log("Application ready.");
+}
+
+// --- DEFINE attachEventListeners SECOND ---
 function attachEventListeners() {
     console.log("Attaching event listeners...");
 
-    // --- Element References ---
+    // --- Element References (Declared once for clarity) ---
     const startButton = document.getElementById('startGuidedButton');
     const loadButton = document.getElementById('loadButton');
     const nextBtn = document.getElementById('nextElementButton');
@@ -21,12 +84,7 @@ function attachEventListeners() {
     const conceptDetailPopupElem = document.getElementById('conceptDetailPopup');
     const infoPopupElem = document.getElementById('infoPopup');
     const dilemmaModalElem = document.getElementById('dilemmaModal');
-    const splashScreen = document.getElementById('postQuestionnaireSplash'); // Splash Screen
-
-    // --- Welcome Screen ---
-   // --- START OF main.js MODIFICATION ---
-
-// Inside attachEventListeners function:
+    const splashScreen = document.getElementById('postQuestionnaireSplash');
 
     // --- Welcome Screen ---
     if (startButton) startButton.addEventListener('click', () => {
@@ -35,62 +93,39 @@ function attachEventListeners() {
         UI.showScreen('questionnaireScreen');
         if(loadButton) loadButton.classList.add('hidden');
     });
-
-    // *** REVISED Load Button Listener ***
+    // Use anonymous function for load button listener
     if (loadButton) {
         loadButton.addEventListener('click', () => {
             console.log("Load button clicked. Attempting to load state...");
-            if (State.loadGameState()) { // Try loading state
-                console.log("Load successful via button. Setting up UI...");
-                // Manually perform UI setup steps usually done by initializeApp for loaded state
-                UI.updateInsightDisplays();
-                UI.updateGrimoireCounter();
-                UI.populateGrimoireFilters();
-                const currentState = State.getState();
-                if (currentState.questionnaireCompleted) {
-                    GameLogic.checkForDailyLogin();
-                    GameLogic.calculateTapestryNarrative(true);
-                    GameLogic.checkSynergyTensionStatus();
-                    UI.updateFocusSlotsDisplay();
-                    const activeShelf = document.querySelector('.grimoire-shelf.active-shelf');
-                    const initialCategory = activeShelf ? activeShelf.dataset.categoryId : 'All';
-                    UI.refreshGrimoireDisplay({ filterCategory: initialCategory });
-                    UI.showScreen('personaScreen'); // Go to persona screen after load
-                    UI.hidePopups();
-                } else {
-                    // If load was successful but questionnaire wasn't done, restart questionnaire
-                    console.log("Loaded incomplete state. Restarting questionnaire.");
-                     if (currentState.currentElementIndex < 0 || currentState.currentElementIndex >= elementNames.length) {
-                         State.updateElementIndex(0);
-                     }
-                     UI.initializeQuestionnaireUI();
-                     UI.showScreen('questionnaireScreen');
-                }
-                loadButton.classList.add('hidden'); // Hide load button after successful load
-                UI.showTemporaryMessage("Session Restored", 2000);
+            // Re-run initialization logic on load click
+            // This effectively reloads state and sets up UI
+            initializeApp(); // Call directly as it's defined above now
+        });
+    }
 
+    // --- Questionnaire Navigation ---
+    if (nextBtn) nextBtn.addEventListener('click', GameLogic.goToNextElement);
+    if (prevBtn) prevBtn.addEventListener('click', GameLogic.goToPrevElement);
+
+    // --- Main Navigation ---
+    if (mainNavBar) {
+        mainNavBar.addEventListener('click', (event) => {
+            const button = event.target.closest('.nav-button');
+            if (!button) return;
+            if (button.id === 'settingsButton') {
+                UI.showSettings();
             } else {
-                // Loading failed (either no save or parsing error)
-                UI.showTemporaryMessage("Failed to load session data. Starting fresh.", 4000);
-                // Optionally disable load button if it failed due to error
-                loadButton.disabled = true;
-                loadButton.textContent = "Load Failed";
-                // Do NOT call initializeApp here, let the user click "Start"
+                const target = button.dataset.target;
+                if (target) UI.showScreen(target);
             }
         });
     }
-    // *** END REVISED Load Button Listener ***
 
-
-// (Keep the rest of attachEventListeners the same)
-
-// --- END OF main.js MODIFICATION ---
-
-    // --- General Popup/Overlay Closing (Excluding Splash Buttons) ---
+    // --- General Popup/Overlay Closing ---
     if (popupOverlay) popupOverlay.addEventListener('click', UI.hidePopups);
 
     document.body.addEventListener('click', (event) => {
-        // Close buttons for standard popups/modals
+        // Close buttons for standard popups/modals (excluding splash confirm)
         const closeButtonSelector = `
             #closePopupButton,
             #closeReflectionModalButton,
@@ -98,38 +133,37 @@ function attachEventListeners() {
             #closeDeepDiveButton,
             #closeDilemmaModalButton,
             #closeInfoPopupButton,
-            #confirmInfoPopupButton
-            /* NOTE: #closeSplashButton is handled separately now */
+            #confirmInfoPopupButton,
+            #closeSplashButton
         `;
         if (event.target.matches(closeButtonSelector)) {
-            UI.hidePopups();
+            if (event.target.id === 'closeSplashButton' && !State.hasSeenPostQuestionnaireSplash()){
+               State.markPostQuestionnaireSplashSeen(); // Mark seen if closed via X
+               // Don't transition screen here, let hidePopups handle closing
+            }
+            UI.hidePopups(); // General hide function
         }
         // Separate handler for milestone alert close
         if (event.target.matches('#closeMilestoneAlertButton')) {
             UI.hideMilestoneAlert();
         }
-        // NO LONGER NEEDED HERE: Splash 'X' button handler removed from body listener
-        // if (event.target.matches('#closeSplashButton')) { ... }
     });
 
-    // --- Post-Questionnaire Splash Screen Button Listener ---
+    // --- Post-Questionnaire Splash Screen CONFIRM Button ---
     if (splashScreen) {
-        // Listen for clicks *within* the splash screen element
-        splashScreen.addEventListener('click', (event) => {
-            // Check if the clicked element is either the close or confirm button
-            if (event.target.matches('#closeSplashButton') || event.target.matches('#confirmSplashButton')) {
-                console.log(`Splash button clicked: ${event.target.id}`); // Debug log
+        const confirmSplashButton = document.getElementById('confirmSplashButton');
+        if(confirmSplashButton) {
+            confirmSplashButton.addEventListener('click', () => {
                 if (!State.hasSeenPostQuestionnaireSplash()) {
                     State.markPostQuestionnaireSplashSeen(); // Mark as seen
                 }
                 UI.hidePopups(); // Hide splash and overlay
                 UI.showScreen('personaScreen'); // Transition to Persona
-            }
-        });
+            });
+        }
     } else {
         console.warn("Splash screen element (#postQuestionnaireSplash) not found.");
     }
-
 
     // --- Study Screen Actions ---
     if (studyScreenElement) {
@@ -168,35 +202,26 @@ function attachEventListeners() {
         grimoireControlsElem.addEventListener('input', (event) => { if (event.target.id === 'grimoireSearchInput') UI.refreshGrimoireDisplay(); });
     }
     if (grimoireContent) {
-        // Grimoire Card Button Clicks
-        grimoireContent.addEventListener('click', (event) => {
+        grimoireContent.addEventListener('click', (event) => { // Buttons
             const targetButton = event.target.closest('button.card-sell-button, button.card-focus-button');
             if (!targetButton) return;
             event.stopPropagation();
             const conceptIdStr = targetButton.dataset.conceptId;
             if (conceptIdStr) { const conceptId = parseInt(conceptIdStr); if (!isNaN(conceptId)) { if (targetButton.classList.contains('card-sell-button')) { GameLogic.handleSellConcept(event); } else if (targetButton.classList.contains('card-focus-button')) { GameLogic.handleCardFocusToggle(conceptId); } } }
         });
-        // Grimoire Card Popup Click
-         grimoireContent.addEventListener('click', (event) => {
+         grimoireContent.addEventListener('click', (event) => { // Card Popup
              if (event.target.closest('button')) return;
              const card = event.target.closest('.concept-card');
              if (card) { const conceptId = parseInt(card.dataset.conceptId); if (!isNaN(conceptId)) { UI.showConceptDetailPopup(conceptId); } }
          });
-         // Grimoire Card Drag/Drop
+         // Drag/Drop
          grimoireContent.addEventListener('dragstart', (event) => {
              const card = event.target.closest('.concept-card');
-             if (card && card.draggable) {
-                event.dataTransfer.setData('text/plain', card.dataset.conceptId);
-                event.dataTransfer.effectAllowed = 'move';
-                card.classList.add('dragging');
-                draggedCardId = parseInt(card.dataset.conceptId);
-             } else { event.preventDefault(); }
+             if (card && card.draggable) { event.dataTransfer.setData('text/plain', card.dataset.conceptId); event.dataTransfer.effectAllowed = 'move'; card.classList.add('dragging'); draggedCardId = parseInt(card.dataset.conceptId); }
+             else { event.preventDefault(); }
          });
          grimoireContent.addEventListener('dragend', (event) => {
-             const card = event.target.closest('.concept-card');
-             if (card) { card.classList.remove('dragging'); }
-             draggedCardId = null;
-             document.querySelectorAll('.grimoire-shelf.drag-over').forEach(shelf => shelf.classList.remove('drag-over'));
+             const card = event.target.closest('.concept-card'); if (card) { card.classList.remove('dragging'); } draggedCardId = null; document.querySelectorAll('.grimoire-shelf.drag-over').forEach(shelf => shelf.classList.remove('drag-over'));
          });
     }
     if (grimoireShelvesContainer) {
@@ -301,12 +326,13 @@ function attachEventListeners() {
     console.log("All event listeners attached.");
 } // End of attachEventListeners function
 
-// --- Initialize the App on DOM Ready ---
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp(); // Call initializeApp directly if DOM is already loaded
-}
+// --- Initialize the App ONLY when DOM is Ready ---
+// Ensures `initializeApp` is defined before being called by listeners.
+document.addEventListener('DOMContentLoaded', () => {
+    // Now that the DOM is fully loaded and the script parsed,
+    // it's safe to call initializeApp.
+    initializeApp();
+});
 
-console.log("main.js loaded.");
+console.log("main.js loaded (event listener attached).");
 // --- END OF main.js ---
