@@ -66,28 +66,8 @@ function initializeApp() {
 // --- Event Listeners ---
 function attachEventListeners() {
     console.log("Attaching event listeners...");
- // --- Post-Questionnaire Splash Screen Buttons ---
-    const splashScreen = document.getElementById('postQuestionnaireSplash');
-    if (splashScreen) {
-        splashScreen.addEventListener('click', (event) => {
-            if (event.target.matches('#closeSplashButton') || event.target.matches('#confirmSplashButton')) {
-                State.markPostQuestionnaireSplashSeen(); // Mark as seen when dismissed
-                UI.hidePopups(); // Hide the splash screen and overlay
-                UI.showScreen('personaScreen'); // Now show the persona screen
-            }
-        });
-    }
-// --- Combined close button listener (ensure it covers splash close too if needed, though above handles it) ---
-    document.body.addEventListener('click', (event) => {
-        if (event.target.matches('#closePopupButton, #closeReflectionModalButton, #closeSettingsPopupButton, #closeDeepDiveButton, #closeDilemmaModalButton, #closeInfoPopupButton, #confirmInfoPopupButton, #closeSplashButton')) {
-             // ^ Added #closeSplashButton here just in case, though the listener above should catch it.
-             if (event.target.id === 'closeSplashButton' && !State.hasSeenPostQuestionnaireSplash()){
-                State.markPostQuestionnaireSplashSeen(); // Mark seen if closed via X before confirm
-                UI.showScreen('personaScreen'); // Ensure transition if closed via X
-             }
-             UI.hidePopups();
-        }
-    // --- Element References ---
+
+    // --- Element References (Declared once for clarity) ---
     const startButton = document.getElementById('startGuidedButton');
     const loadButton = document.getElementById('loadButton');
     const nextBtn = document.getElementById('nextElementButton');
@@ -105,6 +85,7 @@ function attachEventListeners() {
     const conceptDetailPopupElem = document.getElementById('conceptDetailPopup');
     const infoPopupElem = document.getElementById('infoPopup');
     const dilemmaModalElem = document.getElementById('dilemmaModal'); // Dilemma Modal
+    const splashScreen = document.getElementById('postQuestionnaireSplash'); // Splash Screen
 
     // --- Welcome Screen ---
     if (startButton) startButton.addEventListener('click', () => {
@@ -120,17 +101,56 @@ function attachEventListeners() {
     if (prevBtn) prevBtn.addEventListener('click', GameLogic.goToPrevElement);
 
     // --- Main Navigation & Popups (Delegation on Body/Nav) ---
-    if (mainNavBar) { mainNavBar.addEventListener('click', (event) => { const button = event.target.closest('.nav-button'); if (!button) return; if (button.id === 'settingsButton') UI.showSettings(); else { const target = button.dataset.target; if (target) UI.showScreen(target); } }); }
-    // Combined close button listener for all popups/modals
+    if (mainNavBar) {
+        mainNavBar.addEventListener('click', (event) => {
+            const button = event.target.closest('.nav-button');
+            if (!button) return;
+            if (button.id === 'settingsButton') {
+                UI.showSettings();
+            } else {
+                const target = button.dataset.target;
+                if (target) UI.showScreen(target);
+            }
+        });
+    }
+    // Combined close button listener for all popups/modals & Splash Screen (handled via specific button listener too)
     document.body.addEventListener('click', (event) => {
-        if (event.target.matches('#closePopupButton, #closeReflectionModalButton, #closeSettingsPopupButton, #closeDeepDiveButton, #closeDilemmaModalButton, #closeInfoPopupButton, #confirmInfoPopupButton')) {
-             UI.hidePopups();
+        const closeButtonSelector = `
+            #closePopupButton,
+            #closeReflectionModalButton,
+            #closeSettingsPopupButton,
+            #closeDeepDiveButton,
+            #closeDilemmaModalButton,
+            #closeInfoPopupButton,
+            #confirmInfoPopupButton,
+            #closeSplashButton
+        `;
+        if (event.target.matches(closeButtonSelector)) {
+            // Handle splash screen closing specifically to mark state
+             if (event.target.id === 'closeSplashButton' && !State.hasSeenPostQuestionnaireSplash()){
+                State.markPostQuestionnaireSplashSeen(); // Mark seen if closed via X before confirm
+                UI.showScreen('personaScreen'); // Ensure transition if closed via X
+             }
+            UI.hidePopups(); // General hide function
         }
         if (event.target.matches('#closeMilestoneAlertButton')) {
             UI.hideMilestoneAlert();
         }
     });
     if (popupOverlay) popupOverlay.addEventListener('click', UI.hidePopups);
+
+    // --- Post-Questionnaire Splash Screen Buttons ---
+    if (splashScreen) {
+        splashScreen.addEventListener('click', (event) => {
+            // Specifically handle the confirmation button click
+            if (event.target.matches('#confirmSplashButton')) {
+                State.markPostQuestionnaireSplashSeen(); // Mark as seen when confirmed
+                UI.hidePopups(); // Hide the splash screen and overlay
+                UI.showScreen('personaScreen'); // Now show the persona screen
+            }
+            // Close button ('X') is handled by the general body listener above
+        });
+    }
 
     // --- Study Screen Actions (Delegation on Study Screen) ---
     if (studyScreenElement) {
@@ -139,7 +159,6 @@ function attachEventListeners() {
             if (discoveryElement) {
                  const freeResearchLeft = State.getInitialFreeResearchRemaining();
                  const isFreeClick = freeResearchLeft > 0;
-                 // Pass the event object or relevant data if handleResearchClick needs it
                  GameLogic.handleResearchClick({ currentTarget: discoveryElement, isFree: isFreeClick }); return;
             }
             if (event.target.matches('#freeResearchButton')) { GameLogic.handleFreeResearchClick(); return; }
@@ -162,7 +181,6 @@ function attachEventListeners() {
              }
         });
     } else { console.error("#studyResearchDiscoveries element not found for listener attachment."); }
-
 
     // --- Grimoire Actions (Filters, Cards, Shelves - Delegated) ---
     const grimoireControlsElem = document.getElementById('grimoireControls');
@@ -373,11 +391,14 @@ function attachEventListeners() {
      });
 
     console.log("All event listeners attached.");
-      
+} // End of attachEventListeners function
 
 // --- Start the App ---
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initializeApp); }
-else { initializeApp(); }
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp(); // Call initializeApp directly if DOM is already loaded
+}
 
 console.log("main.js loaded.");
 // --- END OF main.js ---
