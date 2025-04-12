@@ -10,8 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Chart.js Library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Library (Using a slightly newer version) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:,"> <!-- Prevent favicon error -->
@@ -30,10 +30,10 @@
              <button id="loadButton" class="button secondary-button hidden">Load Previous Session</button>
         </div>
 
-        <!-- Questionnaire Screen -->
+        <!-- Questionnaire Screen (Will show 7 steps) -->
         <div id="questionnaireScreen" class="screen hidden">
              <header>
-                 <div id="elementProgressHeader"></div>
+                 <div id="elementProgressHeader"></div> <!-- Will be populated with 7 tabs by JS -->
                  <p id="progressText"></p>
                  <div id="dynamicScoreFeedback">
                     Current <span id="feedbackElement">Element</span> Score: <span id="feedbackScore">5.0</span><span class="score-label">(Moderate)</span>
@@ -46,7 +46,7 @@
              <main id="questionContent"></main>
              <footer>
                  <button id="prevElementButton" class="button back-button" style="visibility: hidden;">Previous</button>
-                 <button id="nextElementButton" class="button next-button">View Initial Discoveries</button>
+                 <button id="nextElementButton" class="button next-button">View Initial Discoveries</button> <!-- Text updates dynamically -->
              </footer>
         </div>
 
@@ -72,16 +72,16 @@
              <div id="personaDetailedView" class="persona-view current">
                  <div class="persona-overview">
                      <div class="persona-column persona-elements-detailed">
-                         <h2>Core Foundation <i class="fas fa-info-circle info-icon" title="Your scores across the 6 core elements, based on the initial questionnaire. Expand each for details, interpretations, current Attunement, and unlockable Insights."></i></h2>
+                         <h2>Core Foundation <i class="fas fa-info-circle info-icon" title="Your scores across the 7 core elements, based on the initial questionnaire. Expand each for details, interpretations, current Attunement, and unlockable Insights."></i></h2>
                          <p>Your fundamental attributes and elemental attunement. Expand each element.</p>
                          <div id="personaElementDetails">
-                             <!-- Element details populated by JS -->
+                             <!-- JS will populate this with 7 element sections -->
                          </div>
                          <hr>
                          <h2>Resources <i class="fas fa-info-circle info-icon" title="Insight is the primary currency, earned through discovery, reflection, and rituals. Spend it in The Study to research new Concepts or unlock deeper knowledge."></i></h2>
                          <p>
                              Current Insight: <strong id="userInsightDisplayPersona">0.0</strong> <i class="fas fa-brain insight-icon"></i>
-                             <button id="addInsightButton" class="button tiny-button" title="Get an Insight boost (5 min cooldown)">
+                             <button id="addInsightButton" class="button tiny-button hidden-by-flow" title="Get an Insight boost (cooldown applies)">
                                   <i class="fas fa-plus"></i> Add Insight
                              </button>
                          </p>
@@ -127,17 +127,17 @@
                   <div id="summaryContent">
                         <h3>Core Essence</h3>
                         <div class="summary-section" id="summaryCoreEssenceText">
-                            <p>Loading essence details...</p>
+                            <p>Loading essence details...</p> <!-- JS Populates with 7 elements -->
                         </div>
                         <hr class="popup-hr">
                         <h3>Elemental Profile</h3>
                         <div class="chart-container" style="position: relative; height:400px; width: 100%; max-width: 850px; margin: 20px auto; padding: 20px; background-color: rgba(255, 248, 231, 0.3); border-radius: 8px;">
-                            <canvas id="personaScoreChartCanvas"></canvas>
+                            <canvas id="personaScoreChartCanvas"></canvas> <!-- JS will draw 7 points -->
                         </div>
                         <hr class="popup-hr">
                         <h3>Focused Tapestry</h3>
                         <div class="summary-section" id="summaryTapestryInfo">
-                             <p>Loading tapestry details...</p>
+                             <p>Loading tapestry details...</p> <!-- JS Populates -->
                         </div>
                   </div>
              </div>
@@ -154,7 +154,7 @@
                       <label for="grimoireTypeFilter">Type:</label>
                       <select id="grimoireTypeFilter"><option value="All">All Types</option></select>
                       <label for="grimoireElementFilter">Element:</label>
-                      <select id="grimoireElementFilter"><option value="All">All Elements</option></select>
+                      <select id="grimoireElementFilter"><option value="All">All Elements</option></select> <!-- JS will populate with 7 -->
                       <label for="grimoireRarityFilter">Rarity:</label>
                       <select id="grimoireRarityFilter"><option value="All">All Rarities</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option></select>
                       <label for="grimoireFocusFilter">Focus:</label>
@@ -177,7 +177,9 @@
              </div>
              <hr class="study-divider">
              <h2>Research Elements <i class="fas fa-info-circle info-icon" title="Click an Element to Research it. Higher personal scores suggest greater resonance with potential discoveries. Check cost (Insight or Free Research)."></i></h2>
-             <div id="initialDiscoveryElements" class="initial-discovery-elements"></div>
+             <div id="initialDiscoveryElements" class="initial-discovery-elements">
+                 <!-- JS will populate with 7 research elements/buttons -->
+             </div>
               <div class="study-actions-area hidden-by-flow">
                   <hr class="study-divider">
                   <h2>Daily Actions & Guidance <i class="fas fa-info-circle info-icon" title="Perform your daily free meditation or seek guided reflection prompts here (costs Insight)."></i></h2>
@@ -231,7 +233,7 @@
          </div>
 
       <!-- Popups and Modals -->
-        <!-- Concept Detail Popup (NEW STRUCTURE) -->
+        <!-- Concept Detail Popup (Handles 7 elements in comparison section) -->
         <div id="conceptDetailPopup" class="popup hidden card-popup">
               <button id="closePopupButton" class="close-button">×</button>
               <div class="popup-header">
@@ -282,8 +284,8 @@
                            <details class="element-details">
                                <summary>View Full Score Comparison</summary>
                                <div class="profile-comparison">
-                                   <div class="profile-column"><h5>Concept Scores</h5><div id="popupConceptProfile"></div></div>
-                                   <div class="profile-column"><h5>Your Scores</h5><div id="popupUserComparisonProfile"></div></div>
+                                   <div class="profile-column"><h5>Concept Scores</h5><div id="popupConceptProfile"></div></div> <!-- JS populates 7 scores -->
+                                   <div class="profile-column"><h5>Your Scores</h5><div id="popupUserComparisonProfile"></div></div> <!-- JS populates 7 scores -->
                                </div>
                            </details>
                       </div>
@@ -336,43 +338,26 @@
          </div>
          <!-- End Settings Popup -->
 
-        <!-- Tapestry Deep Dive Modal (NEW STRUCTURE) -->
-        <div id="tapestryDeepDiveModal" class="popup hidden resonance-chamber-modal"> <!-- New Class for styling -->
+        <!-- Tapestry Deep Dive Modal (Resonance Chamber) -->
+        <div id="tapestryDeepDiveModal" class="popup hidden resonance-chamber-modal">
             <button id="closeDeepDiveButton" class="close-button">×</button>
-            <div class="popup-header"> <!-- Reuse existing style or customize -->
-                <h3 id="deepDiveTitle">Resonance Chamber</h3>
-                <!-- Optional: Add central graphic placeholder -->
-                <!-- <div id="resonanceChamberGraphic"></div> -->
-            </div>
+            <div class="popup-header"> <h3 id="deepDiveTitle">Resonance Chamber</h3> </div>
             <div class="resonance-chamber-content">
                 <div class="resonance-chamber-summary">
                      <h4>Weaver's Summary</h4>
                      <p id="deepDiveNarrativeP">Loading narrative...</p>
-                     <div class="focused-concepts-icons" id="deepDiveFocusIcons">
-                         <!-- Focus icons populated by JS -->
-                     </div>
+                     <div class="focused-concepts-icons" id="deepDiveFocusIcons"> </div>
                 </div>
                  <hr class="popup-hr">
                 <div class="resonance-chamber-main">
                     <nav class="aspects-navigation" id="deepDiveAnalysisNodes">
                         <h4>Aspects of the Weave</h4>
-                        <button class="aspect-node button small-button" data-node-id="elemental">
-                            <i class="fas fa-atom"></i> Elemental Flow
-                        </button>
-                        <button class="aspect-node button small-button" data-node-id="archetype">
-                            <i class="fas fa-theater-masks"></i> Concept Archetype
-                        </button>
-                        <button class="aspect-node button small-button" data-node-id="synergy">
-                            <i class="fas fa-link"></i> Synergy & Tension
-                        </button>
-                        <button id="contemplationNode" class="aspect-node button small-button contemplation-node" data-node-id="contemplation">
-                             <i class="fas fa-brain"></i> Focusing Lens
-                             (<span class="contemplation-cost">?</span> <i class="fas fa-brain insight-icon"></i>) <!-- Show cost -->
-                        </button>
+                        <button class="aspect-node button small-button" data-node-id="elemental"> <i class="fas fa-atom"></i> Elemental Flow </button>
+                        <button class="aspect-node button small-button" data-node-id="archetype"> <i class="fas fa-theater-masks"></i> Concept Archetype </button>
+                        <button class="aspect-node button small-button" data-node-id="synergy"> <i class="fas fa-link"></i> Synergy & Tension </button>
+                        <button id="contemplationNode" class="aspect-node button small-button contemplation-node" data-node-id="contemplation"> <i class="fas fa-brain"></i> Focusing Lens (<span class="contemplation-cost">?</span> <i class="fas fa-brain insight-icon"></i>) </button>
                     </nav>
-                    <div class="insight-scroll-panel" id="deepDiveDetailContent">
-                        <p><i>Select an Aspect to explore...</i></p>
-                    </div>
+                    <div class="insight-scroll-panel" id="deepDiveDetailContent"> <p><i>Select an Aspect to explore...</i></p> </div>
                 </div>
             </div>
         </div>
@@ -401,7 +386,6 @@
          </div>
          <!-- End Elemental Dilemma Modal -->
 
-
          <!-- Info Popup -->
          <div id="infoPopup" class="popup hidden info-popup">
              <button id="closeInfoPopupButton" class="close-button">×</button>
@@ -412,20 +396,14 @@
          <!-- End Info Popup -->
 
          <!-- Alerts & Toasts -->
-         <div id="milestoneAlert" class="milestone-alert hidden">
-             <span id="milestoneAlertText">Milestone Reached!</span>
-             <button id="closeMilestoneAlertButton">×</button>
-         </div>
-         <div id="toastNotification" class="toast hidden">
-             <span id="toastMessage">Message text here</span>
-         </div>
+         <div id="milestoneAlert" class="milestone-alert hidden"> <span id="milestoneAlertText">Milestone Reached!</span> <button id="closeMilestoneAlertButton">×</button> </div>
+         <div id="toastNotification" class="toast hidden"> <span id="toastMessage">Message text here</span> </div>
          <div id="popupOverlay" class="overlay hidden"></div>
 
     </div> <!-- End App Container -->
 
-    <!-- Load Data First -->
+    <!-- Load Scripts (Type Module) -->
     <script src="data.js" type="module"></script>
-    <!-- Then Load Modules -->
     <script src="js/config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>
     <script src="js/state.js" type="module"></script>
