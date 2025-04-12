@@ -1,4 +1,4 @@
-/* --- START OF COMPLETE style.css --- */
+/* --- START OF COMPLETE style.css (Acknowledging 7 Elements) --- */
 
 :root {
     --primary-color: #8b4513; /* Saddle Brown */
@@ -28,6 +28,8 @@
     --category-coreIdentity-border: #ffe4b5;
     --category-uncategorized-bg: transparent;
     --category-uncategorized-border: var(--border-color-light);
+    /* --- Added RoleFocus Color --- */
+    --rolefocus-color: #40E0D0; /* Turquoise */
 }
 
 body {
@@ -99,6 +101,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 /* --- Questionnaire Screen --- */
 #questionnaireScreen { text-align: center; }
 #questionnaireScreen header { padding: 8px 10px 10px 10px; border-bottom: 1px solid var(--border-color-light); margin-bottom: 20px; position: sticky; top: 0; background: rgba(245, 240, 225, 0.98); backdrop-filter: blur(3px); z-index: 10; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+/* Questionnaire Header Tabs (Should wrap gracefully with 7 items) */
 .element-progress-header { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; padding: 4px; background-color: rgba(232, 228, 216, 0.5); border-radius: 5px; border: 1px solid var(--border-color-light); }
 .element-tab { padding: 5px 10px; border-radius: 4px; font-size: 0.75em; color: #7a5230; border: 1px solid transparent; margin: 2px; text-align: center; white-space: nowrap; flex-shrink: 0; transition: background-color 0.3s ease, color 0.3s ease; font-family: 'Merriweather', serif; }
 .element-tab.active { background-color: #f0e68c; color: #5a3a22; border-color: #b8a880; font-weight: bold; }
@@ -147,7 +150,8 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 @media (min-width: 992px) { .persona-overview { flex-direction: row; gap: 35px; } .persona-header h1 { flex-basis: auto; } .view-toggle-buttons { width: auto; margin-left: 15px; text-align: right; } .persona-column { flex: 1 1 0; } }
 .persona-column { background-color: rgba(255, 248, 231, 0.7); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color-light); min-width: 0; }
 .persona-constellation { background-color: rgba(232, 228, 216, 0.6); border-color: #c8b89a; }
-.persona-elements-detailed h2, .persona-constellation h2 { text-align: left; border: none; margin-bottom: 12px; font-size: 1.3em; }
+/* Persona elements section - should contain 7 items */
+.persona-elements-detailed h2 { text-align: left; border: none; margin-bottom: 12px; font-size: 1.3em; }
 .element-detail-entry { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dotted #c8b89a; border-left: 4px solid var(--element-color, #ccc); padding-left: 10px; border-radius: 0 4px 4px 0; transition: background-color 0.2s ease; }
 .element-detail-entry:hover { background-color: rgba(255,255,255,0.3); }
 .element-detail-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 6px; padding: 4px 8px 4px 0; border-radius: 0 4px 4px 0; position: relative; flex-wrap: wrap; }
@@ -194,11 +198,13 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .tapestry-area { background-color: #fffefa; border: 1px solid var(--border-color-light); border-radius: 8px; min-height: 150px; padding: 15px; margin-bottom: 20px; }
 #focusedConceptsHeader { border-bottom: 1px solid #e8e4d8; padding-bottom: 5px; text-align: left; margin-bottom: 10px; font-size: 1.15em; }
 .focus-concepts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-.focus-concept-item { background-color: #fff8e7; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.9em; text-align: center; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease; min-height: 70px; display: flex; flex-direction: column; justify-content: center; }
+.focus-concept-item { background-color: #fff8e7; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.9em; text-align: center; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease; min-height: 70px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; color: var(--text-color); text-shadow: 0 0 3px rgba(255, 255, 255, 0.6); }
 .focus-concept-item:hover { background-color: #f5eecf; transform: translateY(-2px); }
-.focus-concept-item i { font-size: 1.2em; margin-bottom: 5px; display: block; }
-.focus-concept-item .name { font-weight: bold; display: block; font-size: 0.95em; font-family: 'Merriweather', serif; line-height: 1.2; }
-.focus-concept-item .type { font-size: 0.8em; color: #6a5a4a; font-style: italic; }
+.focus-concept-item i { font-size: 1.2em; margin-bottom: 5px; display: block; position: relative; z-index: 2; } /* Ensure icon above overlay */
+.focus-concept-item .name { font-weight: bold; display: block; font-size: 0.95em; font-family: 'Merriweather', serif; line-height: 1.2; position: relative; z-index: 2; }
+.focus-concept-item .type { font-size: 0.8em; color: #6a5a4a; font-style: italic; position: relative; z-index: 2;}
+.focus-concept-item.has-background-image { background-size: cover; background-position: center center; background-repeat: no-repeat; color: #211a13; text-shadow: 0 0 4px rgba(255, 253, 250, 0.8); }
+.focus-concept-item.has-background-image::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(253, 248, 240, 0.88); backdrop-filter: blur(1px); -webkit-backdrop-filter: blur(1px); z-index: 1; }
 .focus-concepts-grid .focus-placeholder { list-style: none; font-style: italic; color: #777; text-align: center; grid-column: 1 / -1; padding: 10px; background-color: #f9f6ee; border: 1px dashed #ccc; border-radius: 6px; }
 .tapestry-narrative-section { margin-top: 18px; padding-top: 12px; border-top: 1px dashed #c8b89a; }
 .tapestry-narrative-section h3 { font-size: 1.15em; text-align: left; border: none; margin-bottom: 4px; font-family: 'Garamond', serif; }
@@ -216,15 +222,17 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #summaryContent p { margin-bottom: 8px; font-size: 0.95em; }
 #summaryContent ul { list-style: disc; padding-left: 20px; margin-bottom: 12px; font-size: 0.95em;}
 #personaSummaryView #summaryContent { max-width: 800px; margin-left: auto; margin-right: auto; }
+/* Chart container - should be flexible */
 .chart-container { border: none; box-sizing: border-box; }
 #personaScoreChartCanvas { display: block; max-width: 100%; height: auto; }
 
-/* --- Study Screen (Unified Layout Styles) --- */
+/* --- Study Screen --- */
 .study-screen { background: linear-gradient(to bottom, #e8d8c0, #f5f0e1); background-size: cover; border: 1px solid var(--border-color-dark); }
 .study-screen h1 { color: #5a3a22; text-shadow: 1px 1px 1px rgba(255,255,255,0.1); }
 .study-screen h2 { text-align: left; border-bottom: none; padding-bottom: 0; margin-bottom: 10px; font-size: 1.3em; font-family: 'Garamond', serif; }
 .initial-discovery-guidance { background-color: rgba(255, 248, 220, 0.9); border: 1px dashed var(--primary-color); padding: 12px 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-weight: 500; color: var(--link-color); font-size: 1.05em; line-height: 1.5; }
 .study-insight-display { text-align: center; font-size: 1.1em; font-weight: bold; color: var(--link-color); background-color: rgba(255, 248, 220, 0.7); padding: 8px; border-radius: 5px; border: 1px dashed var(--primary-color); margin: 10px auto 20px auto; max-width: 300px; }
+/* Initial discovery grid - uses auto-fit, should handle 7 items */
 .initial-discovery-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px; }
 .initial-discovery-element { background-color: #fffefa; border: 1px solid var(--border-color-light); border-left-width: 5px; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
 .initial-discovery-element.clickable { cursor: pointer; }
@@ -253,14 +261,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #studyResearchDiscoveries { background-color: rgba(248, 244, 232, 0.7); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-light); min-height: 200px; margin-top: 25px; }
 #studyResearchDiscoveries > p { text-align: center; color: #888; margin-top: 20px; }
 #studyResearchDiscoveries .card-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; padding: 0; }
-#studyResearchDiscoveries .research-result-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #c8b89a;     display: inline-block; /* Change from default block/grid item */
-    vertical-align: top; 
-    width: auto; 
-}
-
-#studyResearchDiscoveries .research-result-item:last-child {
-    border-bottom: none;
- }
+#studyResearchDiscoveries .research-result-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #c8b89a; display: inline-block; vertical-align: top; width: auto; }
 #studyResearchDiscoveries .research-result-item:last-child { border-bottom: none; }
 #studyResearchDiscoveries .research-actions { margin-top: 8px; display: flex; gap: 8px; justify-content: center; }
 .duplicate-message { background-color: #eee; border: 1px solid #ccc; color: #666; padding: 8px; border-radius: 5px; text-align: center; margin: 8px 0 12px 0; font-size: 0.9em; }
@@ -276,7 +277,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #dailyRitualsDisplay .ritual-reward { font-size: 0.9em; color: var(--link-color); margin-left: 6px; font-style: italic; }
 
 /* --- Card Grid Layout --- */
-.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); /* Slightly wider minimum */ gap: 18px; /* Increased gap */ padding: 15px; /* Add padding to grid container */ }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; padding: 15px; }
 
 /* --- Grimoire Screen --- */
 .grimoire-screen { background-color: var(--secondary-color); }
@@ -287,7 +288,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #grimoireControls label { margin: 0 4px 0 8px; font-weight: bold; color: var(--link-color); font-family: 'Merriweather', serif; font-size: 0.9em; }
 #grimoireControls select, #grimoireControls input[type="text"] { padding: 5px 6px; border-radius: 5px; border: 1px solid var(--border-color-dark); background-color: #fff8e7; font-family: 'Merriweather', serif; font-size: 0.9em; }
 #grimoireControls input[type="text"] { width: 100px; }
-#grimoireContent { background-color: #fff8e7; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-dark); margin-top: 8px; max-height: calc(100vh - 230px); /* Adjust based on header/nav/controls */ overflow-y: auto; }
+#grimoireContent { background-color: #fff8e7; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-dark); margin-top: 8px; max-height: calc(100vh - 230px); overflow-y: auto; }
 
 /* --- Grimoire Shelf Styling --- */
 .grimoire-shelves-area { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 5px; margin-bottom: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05)); border-radius: 6px; border-top: 1px solid var(--border-color-dark); border-bottom: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
@@ -303,10 +304,8 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .show-all-shelf:hover { border-color: #adb5bd; background-color: #e9ecef; }
 .show-all-shelf.active-shelf { border-color: #6c757d; background-color: #e2e6ea; transform: scale(1.01); }
 
-/* --- Concept Card Styling Overhaul --- */
-.concept-card {
-    border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; position: relative; display: flex; flex-direction: column; min-height: 290px; overflow: hidden; border: 1px solid var(--border-color-dark); border-left-width: 1px; background: linear-gradient(160deg, #fffefa, #f5f0e1); box-shadow: 0 4px 8px rgba(80, 50, 20, 0.1), inset 0 0 1px rgba(255, 255, 255, 0.5); transition: all 0.25s ease-in-out;
-}
+/* --- Concept Card Styling --- */
+.concept-card { border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; position: relative; display: flex; flex-direction: column; min-height: 290px; overflow: hidden; border: 1px solid var(--border-color-dark); border-left-width: 1px; background: linear-gradient(160deg, #fffefa, #f5f0e1); box-shadow: 0 4px 8px rgba(80, 50, 20, 0.1), inset 0 0 1px rgba(255, 255, 255, 0.5); transition: all 0.25s ease-in-out; }
 .concept-card.rarity-uncommon { background: linear-gradient(160deg, #f8f8ff, #e6f2ff); border-color: #b0c4de; box-shadow: 0 4px 8px rgba(80, 50, 20, 0.1), 0 0 5px rgba(70, 130, 180, 0.3); }
 .concept-card.rarity-rare { background: linear-gradient(160deg, #fff8dc, #ffecb3); border-color: #dda0dd; box-shadow: 0 4px 8px rgba(80, 50, 20, 0.1), 0 0 8px var(--highlight-glow); }
 .concept-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 16px rgba(80, 50, 20, 0.18), inset 0 0 1px rgba(255, 255, 255, 0.5); z-index: 10; }
@@ -356,7 +355,6 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .tiny-button:disabled { cursor: not-allowed; opacity: 0.6; }
 .card-actions button { pointer-events: auto; }
 .research-note-card { border-color: #aaa; background: linear-gradient(145deg, #f5f5f5, #e8e8e8); opacity: 0.95; }
-/* --- END Card Styling Overhaul --- */
 
 
 /* --- Repository Screen --- */
@@ -388,12 +386,8 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .close-button { position: absolute; top: 8px; right: 10px; background: none; border: none; font-size: 1.8em; color: #b8a880; cursor: pointer; line-height: 1; z-index: 101; transition: color 0.2s ease; padding: 2px 5px; }
 .close-button:hover { color: var(--primary-color); }
 
-/* --- Concept Detail Popup Overhaul Styles --- */
-.popup.card-popup {
-    max-width: 800px; /* Wider popup */
-    background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); /* Adjusted background */
-    border: 2px solid var(--border-color-dark); /* Stronger border */
-}
+/* --- Concept Detail Popup --- */
+.popup.card-popup { max-width: 800px; background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); border: 2px solid var(--border-color-dark); }
 .card-popup .popup-header { background-color: #e8d8c0; border-bottom: 2px solid var(--primary-color); padding: 12px 45px 12px 20px; text-align: center; position: relative; border-radius: 9px 9px 0 0; }
 .card-popup .popup-header .card-type-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-size: 1.2em; color: #7a5230; }
 .card-popup .popup-header h3 { margin: 0; color: var(--link-color); font-size: 1.4em; font-family: 'Cinzel Decorative', cursive; }
@@ -444,6 +438,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #myNotesSection details { margin: 0; }
 #myNotesSection summary { background-color: #e8d8c0; }
 #myNotesSection .collapsible-content { padding: 12px 15px; border: none; background: #fffefa; border-radius: 0 0 5px 5px; }
+/* Profile Comparison (Should handle 7 elements due to JS loop) */
 .profile-comparison { display: flex; flex-direction: column; text-align: left; gap: 15px; padding: 10px 12px; }
 @media (min-width: 480px) { .profile-comparison { flex-direction: row; justify-content: space-around; gap: 20px; } }
 .profile-column h5 { text-align: center; font-family: 'Garamond', serif; font-size: 1em; }
@@ -477,7 +472,6 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .card-popup .focus-button.hidden { display: none; }
 .card-popup .popup-sell-button { background-color: var(--danger-color); border-color: #a52a2a; color: white; text-shadow: none; }
 .card-popup .popup-sell-button:hover:not(:disabled) { background-color: #c82333; }
-/* --- END Concept Detail Popup Overhaul --- */
 
 
 /* --- Reflection Modal --- */
@@ -500,299 +494,45 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .settings-content button { margin: 4px 8px; }
 .reset-warning { color: var(--danger-color); font-size: 0.85em; margin-top: 12px; font-weight: bold; }
 
-/* --- Tapestry Deep Dive Modal ("Resonance Chamber") Overhaul --- */
-.resonance-chamber-modal {
-    max-width: 850px; /* Keep wider modal */
-    width: 95%;
-    max-height: 90vh;
-    /* Use standard popup background */
-    background: linear-gradient(to bottom, var(--background-light, #fdf8f0), var(--background-medium, #f5f0e1));
-    /* Use standard text color */
-    color: var(--text-color, #4a392c);
-    /* Use standard border color */
-    border: 2px solid var(--border-color-dark, #a08460);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Slightly softer shadow */
-}
-
-/* Header Styling */
-.resonance-chamber-modal .popup-header {
-    /* Use consistent header background and border */
-    background-color: var(--secondary-color, #d2b48c);
-    border-bottom: 2px solid var(--primary-color, #8b4513);
-    padding: 10px 45px 10px 20px;
-}
-
-.resonance-chamber-modal .popup-header h3 {
-    /* Use consistent header text color and font */
-    color: var(--link-color, #5a3a22);
-    font-size: 1.3em;
-    text-align: center; /* Center title */
-    text-shadow: none; /* Remove dark theme shadow */
-    font-family: 'Cinzel Decorative', cursive;
-}
-
-.resonance-chamber-modal .close-button {
-    /* Adjust close button color for light background */
-    color: var(--primary-color, #8b4513);
-    opacity: 0.7;
-}
-
-.resonance-chamber-modal .close-button:hover {
-    color: var(--text-color, #4a392c);
-    opacity: 1;
-}
-.resonance-chamber-content {
-    padding: 15px;
-    flex-grow: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* Summary Section */
-.resonance-chamber-summary {
-    /* Lighter background consistent with other sections */
-    background-color: rgba(245, 240, 225, 0.7); /* Similar to study/persona sections */
-    padding: 12px 15px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color-light, #d3c0a0);
-}
-
-.resonance-chamber-summary h4 {
-    font-family: 'Cinzel Decorative', cursive; /* Match other H4 */
-    font-size: 1.1em;
-    color: var(--primary-color, #8b4513); /* Consistent header color */
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border-color-light, #d3c0a0);
-    padding-bottom: 4px;
-    text-align: left;
-}
-
-.resonance-chamber-summary #deepDiveNarrativeP {
-    font-size: 0.95em;
-    font-style: italic;
-    line-height: 1.5;
-    color: var(--text-color, #4a392c); /* Standard text color */
-    margin-bottom: 10px;
-}
-
-.resonance-chamber-summary .focused-concepts-icons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-    margin-top: 8px;
-}
-
-.resonance-chamber-summary .focused-concepts-icons i {
-    font-size: 1.2em;
-    opacity: 0.8;
-    padding: 3px;
-    background-color: transparent; /* Remove dark background */
-    border-radius: 3px;
-    /* Color set by JS, keep this */
-}
-
-/* Main Layout (Nav + Content) */
-.resonance-chamber-main {
-    display: flex;
-    flex-direction: column; /* Stack on mobile */
-    gap: 15px;
-    flex-grow: 1;
-    overflow: hidden;
-}
-
-/* Navigation Section */
-.aspects-navigation {
-    /* Lighter background, similar to summary */
-    background-color: rgba(245, 240, 225, 0.5);
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color-light, #d3c0a0);
-    flex-shrink: 0;
-}
-
-.aspects-navigation h4 {
-    font-family: 'Cinzel Decorative', cursive;
-    font-size: 1.1em;
-    color: var(--primary-color, #8b4513);
-    margin-bottom: 10px;
-    text-align: center;
-    border: none;
-    padding: 0;
-}
-
-/* Navigation Buttons */
-.aspects-navigation .aspect-node {
-    /* Inherit base button styles */
-    display: block;
-    width: 100%;
-    margin-bottom: 8px;
-    text-align: left;
-    /* Reset base button styles that might conflict */
-    border-radius: 4px;
-    text-transform: none; /* Remove uppercase from base button */
-    letter-spacing: normal; /* Remove letter-spacing from base button */
-    font-size: 0.9em;
-    font-family: 'Merriweather', serif;
-    padding: 8px 12px;
-    /* Apply standard button colors */
-    background-color: var(--secondary-color, #d2b48c);
-    border: 1px solid var(--border-color-dark, #a08460);
-    color: var(--text-color, #4a392c);
-    text-shadow: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-}
-
-.aspects-navigation .aspect-node i {
-    margin-right: 8px;
-    width: 1.2em;
-    text-align: center;
-    color: var(--primary-color); /* Icon color matches primary */
-    opacity: 0.9;
-}
-
-.aspects-navigation .aspect-node:hover:not(:disabled):not(.active) {
-    background-color: #e0d0b0; /* Lighten secondary */
-    border-color: var(--primary-color, #8b4513);
-    color: var(--primary-color, #8b4513);
-    transform: translateY(-1px);
-}
-
-.aspects-navigation .aspect-node.active {
-    background-color: var(--primary-color, #8b4513);
-    border-color: #5a2d0c; /* Darker primary border */
-    color: #ffffff; /* White text on active */
-    font-weight: bold;
-}
-
-.aspects-navigation .aspect-node.active i {
-    color: #ffffff; /* White icon */
-    opacity: 1;
-}
-
-/* Contemplation Button Specifics */
-.aspects-navigation .contemplation-node {
-    /* Start with secondary button style */
-    background-color: #b0a48a;
-    border-color: #8b7d6b;
-    color: #3f372e;
-}
-.aspects-navigation .contemplation-node:hover:not(:disabled):not(.active) {
-     background-color: #c4bba8; /* Lighter secondary */
-     border-color: #7a6d5b;
-}
-.aspects-navigation .contemplation-node.active {
-    /* Use accent color for active contemplation? */
-    background-color: var(--accent-color, #ffd700);
-    border-color: #b8860b; /* Darker gold */
-    color: var(--text-color, #4a392c);
-}
-.aspects-navigation .contemplation-node.active i {
-    color: var(--text-color, #4a392c);
-}
-
-/* Disabled State */
-.aspects-navigation .aspect-node:disabled {
-    background-color: #ccc; /* Standard disabled grey */
-    border-color: #aaa;
-    color: #777;
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-.aspects-navigation .aspect-node:disabled i {
-    color: #777;
-    opacity: 0.7;
-}
-
-.contemplation-cost { display: inline; } /* Keep this */
-
-/* Insight Content Panel */
-.insight-scroll-panel {
-    /* Already mostly themed correctly, ensure background consistency */
-    background-color: var(--background-light, #fdf8f0); /* Match popup background base */
-    color: var(--text-color, #4a392c);
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color-light, #d3c0a0);
-    flex-grow: 1;
-    overflow-y: auto;
-    min-height: 200px; /* Ensure it takes space */
-}
-
-.insight-scroll-panel h4 {
-    font-family: 'Cinzel Decorative', cursive;
-    color: var(--primary-color, #8b4513);
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--border-color-dark, #a08460);
-    padding-bottom: 5px;
-    font-size: 1.2em;
-}
-
-.insight-scroll-panel h5 {
-    font-family: 'Garamond', serif;
-    color: var(--link-color, #5a3a22);
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-size: 1.1em;
-    border: none;
-    text-align: left;
-}
-
-.insight-scroll-panel p, .insight-scroll-panel ul {
-    font-size: 0.95em;
-    line-height: 1.6;
-    margin-bottom: 12px;
-}
-
-.insight-scroll-panel ul {
-    list-style: disc;
-    padding-left: 25px;
-}
-
+/* --- Tapestry Deep Dive Modal ("Resonance Chamber") --- */
+.resonance-chamber-modal { max-width: 850px; width: 95%; max-height: 90vh; background: linear-gradient(to bottom, var(--background-light, #fdf8f0), var(--background-medium, #f5f0e1)); color: var(--text-color, #4a392c); border: 2px solid var(--border-color-dark, #a08460); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+.resonance-chamber-modal .popup-header { background-color: var(--secondary-color, #d2b48c); border-bottom: 2px solid var(--primary-color, #8b4513); padding: 10px 45px 10px 20px; }
+.resonance-chamber-modal .popup-header h3 { color: var(--link-color, #5a3a22); font-size: 1.3em; text-align: center; text-shadow: none; font-family: 'Cinzel Decorative', cursive; }
+.resonance-chamber-modal .close-button { color: var(--primary-color, #8b4513); opacity: 0.7; }
+.resonance-chamber-modal .close-button:hover { color: var(--text-color, #4a392c); opacity: 1; }
+.resonance-chamber-content { padding: 15px; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 15px; }
+.resonance-chamber-summary { background-color: rgba(245, 240, 225, 0.7); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--border-color-light, #d3c0a0); }
+.resonance-chamber-summary h4 { font-family: 'Cinzel Decorative', cursive; font-size: 1.1em; color: var(--primary-color, #8b4513); margin-bottom: 8px; border-bottom: 1px solid var(--border-color-light, #d3c0a0); padding-bottom: 4px; text-align: left; }
+.resonance-chamber-summary #deepDiveNarrativeP { font-size: 0.95em; font-style: italic; line-height: 1.5; color: var(--text-color, #4a392c); margin-bottom: 10px; }
+.resonance-chamber-summary .focused-concepts-icons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; margin-top: 8px; }
+.resonance-chamber-summary .focused-concepts-icons i { font-size: 1.2em; opacity: 0.8; padding: 3px; background-color: transparent; border-radius: 3px; }
+.resonance-chamber-main { display: flex; flex-direction: column; gap: 15px; flex-grow: 1; overflow: hidden; }
+.aspects-navigation { background-color: rgba(245, 240, 225, 0.5); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color-light, #d3c0a0); flex-shrink: 0; }
+.aspects-navigation h4 { font-family: 'Cinzel Decorative', cursive; font-size: 1.1em; color: var(--primary-color, #8b4513); margin-bottom: 10px; text-align: center; border: none; padding: 0; }
+.aspects-navigation .aspect-node { display: block; width: 100%; margin-bottom: 8px; text-align: left; border-radius: 4px; text-transform: none; letter-spacing: normal; font-size: 0.9em; font-family: 'Merriweather', serif; padding: 8px 12px; background-color: var(--secondary-color, #d2b48c); border: 1px solid var(--border-color-dark, #a08460); color: var(--text-color, #4a392c); text-shadow: none; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
+.aspects-navigation .aspect-node i { margin-right: 8px; width: 1.2em; text-align: center; color: var(--primary-color); opacity: 0.9; }
+.aspects-navigation .aspect-node:hover:not(:disabled):not(.active) { background-color: #e0d0b0; border-color: var(--primary-color, #8b4513); color: var(--primary-color, #8b4513); transform: translateY(-1px); }
+.aspects-navigation .aspect-node.active { background-color: var(--primary-color, #8b4513); border-color: #5a2d0c; color: #ffffff; font-weight: bold; }
+.aspects-navigation .aspect-node.active i { color: #ffffff; opacity: 1; }
+.aspects-navigation .contemplation-node { background-color: #b0a48a; border-color: #8b7d6b; color: #3f372e; }
+.aspects-navigation .contemplation-node:hover:not(:disabled):not(.active) { background-color: #c4bba8; border-color: #7a6d5b; }
+.aspects-navigation .contemplation-node.active { background-color: var(--accent-color, #ffd700); border-color: #b8860b; color: var(--text-color, #4a392c); }
+.aspects-navigation .contemplation-node.active i { color: var(--text-color, #4a392c); }
+.aspects-navigation .aspect-node:disabled { background-color: #ccc; border-color: #aaa; color: #777; cursor: not-allowed; opacity: 0.7; transform: none; box-shadow: none; }
+.aspects-navigation .aspect-node:disabled i { color: #777; opacity: 0.7; }
+.contemplation-cost { display: inline; }
+.insight-scroll-panel { background-color: var(--background-light, #fdf8f0); color: var(--text-color, #4a392c); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color-light, #d3c0a0); flex-grow: 1; overflow-y: auto; min-height: 200px; }
+.insight-scroll-panel h4 { font-family: 'Cinzel Decorative', cursive; color: var(--primary-color, #8b4513); margin-bottom: 12px; border-bottom: 1px solid var(--border-color-dark, #a08460); padding-bottom: 5px; font-size: 1.2em; }
+.insight-scroll-panel h5 { font-family: 'Garamond', serif; color: var(--link-color, #5a3a22); margin-top: 15px; margin-bottom: 5px; font-size: 1.1em; border: none; text-align: left; }
+.insight-scroll-panel p, .insight-scroll-panel ul { font-size: 0.95em; line-height: 1.6; margin-bottom: 12px; }
+.insight-scroll-panel ul { list-style: disc; padding-left: 25px; }
 .insight-scroll-panel li { margin-bottom: 8px; }
 .insight-scroll-panel strong { font-weight: bold; color: var(--primary-color, #8b4513); }
-.insight-scroll-panel p i { color: #888; } /* Placeholder text color */
+.insight-scroll-panel p i { color: #888; }
+.insight-scroll-panel .keyword-tag { background-color: var(--secondary-color, #d2b48c); color: var(--text-color, #4a392c); padding: 2px 8px; border-radius: 12px; font-size: 0.9em; margin: 2px; display: inline-block; border: 1px solid var(--border-color-dark, #a08460); }
+#completeContemplationBtn { display: block; margin: 20px auto 5px auto; }
+@media (min-width: 768px) { .resonance-chamber-main { flex-direction: row; } .aspects-navigation { flex: 0 0 220px; overflow-y: auto; max-height: calc(88vh - 200px); } .insight-scroll-panel { flex: 1 1 auto; min-width: 0; max-height: calc(88vh - 180px); } }
 
-.insight-scroll-panel .keyword-tag {
-    /* Style keyword tags if used */
-    background-color: var(--secondary-color, #d2b48c);
-    color: var(--text-color, #4a392c);
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.9em;
-    margin: 2px;
-    display: inline-block;
-    border: 1px solid var(--border-color-dark, #a08460);
-}
-
-#completeContemplationBtn {
-    /* Ensure button styles are applied correctly if added dynamically */
-    display: block;
-    margin: 20px auto 5px auto;
-    /* Inherits base button styles */
-}
-
-/* Responsive adjustments */
-@media (min-width: 768px) {
-    .resonance-chamber-main {
-        flex-direction: row; /* Side-by-side layout on larger screens */
-    }
-    .aspects-navigation {
-        flex: 0 0 220px; /* Slightly wider nav */
-        overflow-y: auto;
-        max-height: calc(88vh - 200px); /* Adjust based on modal height */
-    }
-    .insight-scroll-panel {
-        flex: 1 1 auto;
-        min-width: 0;
-        max-height: calc(88vh - 180px); /* Adjust based on modal height */
-    }
-}
-/* --- END Tapestry Deep Dive Modal Overhaul --- */
 
 /* --- Elemental Dilemma Modal --- */
 #dilemmaModal { max-width: 550px; }
@@ -836,60 +576,56 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .tiny-button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 /* Insight Boost Button */
-#addInsightButton {
-    margin-left: 10px;
-    padding: 3px 8px; /* Tiny button size */
-    font-size: 0.75em;
-    vertical-align: middle; /* Align nicely with text */
-    background-color: var(--success-color);
-    border-color: #1c7430;
-}
-#addInsightButton:disabled {
-    background-color: #aaa;
-    border-color: #888;
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-#addInsightButton i {
-    margin-right: 4px;
-}
-
-/* --- Resonance Indicators (Only used in popup now) --- */
-/* Styles defined within #popupResonanceGauge section */
+#addInsightButton { margin-left: 10px; padding: 3px 8px; font-size: 0.75em; vertical-align: middle; background-color: var(--success-color); border-color: #1c7430; }
+#addInsightButton:disabled { background-color: #aaa; border-color: #888; opacity: 0.6; cursor: not-allowed; }
+#addInsightButton i { margin-right: 4px; }
 
 /* --- Highlight Class --- */
 .highlight-feature { animation: pulseGlow 1.5s infinite alternate; box-shadow: 0 0 8px 2px var(--highlight-glow); border-radius: 5px; }
 @keyframes pulseGlow { from { box-shadow: 0 0 5px 1px rgba(255, 215, 0, 0.5); } to { box-shadow: 0 0 12px 3px var(--highlight-glow); } }
 
-/* --- Responsive Tweaks --- */
+/* --- Study Screen Rarity Counts --- */
+.initial-discovery-element .rarity-counts-display { display: flex; justify-content: center; gap: 10px; margin: 10px 0 8px 0; font-size: 0.8em; opacity: 0.8; }
+.rarity-counts-display .rarity-count { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px; border-radius: 3px; background-color: transparent; border: none; color: var(--text-color); }
+.rarity-counts-display .rarity-count i { font-size: 0.9em; }
+.rarity-counts-display .rarity-count.common { color: #495057; }
+.rarity-counts-display .rarity-count.common i { color: #6c757d; }
+.rarity-counts-display .rarity-count.uncommon { color: #0f5132; }
+.rarity-counts-display .rarity-count.uncommon i { color: #198754; }
+.rarity-counts-display .rarity-count.rare { color: #6f42c1; }
+.rarity-counts-display .rarity-count.rare i { color: #8a2be2; }
+.rarity-counts-display .rarity-count.error { color: var(--danger-color); font-style: italic; }
+.rarity-counts-display .rarity-count:hover { background-color: rgba(0,0,0,0.05); }
+
+/* --- Responsiveness --- */
 @media (max-width: 767px) {
   .app-container { margin: 5px; border-radius: 5px;}
   .screen { padding: 15px 10px; }
   .popup { width: 95%; max-height: 90vh; }
-  .popup.card-popup { max-width: 95%; } /* Allow popup to be wider on medium */
-  .card-popup .popup-main-content { flex-direction: column; padding: 10px; gap: 15px; } /* Ensure stacking */
-  .card-popup .popup-visual-area { max-width: 250px; width: 80%; align-self: center; position: static; /* Unstick on mobile */ }
+  .popup.card-popup { max-width: 95%; }
+  .card-popup .popup-main-content { flex-direction: column; padding: 10px; gap: 15px; }
+  .card-popup .popup-visual-area { max-width: 250px; width: 80%; align-self: center; position: static; }
   .card-popup .popup-info-area { max-height: none; overflow-y: visible; padding-right: 0;}
   .card-popup .popup-collapsible-area { max-height: none; overflow-y: visible; padding: 0 10px 10px 10px;}
   .card-popup .popup-actions { padding: 8px 10px; justify-content: center; }
-  .resonance-chamber-modal .popup-header h3 { font-size: 1.2em; } /* Adjust deep dive header */
+  .resonance-chamber-modal .popup-header h3 { font-size: 1.2em; }
   .resonance-chamber-main { flex-direction: column; }
-  .aspects-navigation { max-height: none; overflow-y: visible; flex: 0 0 auto; } /* Unset flex basis */
+  .aspects-navigation { max-height: none; overflow-y: visible; flex: 0 0 auto; }
   .insight-scroll-panel { max-height: none; overflow-y: visible;}
   .nav-button { padding: 6px 8px; font-size: 0.85em; }
-  .initial-discovery-elements { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .initial-discovery-elements { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; } /* Grid should wrap nicely */
   .study-actions-area { margin-top: 15px; padding-top: 10px; }
   .rituals-alcove { margin-top: 15px; }
   .grimoire-shelves-area { justify-content: center; }
-  .card-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); /* Adjust min width */ gap: 12px; padding: 10px; }
-  .concept-card { min-height: 275px; padding: 10px; } /* Adjust min height */
+  .card-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding: 10px; }
+  .concept-card { min-height: 275px; padding: 10px; }
 }
 @media (max-width: 480px) {
     body { font-size: 15px; }
     h1 { font-size: 1.6em; } h2 { font-size: 1.25em; } h3 { font-size: 1.1em; }
-    .card-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; padding: 5px; } /* Further adjust min width */
+    .card-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; padding: 5px; }
     .concept-card { min-height: 265px; padding: 8px; }
-    .card-header .card-name { font-size: 1.0em; } /* Further reduce if needed */
+    .card-header .card-name { font-size: 1.0em; }
     .card-header .card-rarity { font-size: 0.6em; }
     .card-visual { min-height: 80px; }
     .card-visual .card-visual-placeholder { font-size: 2.5em; }
@@ -907,9 +643,7 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
     .card-popup .detailed-description { font-size: 0.9em; max-height: 120px; }
     .card-popup .popup-actions { justify-content: space-around; }
     .initial-discovery-elements { grid-template-columns: 1fr; } /* Stack elements */
-    /* .deep-dive-nodes-container { text-align: center; } */ /* Old rule */
-    /* .deep-dive-nodes-container .deep-dive-node { display: inline-block; width: auto; margin: 4px; } */ /* Old rule */
-    .aspects-navigation .aspect-node { font-size: 0.85em; padding: 6px 10px; } /* Adjust new buttons */
+    .aspects-navigation .aspect-node { font-size: 0.85em; padding: 6px 10px; }
     .chart-container { height: 280px; max-width: 95%; padding: 10px; }
 }
 
@@ -952,179 +686,16 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #myNotesSection .collapsible-content { padding: 12px 15px; border: none; background: #fffefa; border-radius: 0 0 5px 5px; }
 
 /* --- Study Screen Rarity Counts --- */
-}
+.initial-discovery-element .rarity-counts-display { display: flex; justify-content: center; gap: 10px; margin: 10px 0 8px 0; font-size: 0.8em; opacity: 0.8; }
+.rarity-counts-display .rarity-count { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px; border-radius: 3px; background-color: transparent; border: none; color: var(--text-color); }
+.rarity-counts-display .rarity-count i { font-size: 0.9em; }
+.rarity-counts-display .rarity-count.common { color: #495057; }
+.rarity-counts-display .rarity-count.common i { color: #6c757d; }
+.rarity-counts-display .rarity-count.uncommon { color: #0f5132; }
+.rarity-counts-display .rarity-count.uncommon i { color: #198754; }
+.rarity-counts-display .rarity-count.rare { color: #6f42c1; }
+.rarity-counts-display .rarity-count.rare i { color: #8a2be2; }
+.rarity-counts-display .rarity-count.error { color: var(--danger-color); font-style: italic; }
+.rarity-counts-display .rarity-count:hover { background-color: rgba(0,0,0,0.05); }
 
-/* --- Study Screen Rarity Counts --- */
-.initial-discovery-element .rarity-counts-display {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 10px 0 8px 0; /* Add some spacing */
-    font-size: 0.8em;
-    opacity: 0.8;
-}
-
-.rarity-counts-display .rarity-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 5px;
-    border-radius: 3px;
-    /* Remove background/border from the span itself */
-    background-color: transparent;
-    border: none;
-    /* Set base color */
-    color: var(--text-color);
-}
-
-.rarity-counts-display .rarity-count i {
-    font-size: 0.9em; /* Adjust icon size */
-    /* Set icon color based on rarity */
-}
-
-/* Style icons and numbers based on rarity */
-.rarity-counts-display .rarity-count.common {
-    color: #495057; /* Dark grey for the number */
-}
-.rarity-counts-display .rarity-count.common i {
-     color: #6c757d; /* Slightly different grey for icon */
-}
-
-.rarity-counts-display .rarity-count.uncommon {
-    color: #0f5132; /* Dark green for the number */
-}
-.rarity-counts-display .rarity-count.uncommon i {
-     color: #198754; /* Brighter green for icon */
-}
-
-.rarity-counts-display .rarity-count.rare {
-    color: #6f42c1; /* Bootstrap purple for number */
-}
-.rarity-counts-display .rarity-count.rare i {
-     color: #8a2be2; /* Original purple for icon */
-}
-
-.rarity-counts-display .rarity-count.error {
-    color: var(--danger-color);
-    font-style: italic;
-}
-/* Add hover effect for clarity */
-.rarity-counts-display .rarity-count:hover {
-    background-color: rgba(0,0,0,0.05); /* Subtle hover */
-}
-/* --- Focus Concept Item Background --- */
-.focus-concept-item {
-    /* Ensure positioning context for pseudo-elements */
-    position: relative;
-    overflow: hidden; /* Prevent background bleeding out */
-    /* Add padding so text isn't right at the edge */
-    padding: 10px 8px;
-    /* Ensure text stands out - may need adjustment based on your base styles */
-    color: var(--text-color); /* Or maybe a slightly darker color if needed */
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.6); /* Subtle white glow */
-}
-
-.focus-concept-item.has-background-image {
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    /* Ensure text color is definitely readable */
-    color: #211a13; /* Darker brown for contrast */
-    text-shadow: 0 0 4px rgba(255, 253, 250, 0.8); /* Stronger white glow */
-}
-
-/* Overlay to wash out the background image */
-.focus-concept-item.has-background-image::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Use a semi-transparent version of your light background */
-    background-color: rgba(253, 248, 240, 0.88); /* Adjust alpha (0.8 to 0.95) for washout level */
-    /* Optional: Add a slight blur */
-    backdrop-filter: blur(1px);
-    -webkit-backdrop-filter: blur(1px); /* Safari */
-    z-index: 1; /* Sit behind the content */
-}
-
-/* Ensure text and icon are above the overlay */
-.focus-concept-item > i,
-.focus-concept-item > .name,
-.focus-concept-item > .type {
-    position: relative; /* Needed for z-index */
-    z-index: 2; /* Sit above the ::before overlay */
-}
-
-/* Adjust specific element styles if needed for contrast */
-.focus-concept-item.has-background-image .name {
-     font-weight: bold; /* Make name bolder */
-}
-
-.focus-concept-item.has-background-image .type {
-    color: #5c4d3e; /* Slightly darker grey/brown for type */
-}
-
-.focus-concept-item.has-background-image i {
-    /* Optional: Add a slight shadow to icons too */
-    /* text-shadow: 0 0 3px rgba(0, 0, 0, 0.3); */
-}
-/* --- Focus Concept Item Background --- */
-.focus-concept-item {
-    /* Ensure positioning context for pseudo-elements */
-    position: relative;
-    overflow: hidden; /* Prevent background bleeding out */
-    /* Add padding so text isn't right at the edge */
-    padding: 10px 8px;
-    /* Ensure text stands out - may need adjustment based on your base styles */
-    color: var(--text-color); /* Or maybe a slightly darker color if needed */
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.6); /* Subtle white glow */
-}
-
-.focus-concept-item.has-background-image {
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    /* Ensure text color is definitely readable */
-    color: #211a13; /* Darker brown for contrast */
-    text-shadow: 0 0 4px rgba(255, 253, 250, 0.8); /* Stronger white glow */
-}
-
-/* Overlay to wash out the background image */
-.focus-concept-item.has-background-image::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Use a semi-transparent version of your light background */
-    background-color: rgba(253, 248, 240, 0.88); /* Adjust alpha (0.8 to 0.95) for washout level */
-    /* Optional: Add a slight blur */
-    backdrop-filter: blur(1px);
-    -webkit-backdrop-filter: blur(1px); /* Safari */
-    z-index: 1; /* Sit behind the content */
-}
-
-/* Ensure text and icon are above the overlay */
-.focus-concept-item > i,
-.focus-concept-item > .name,
-.focus-concept-item > .type {
-    position: relative; /* Needed for z-index */
-    z-index: 2; /* Sit above the ::before overlay */
-}
-
-/* Adjust specific element styles if needed for contrast */
-.focus-concept-item.has-background-image .name {
-     font-weight: bold; /* Make name bolder */
-}
-
-.focus-concept-item.has-background-image .type {
-    color: #5c4d3e; /* Slightly darker grey/brown for type */
-}
-
-.focus-concept-item.has-background-image i {
-    /* Optional: Add a slight shadow to icons too */
-    /* text-shadow: 0 0 3px rgba(0, 0, 0, 0.3); */
-}/* --- END OF style.css --- */
+/* --- END OF COMPLETE style.css --- */
