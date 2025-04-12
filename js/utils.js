@@ -1,7 +1,6 @@
-// js/utils.js - Utility Functions
-import { elementDetails, elementKeyToFullName, elementNameToKey } from '../data.js'; // data.js is now in parent directory
+import { elementDetails, elementKeyToFullName, elementNameToKey } from '../data.js';
 
-console.log("utils.js loading...");
+console.log("utils.js loading... (with RoleFocus integration)");
 
 /**
  * Returns a descriptive label for a score (0-10).
@@ -32,13 +31,21 @@ export function getAffinityLevel(score) {
 
 /**
  * Gets the color associated with an element name.
- * @param {string} elementName - The full name of the element (e.g., "Attraction").
+ * @param {string} elementName - The full name of the element (e.g., "Attraction", "RoleFocus").
  * @returns {string} The hex color code.
  */
 export function getElementColor(elementName) {
     // Using fallback colors directly for simplicity now.
-    // TODO: Potentially read from elementDetails if defined there later.
-    const fallbackColors = { Attraction: '#FF6347', Interaction: '#4682B4', Sensory: '#32CD32', Psychological: '#FFD700', Cognitive: '#8A2BE2', Relational: '#FF8C00' };
+    // Added RoleFocus color
+    const fallbackColors = {
+        Attraction: '#FF6347',      // Tomato Red
+        Interaction: '#4682B4',     // Steel Blue (Leaning)
+        Sensory: '#32CD32',         // Lime Green
+        Psychological: '#FFD700',   // Gold
+        Cognitive: '#8A2BE2',       // Blue Violet
+        Relational: '#FF8C00',      // Dark Orange
+        RoleFocus: '#40E0D0'        // Turquoise (Intensity)
+    };
     return fallbackColors[elementName] || '#CCCCCC'; // Default grey
 }
 
@@ -68,7 +75,7 @@ export function hexToRgba(hex, alpha = 1) {
 export function getCardTypeIcon(cardType) {
      switch (cardType) {
          case "Orientation": return "fa-solid fa-compass";
-         case "Identity/Role": return "fa-solid fa-mask";
+         case "Identity/Role": return "fa-solid fa-mask"; // Good for BDSM styles too
          case "Practice/Kink": return "fa-solid fa-gear";
          case "Psychological/Goal": return "fa-solid fa-brain";
          case "Relationship Style": return "fa-solid fa-heart";
@@ -77,77 +84,84 @@ export function getCardTypeIcon(cardType) {
 }
 
 /**
- * Gets the Font Awesome icon class for a given element name.
+ * Gets the Font Awesome icon class for a given element name (now including RoleFocus).
  * @param {string} elementName - The full name of the element.
  * @returns {string} The Font Awesome class string.
  */
 export function getElementIcon(elementName) {
-     // Using fallback icons directly for now.
-     // TODO: Potentially read from elementDetails if defined there later.
      switch (elementName) {
          case "Attraction": return "fa-solid fa-magnet";
-         case "Interaction": return "fa-solid fa-users";
+         case "Interaction": return "fa-solid fa-arrows-left-right-to-line"; // Changed: Represents leaning/spectrum
          case "Sensory": return "fa-solid fa-hand-sparkles";
-         case "Psychological": return "fa-solid fa-comment-dots"; // Changed from brain (used by CardType)
+         case "Psychological": return "fa-solid fa-comment-dots";
          case "Cognitive": return "fa-solid fa-lightbulb";
          case "Relational": return "fa-solid fa-link";
+         case "RoleFocus": return "fa-solid fa-gauge-high"; // New: Represents intensity/focus
          default: return "fa-solid fa-atom"; // Generic fallback
      }
 }
 
 /**
  * Calculates the Euclidean distance between two score objects.
- * Assumes objects use the same keys (A, I, S, P, C, R).
- * @param {object} userScoresObj - The user's score object.
- * @param {object} conceptScoresObj - The concept's score object.
+ * Assumes objects use the same keys (A, I, S, P, C, R, RF).
+ * It dynamically uses the keys from the userScoresObj for comparison.
+ * @param {object} userScoresObj - The user's score object (expected to have 7 keys).
+ * @param {object} conceptScoresObj - The concept's score object (expected to have 7 keys).
  * @returns {number} The calculated Euclidean distance, or Infinity if inputs are invalid/incompatible.
  */
 export function euclideanDistance(userScoresObj, conceptScoresObj) {
      let sumOfSquares = 0;
      let validDimensions = 0;
 
-     // Basic validation
      if (!userScoresObj || typeof userScoresObj !== 'object' || !conceptScoresObj || typeof conceptScoresObj !== 'object') {
          console.warn("Invalid input for euclideanDistance", userScoresObj, conceptScoresObj);
          return Infinity;
      }
 
-     // Determine keys to compare. Use elementKeyToFullName if available to ensure consistency,
-     // otherwise fallback to keys from user scores.
-     const keysToCompare = elementNameToKey ? Object.values(elementNameToKey) : Object.keys(userScoresObj);
+     // Use the keys from the user's score object as the reference dimensions
+     const keysToCompare = Object.keys(userScoresObj);
 
      if (keysToCompare.length === 0) {
-         console.warn("Could not determine keys for comparison in euclideanDistance");
+         console.warn("Could not determine keys for comparison in euclideanDistance (userScoresObj is empty?)");
          return Infinity;
      }
+      // DEBUG: Log keys being compared
+     // console.log("Comparing keys:", keysToCompare);
 
      for (const key of keysToCompare) {
          const s1 = userScoresObj[key];
          const s2 = conceptScoresObj[key];
 
-         // Check if both scores are valid numbers for this dimension
+         // Ensure both scores are valid numbers for this dimension
          const s1Valid = typeof s1 === 'number' && !isNaN(s1);
-         // Check if the concept actually has this score and it's valid
+         // Ensure the concept *has* this score and it's valid
          const s2Valid = conceptScoresObj.hasOwnProperty(key) && typeof s2 === 'number' && !isNaN(s2);
 
          if (s1Valid && s2Valid) {
              sumOfSquares += Math.pow(s1 - s2, 2);
              validDimensions++;
          } else {
-             // Optionally log missing/invalid dimensions for debugging
-             // console.debug(`Skipping dimension ${key} in distance calc (s1Valid: ${s1Valid}, s2Valid: ${s2Valid})`);
+             // Log missing/invalid dimensions for debugging specific concepts if needed
+              if (!s2Valid) {
+                  console.debug(`Skipping dimension ${key} in distance calc for concept (Concept Score Invalid/Missing: ${s2}) User Score: ${s1}`);
+              } else if (!s1Valid) {
+                   console.debug(`Skipping dimension ${key} in distance calc for concept (User Score Invalid: ${s1}) Concept Score: ${s2}`);
+              }
          }
      }
 
      // If no dimensions could be compared, distance is undefined (Infinity)
      if (validDimensions === 0) {
-         console.warn("No valid dimensions found for comparison in euclideanDistance");
+         console.warn("No valid dimensions found for comparison in euclideanDistance (check if concept scores have all keys)");
          return Infinity;
      }
 
-     // If only some dimensions were valid, should we normalize?
-     // For now, just calculate based on valid dimensions. Could adjust later if needed.
-     // Example normalization: return Math.sqrt(sumOfSquares / validDimensions) * Math.sqrt(keysToCompare.length);
+     // Optional: Normalize distance based on the number of *valid* dimensions compared vs expected (7)
+     // Normalization helps if concepts sometimes lack a score, but currently we assume all 7 exist.
+     // const expectedDimensions = 7;
+     // if (validDimensions < expectedDimensions) {
+     //     return Math.sqrt(sumOfSquares / validDimensions) * Math.sqrt(expectedDimensions);
+     // }
 
      return Math.sqrt(sumOfSquares);
 }
