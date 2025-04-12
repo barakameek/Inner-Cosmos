@@ -1,4 +1,4 @@
-// --- START OF MODIFIED state.js ---
+// --- START OF COMPLETE state.js (with RoleFocus Integration) ---
 
 // js/state.js - Manages Application State and Persistence
 import * as Config from './config.js';
