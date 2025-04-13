@@ -1,11 +1,4 @@
 
-You are absolutely right! My apologies. It seems like in editing and combining the sections, a stray `const` declaration slipped in where it shouldn't be, causing that syntax error. This usually happens when a variable is declared again after it has already been defined.
-
-Let's fix that. I will carefully review the structure and ensure each main data constant is declared only once before the final export block.
-
-Here is the corrected, complete `data.js` file, with all enhancements and fixes applied:
-
-```javascript
 // --- START OF FILE data.js ---
 
 console.log("data.js starting... Unlocking forbidden knowledge, polishing the Grimoire shelves, and brewing potent insights!");
