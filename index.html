@@ -53,8 +53,8 @@
         <!-- Main Navigation Bar -->
         <nav id="mainNavBar" class="main-nav hidden">
              <button class="nav-button active" data-target="personaScreen">Persona</button>
-             <button class="nav-button" data-target="grimoireScreen">Grimoire (<span id="grimoireCount">0</span>)</button>
-             <button class="nav-button hidden-by-flow" data-target="studyScreen">Study</button>
+             <!-- Combined Workshop replaces Grimoire/Study -->
+             <button class="nav-button hidden-by-flow" data-target="workshopScreen">Workshop (<span id="grimoireCount">0</span>)</button>
              <button class="nav-button hidden-by-flow" data-target="repositoryScreen">Repository</button>
              <button id="settingsButton" class="nav-button settings-button" title="Settings & Save/Load Options"><i class="fas fa-cog"></i></button>
         </nav>
@@ -78,7 +78,7 @@
                              <!-- JS will populate this with 7 element sections -->
                          </div>
                          <hr>
-                         <h2>Resources <i class="fas fa-info-circle info-icon" title="Insight is the primary currency, earned through discovery, reflection, and rituals. Spend it in The Study to research new Concepts or unlock deeper knowledge."></i></h2>
+                         <h2>Resources <i class="fas fa-info-circle info-icon" title="Insight is the primary currency, earned through discovery, reflection, and rituals. Spend it in The Workshop to research new Concepts or unlock deeper knowledge."></i></h2>
                          <p>
                              Current Insight: <strong id="userInsightDisplayPersona">0.0</strong> <i class="fas fa-brain insight-icon"></i>
                              <button id="addInsightButton" class="button tiny-button hidden-by-flow" title="Get an Insight boost (cooldown applies)">
@@ -87,7 +87,7 @@
                          </p>
                      </div>
                      <div class="persona-column persona-constellation">
-                          <h2>Persona Tapestry - Focus <i class="fas fa-info-circle info-icon" title="Mark Concepts from your Grimoire as 'Focus' here. This shapes your Tapestry Narrative and may unlock unique content based on combinations."></i></h2>
+                          <h2>Persona Tapestry - Focus <i class="fas fa-info-circle info-icon" title="Mark Concepts from your Workshop as 'Focus' here. This shapes your Tapestry Narrative and may unlock unique content based on combinations."></i></h2>
                           <p>Curate concepts to shape your active Persona.</p>
                           <div class="tapestry-area" id="tapestryArea">
                                <h4 id="focusedConceptsHeader">Focused Concepts (0 / X) <i class="fas fa-info-circle info-icon" title="The number of Concepts currently marked as Focus out of your total available slots. Slots can be increased via Milestones."></i></h4>
@@ -143,62 +143,88 @@
              </div>
         </div>
 
-         <!-- Grimoire Screen -->
-         <div id="grimoireScreen" class="screen hidden grimoire-screen">
-              <h1>The Grand Grimoire <i class="fas fa-info-circle info-icon" title="Your personal collection of discovered Concept Cards. Filter, sort, view details, mark Concepts for Focus, or sell unwanted Concepts for Insight."></i></h1>
-              <div id="grimoireGuidance" class="guidance-message hidden"></div>
-              <div id="grimoireControls">
-                  <label for="grimoireSortOrder">Sort:</label>
-                  <select id="grimoireSortOrder"><option value="discovered">Date Added</option><option value="name">Name</option><option value="type">Type</option><option value="rarity">Rarity</option><option value="resonance">Resonance</option></select>
-                  <span class="filter-controls hidden-by-flow">
-                      <label for="grimoireTypeFilter">Type:</label>
-                      <select id="grimoireTypeFilter"><option value="All">All Types</option></select>
-                      <label for="grimoireElementFilter">Element:</label>
-                      <select id="grimoireElementFilter"><option value="All">All Elements</option></select> <!-- JS will populate with 7 -->
-                      <label for="grimoireRarityFilter">Rarity:</label>
-                      <select id="grimoireRarityFilter"><option value="All">All Rarities</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option></select>
-                      <label for="grimoireFocusFilter">Focus:</label>
-                      <select id="grimoireFocusFilter"><option value="All">All</option><option value="Focused">Focused</option><option value="Not Focused">Not Focused</option></select>
-                      <label for="grimoireSearchInput">Search:</label>
-                      <input type="text" id="grimoireSearchInput" placeholder="Name/Keyword..." />
-                  </span>
-                  <i class="fas fa-info-circle info-icon" title="Use these controls to filter and sort the Concepts displayed in your Grimoire below. More filters unlock as you progress."></i>
-              </div>
-              <div id="grimoireShelvesContainer" class="grimoire-shelves-area hidden-by-flow"></div>
-              <div id="grimoireContent" class="card-grid"></div>
-         </div>
+        <!-- NEW Workshop Screen (Replaces Study & Grimoire) -->
+        <div id="workshopScreen" class="screen hidden workshop-screen">
+            <h1>The Workshop <i class="fas fa-info-circle info-icon" title="Discover new Concepts via Research and manage your permanent collection in the Grimoire Library."></i></h1>
 
-       <!-- Study Screen -->
-       <div id="studyScreen" class="screen hidden study-screen">
-             <h1>The Alchemist's Study <i class="fas fa-info-circle info-icon" title="Research Elements based on your affinities to discover new Concepts. Perform Rituals and Seek Guidance for deeper insights."></i></h1>
-             <p id="initialDiscoveryGuidance" class="initial-discovery-guidance">Loading guidance...</p>
-             <div class="insight-display-area study-insight-display">
-                 Current Insight: <strong id="userInsightDisplayStudy">0.0</strong> <i class="fas fa-brain insight-icon"></i>
-             </div>
-             <hr class="study-divider">
-             <h2>Research Elements <i class="fas fa-info-circle info-icon" title="Click an Element to Research it. Higher personal scores suggest greater resonance with potential discoveries. Check cost (Insight or Free Research)."></i></h2>
-             <div id="initialDiscoveryElements" class="initial-discovery-elements">
-                 <!-- JS will populate with 7 research elements/buttons -->
-             </div>
-              <div class="study-actions-area hidden-by-flow">
-                  <hr class="study-divider">
-                  <h2>Daily Actions & Guidance <i class="fas fa-info-circle info-icon" title="Perform your daily free meditation or seek guided reflection prompts here (costs Insight)."></i></h2>
-                   <div class="action-buttons-area">
-                       <button id="freeResearchButton" class="button free-research-button hidden-by-flow" title="Once per day, perform research on your least attuned element for free.">Perform Daily Meditation</button>
-                       <button id="seekGuidanceButton" class="button small-button guidance-button hidden-by-flow" title="Spend Insight for a randomly selected Guided Reflection prompt.">Seek Guidance (<span id="guidedReflectionCostDisplay">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
-                   </div>
-              </div>
-             <hr class="study-divider">
-             <h2>Research Discoveries <i class="fas fa-info-circle info-icon" title="Concepts you uncover appear here temporarily. Choose to 'Add to Grimoire' or 'Sell' them for Insight."></i></h2>
-             <div id="studyResearchDiscoveries" class="card-grid">
-                <p><i>Discoveries will appear here...</i></p>
-             </div>
-             <div class="rituals-alcove hidden-by-flow">
-                  <hr class="study-divider">
-                  <h3>Daily Rituals <i class="fas fa-info-circle info-icon" title="Complete these tasks each day for bonus Insight or Attunement. They reset daily. Special Focus Rituals appear here when their required Concepts are focused."></i></h3>
-                  <ul id="dailyRitualsDisplay"><li>Unlock rituals by progressing further.</li></ul>
-             </div>
-        </div>
+            <div class="workshop-insight-display"> <!-- Centered Insight Display -->
+                Current Insight: <strong id="userInsightDisplayWorkshop">0.0</strong> <i class="fas fa-brain insight-icon"></i>
+            </div>
+
+            <div class="workshop-layout">
+
+                <!-- Left Panel: Research Bench -->
+                <div id="research-panel" class="research-panel">
+                    <h2>Research Bench <i class="fas fa-info-circle info-icon" title="Conduct research on Elements to discover new Concepts. Perform Daily Meditation or Seek Guidance."></i></h2>
+
+                    <div id="element-research-buttons" class="element-research-buttons">
+                        <!-- JS will populate this with 7 research elements/buttons -->
+                        <p><i>Loading research options...</i></p>
+                    </div>
+
+                    <hr class="panel-divider">
+
+                    <div id="daily-actions" class="daily-actions">
+                        <h3>Guidance & Rituals</h3>
+                         <div class="action-buttons-area">
+                            <button id="freeResearchButtonWorkshop" class="button free-research-button hidden-by-flow" title="Once per day, perform free research on your least attuned element.">Perform Daily Meditation</button>
+                            <button id="seekGuidanceButtonWorkshop" class="button small-button guidance-button hidden-by-flow" title="Spend Insight for a Guided Reflection prompt.">Seek Guidance (<span id="guidedReflectionCostDisplayWorkshop">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
+                         </div>
+                    </div>
+
+                    <hr class="panel-divider">
+
+                    <div id="research-results" class="research-results">
+                        <h3>Research Findings <i class="fas fa-info-circle info-icon" title="Concepts you uncover appear here temporarily. Add them to your Grimoire Library or Sell them."></i></h3>
+                        <div id="research-results-content" class="card-grid research-results-grid">
+                             <p><i>Discoveries will appear here...</i></p>
+                        </div>
+                         <!-- Duplicate message will be prepended here by JS -->
+                    </div>
+                </div>
+
+                <!-- Main Content: Grimoire Library -->
+                <div id="grimoire-library" class="grimoire-library">
+                    <h2>Grimoire Library <i class="fas fa-info-circle info-icon" title="Your permanent collection of discovered Concepts. Filter, sort, categorize using shelves, and manage your focus."></i></h2>
+
+                    <div id="grimoire-controls-workshop" class="grimoire-controls">
+                        <label for="grimoireSortOrderWorkshop">Sort:</label>
+                        <select id="grimoireSortOrderWorkshop"><option value="discovered">Date Added</option><option value="name">Name</option><option value="type">Type</option><option value="rarity">Rarity</option><option value="resonance">Resonance</option></select>
+                        <span class="filter-controls hidden-by-flow">
+                            <label for="grimoireTypeFilterWorkshop">Type:</label>
+                            <select id="grimoireTypeFilterWorkshop"><option value="All">All Types</option></select> <!-- JS populates -->
+                            <label for="grimoireElementFilterWorkshop">Element:</label>
+                            <select id="grimoireElementFilterWorkshop"><option value="All">All Elements</option></select> <!-- JS populates with 7 -->
+                            <label for="grimoireRarityFilterWorkshop">Rarity:</label>
+                            <select id="grimoireRarityFilterWorkshop"><option value="All">All Rarities</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option></select>
+                            <label for="grimoireFocusFilterWorkshop">Focus:</label>
+                            <select id="grimoireFocusFilterWorkshop"><option value="All">All</option><option value="Focused">Focused</option><option value="Not Focused">Not Focused</option></select>
+                            <label for="grimoireSearchInputWorkshop">Search:</label>
+                            <input type="text" id="grimoireSearchInputWorkshop" placeholder="Name/Keyword..." />
+                        </span>
+                        <i class="fas fa-info-circle info-icon" title="Use these controls to filter and sort the Concepts displayed in your Library below. Shelves provide categorization filters."></i>
+                    </div>
+
+                    <div id="grimoire-shelves-workshop" class="grimoire-shelves-area hidden-by-flow">
+                        <!-- JS will populate shelves -->
+                    </div>
+
+                    <div id="grimoire-grid-workshop" class="card-grid grimoire-grid">
+                         <!-- JS will populate discovered concept cards -->
+                         <p><i>Loading Grimoire...</i></p>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar: Daily Rituals -->
+                <div id="rituals-sidebar" class="rituals-sidebar hidden-by-flow">
+                    <h3>Daily Rituals <i class="fas fa-info-circle info-icon" title="Complete these tasks daily for bonuses. Focus Rituals appear when requirements are met."></i></h3>
+                    <ul id="dailyRitualsDisplayWorkshop">
+                        <li>Unlock rituals by progressing.</li>
+                    </ul>
+                </div>
+
+            </div> <!-- /.workshop-layout -->
+        </div> <!-- /#workshopScreen -->
 
          <!-- Repository Screen -->
          <div id="repositoryScreen" class="screen hidden repository-screen hidden-by-flow">
@@ -302,6 +328,7 @@
                   </div>
               </div>
               <div class="popup-actions">
+                   <!-- Sell button now added dynamically by JS -->
                   <button id="addToGrimoireButton" class="button small-button add-grimoire-button" title="Add this Concept to your permanent Grimoire collection.">Add to Grimoire</button>
                   <button id="markAsFocusButton" class="button small-button focus-button hidden" title="Toggle whether this Concept contributes to your Persona Tapestry.">Mark as Focus</button>
               </div>
