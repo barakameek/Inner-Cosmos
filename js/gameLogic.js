@@ -264,7 +264,7 @@ export function triggerReflectionPrompt(context = 'Standard', targetId = null, c
     else { console.error(`Could not select prompt for ${context}`); if (context === 'Dissonance' && reflectionTargetConceptId) { console.warn("Dissonance reflection failed to trigger, adding concept directly."); addConceptToGrimoireInternal(reflectionTargetConceptId, 'dissonanceFail'); UI.hidePopups(); UI.showTemporaryMessage("Reflection unavailable, concept added.", 3500); } else if (context === 'Guided') { gainInsight(Config.GUIDED_REFLECTION_COST, "Refund: No guided prompt"); UI.showTemporaryMessage("No guided reflections available.", 3000); } else { UI.showTemporaryMessage("No reflection prompt found.", 3000); } clearPopupState(); }
 }
 
-export function handleConfirmReflection
+
 
 // --- Notes, Library, Repository Actions ---
 export function handleSaveNote() { if (currentlyDisplayedConceptId === null) return; const notesTA = document.getElementById('myNotesTextarea'); if (!notesTA) return; const noteText = notesTA.value.trim(); if (State.updateNotes(currentlyDisplayedConceptId, noteText)) { const status = document.getElementById('noteSaveStatus'); if (status) { status.textContent = "Saved!"; status.classList.remove('error'); setTimeout(() => { status.textContent = ""; }, 2000); } } else { const status = document.getElementById('noteSaveStatus'); if (status) { status.textContent = "Error."; status.classList.add('error'); } } }
