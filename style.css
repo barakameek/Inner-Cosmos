@@ -1,4 +1,4 @@
-/* --- START OF COMPLETE style.css (with Workshop Layout) --- */
+/* --- START OF COMPLETE style.css (Workshop v3 - Popup Results) --- */
 
 :root {
     --primary-color: #8b4513; /* Saddle Brown */
@@ -37,10 +37,9 @@
     --relational-color: #FF8C00;
     --rolefocus-color: #40E0D0; /* Turquoise */
 
-    /* Workshop Specific */
-    --research-panel-bg: rgba(232, 216, 180, 0.4); /* Slightly darker beige */
-    --library-bg: rgba(255, 248, 231, 0.7); /* Lighter beige */
-    --sidebar-bg: rgba(210, 180, 140, 0.3); /* Tan */
+    /* Section Backgrounds */
+    --research-area-bg: rgba(232, 216, 180, 0.4); /* Was --research-panel-bg */
+    --library-area-bg: rgba(255, 248, 231, 0.7); /* Was --library-bg */
     --panel-divider-color: var(--border-color-dark);
 }
 
@@ -53,13 +52,13 @@ body {
   font-size: 16px;
 }
 .app-container {
-  max-width: 1600px; /* Allow wider for 3 columns */
+  max-width: 1400px; /* Adjusted for potentially wider grimoire */
   margin: 10px auto;
   background: linear-gradient(to bottom, var(--background-light), var(--background-medium));
   border-radius: 8px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color-light);
-  overflow: hidden;
+  overflow-x: hidden; /* Prevent horizontal scroll */
   position: relative;
 }
 
@@ -76,9 +75,11 @@ body {
 /* --- Headings and Text --- */
 h1, h2, h3, h4, h5 { font-family: 'Cinzel Decorative', cursive; letter-spacing: 0.5px; margin-top: 0; margin-bottom: 0.5em; /* Consistent bottom margin */ }
 h1 { color: #6a3906; text-align: center; margin-bottom: 20px; font-size: 1.8em; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-h2 { text-align: left; /* Default left alignment now */ color: var(--primary-color); margin-bottom: 15px; font-size: 1.4em; border-bottom: 1px solid var(--border-color-light); padding-bottom: 6px; }
-.research-panel h2, .grimoire-library h2 { text-align: center; } /* Center titles in Workshop sections */
-h3 { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: var(--link-color); font-family: 'Garamond', serif; }
+h2 { text-align: center; /* Default center now */ color: var(--primary-color); margin-bottom: 15px; font-size: 1.4em; border-bottom: 1px solid var(--border-color-light); padding-bottom: 6px; }
+.persona-elements-detailed h2 { text-align: left; border-bottom: none; } /* Keep persona specific */
+.repository-section h2 { text-align: left; } /* Keep repo specific */
+h3 { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: var(--link-color); font-family: 'Garamond', serif; text-align: center; }
+.popup h3 { margin-bottom: 10px; } /* Reduce margin in popups */
 h4 { font-size: 1.1em; margin-bottom: 10px; color: var(--link-color); text-align: left; font-family: 'Garamond', serif; }
 h5 { font-size: 1em; margin-bottom: 8px; color: #6a5a4a; text-align: center; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 4px; }
 p { margin-bottom: 15px; color: #5a4a3a; font-size: 1em; text-align: left; }
@@ -87,12 +88,11 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .popup-hr { border-top: 1px solid var(--border-color-light); margin: 10px 0; }
 .panel-divider { border: none; height: 1px; background: linear-gradient(to right, transparent, var(--panel-divider-color, var(--border-color-dark)), transparent); margin: 20px 0; }
 
-
 /* Info Icon Style */
 .info-icon { color: var(--info-icon-color); margin-left: 6px; cursor: help; font-size: 0.9em; transition: color 0.2s ease; border-bottom: 1px dotted transparent; }
 .info-icon:hover { color: var(--info-icon-hover-color); border-bottom-color: #ccc; }
 
-/* --- Study Theme Buttons (General Button Styles) --- */
+/* --- General Button Styles --- */
 .study-theme .button { background-color: var(--primary-color); border-color: #5a2d0c; color: #fff; text-shadow: 1px 1px 1px rgba(0,0,0,0.2); }
 .study-theme .button:hover:not(:disabled) { background-color: #a0522d; }
 .study-theme .back-button { background-color: #a8a296; border-color: #7a746a; color: var(--text-color); text-shadow: none; }
@@ -164,7 +164,6 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 @media (min-width: 992px) { .persona-overview { flex-direction: row; gap: 35px; } .persona-header h1 { flex-basis: auto; } .view-toggle-buttons { width: auto; margin-left: 15px; text-align: right; } .persona-column { flex: 1 1 0; } }
 .persona-column { background-color: rgba(255, 248, 231, 0.7); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color-light); min-width: 0; }
 .persona-constellation { background-color: rgba(232, 228, 216, 0.6); border-color: #c8b89a; }
-/* Persona elements section */
 .persona-elements-detailed h2 { text-align: left; border: none; margin-bottom: 12px; font-size: 1.3em; }
 .element-detail-entry { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dotted #c8b89a; border-left: 4px solid var(--element-color, #ccc); padding-left: 10px; border-radius: 0 4px 4px 0; transition: background-color 0.2s ease; }
 .element-detail-entry:hover { background-color: rgba(255,255,255,0.3); }
@@ -238,90 +237,56 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .chart-container { border: none; box-sizing: border-box; }
 #personaScoreChartCanvas { display: block; max-width: 100%; height: auto; }
 
+/* --- Workshop Screen (Simplified Layout) --- */
+.workshop-screen { background: linear-gradient(to bottom, #e0d8c0, #f0e7d8); padding-bottom: 30px; display: flex; flex-direction: column; }
+.workshop-insight-display { text-align: center; font-size: 1.1em; font-weight: bold; color: var(--link-color); background-color: rgba(255, 248, 220, 0.8); padding: 8px 12px; border-radius: 5px; border: 1px dashed var(--primary-color); margin: 0 auto 20px auto; max-width: 300px; flex-shrink: 0; }
+.workshop-section { padding: 20px 15px; margin-bottom: 25px; border-radius: 8px; border: 1px solid var(--border-color-dark); background-color: rgba(245, 240, 225, 0.6); /* Default background */ }
+.research-area { background-color: var(--research-area-bg); border-color: var(--border-color-dark); flex-shrink: 0; }
+.library-area { background-color: var(--library-area-bg); border-color: var(--border-color-light); flex-grow: 1; /* Allow library to take remaining vertical space */ display: flex; flex-direction: column; overflow: hidden; /* Contain children */ }
+.workshop-section h2 { text-align: center; margin-bottom: 20px; }
 
-/* --- NEW Workshop Screen --- */
-.workshop-screen { background: linear-gradient(to bottom, #e0d8c0, #f0e7d8); padding-bottom: 30px; }
-.workshop-insight-display { text-align: center; font-size: 1.1em; font-weight: bold; color: var(--link-color); background-color: rgba(255, 248, 220, 0.8); padding: 8px 12px; border-radius: 5px; border: 1px dashed var(--primary-color); margin: 0 auto 20px auto; max-width: 300px; }
-.workshop-layout { display: grid; grid-template-columns: 280px 1fr 240px; /* Left Panel, Main Library, Right Sidebar */ grid-template-areas: "research library rituals"; gap: 20px; }
-.research-panel { grid-area: research; background-color: var(--research-panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; max-height: calc(100vh - 100px); /* Limit panel height */ }
-.grimoire-library { grid-area: library; background-color: var(--library-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-light); display: flex; flex-direction: column; }
-.rituals-sidebar { grid-area: rituals; background-color: var(--sidebar-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); max-height: calc(100vh - 100px); overflow-y: auto; /* Allow sidebar to scroll if needed */ }
-.research-panel h2, .grimoire-library h2, .rituals-sidebar h3 { font-size: 1.3em; font-family: 'Garamond', serif; text-align: center; margin-bottom: 15px; color: var(--primary-color); border-bottom: 1px solid var(--border-color-dark); padding-bottom: 8px; flex-shrink: 0; /* Prevent shrinking */ }
-.rituals-sidebar h3 { font-size: 1.1em; }
+/* Research Area Content */
+.element-research-buttons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.element-research-buttons-grid .initial-discovery-element { border-radius: 6px; padding: 10px 12px; background-color: rgba(255, 250, 240, 0.9); border-color: var(--border-color-light); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.element-research-buttons-grid .initial-discovery-element.clickable:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.1); cursor: pointer; }
+.element-research-buttons-grid .initial-discovery-element.disabled { opacity: 0.7; background-color: #f0f0f0; cursor: not-allowed; }
+.element-research-buttons-grid .initial-discovery-element.disabled:hover { transform: none; box-shadow: none; }
+.element-research-buttons-grid .initial-discovery-element .element-header { display: flex; align-items: center; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid #eee;}
+.element-research-buttons-grid .initial-discovery-element .element-header i { font-size: 1.2em; margin-right: 8px; flex-shrink: 0;}
+.element-research-buttons-grid .initial-discovery-element .element-name { font-weight: bold; font-size: 1em; color: var(--primary-color); font-family: 'Cinzel Decorative', cursive; flex-grow: 1; }
+.element-research-buttons-grid .initial-discovery-element .element-score { font-size: 0.85em; font-weight: bold; color: #6a5a4a; white-space: nowrap; }
+.element-research-buttons-grid .initial-discovery-element .element-concept { font-size: 0.85em; color: #555; margin-bottom: 8px; line-height: 1.4; min-height: 2.5em; flex-grow: 1; }
+.element-research-buttons-grid .initial-discovery-element .rarity-counts-display { display: flex; justify-content: center; gap: 8px; margin: 6px 0; font-size: 0.75em; opacity: 0.8; }
+.element-research-buttons-grid .rarity-counts-display .rarity-count { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px; border-radius: 3px; background-color: transparent; border: none; color: var(--text-color); }
+.element-research-buttons-grid .rarity-counts-display .rarity-count i { font-size: 0.9em; }
+.element-research-buttons-grid .rarity-counts-display .rarity-count.common { color: #495057; } .element-research-buttons-grid .rarity-counts-display .rarity-count.common i { color: #6c757d; }
+.element-research-buttons-grid .rarity-counts-display .rarity-count.uncommon { color: #0f5132; } .element-research-buttons-grid .rarity-counts-display .rarity-count.uncommon i { color: #198754; }
+.element-research-buttons-grid .rarity-counts-display .rarity-count.rare { color: #6f42c1; } .element-research-buttons-grid .rarity-counts-display .rarity-count.rare i { color: #8a2be2; }
+.element-research-buttons-grid .rarity-counts-display .rarity-count.error { color: var(--danger-color); font-style: italic; }
+.element-research-buttons-grid .initial-discovery-element .element-action { text-align: center; margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--border-color-light); }
+.element-research-buttons-grid .initial-discovery-element .element-cost { font-weight: bold; font-size: 0.9em; color: var(--link-color); }
+.daily-actions-area { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--panel-divider-color); display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.daily-actions-area .button { margin: 0; flex-basis: content; }
 
-/* Workshop: Research Panel Contents */
-#element-research-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; overflow-y: auto; /* Allow buttons to scroll if panel too short */ flex-shrink: 1; }
-/* Reuse styles from study screen's element discovery */
-.research-panel .initial-discovery-element { border-radius: 6px; padding: 10px 12px; background-color: rgba(255, 250, 240, 0.9); border-color: var(--border-color-light); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.research-panel .initial-discovery-element.clickable:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-.research-panel .initial-discovery-element.disabled { opacity: 0.7; background-color: #f0f0f0; cursor: not-allowed; }
-.research-panel .initial-discovery-element.disabled:hover { transform: none; box-shadow: none; }
-.research-panel .initial-discovery-element .element-header { display: flex; align-items: center; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid #eee;}
-.research-panel .initial-discovery-element .element-header i { font-size: 1.2em; margin-right: 8px; flex-shrink: 0;}
-.research-panel .initial-discovery-element .element-name { font-weight: bold; font-size: 1em; color: var(--primary-color); font-family: 'Cinzel Decorative', cursive; flex-grow: 1; }
-.research-panel .initial-discovery-element .element-score { font-size: 0.85em; font-weight: bold; color: #6a5a4a; white-space: nowrap; }
-.research-panel .initial-discovery-element .element-concept { font-size: 0.85em; color: #555; margin-bottom: 8px; line-height: 1.4; min-height: 2.5em; flex-grow: 1; }
-.research-panel .initial-discovery-element .rarity-counts-display { display: flex; justify-content: center; gap: 8px; margin: 6px 0; font-size: 0.75em; opacity: 0.8; }
-.research-panel .rarity-counts-display .rarity-count { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px; border-radius: 3px; background-color: transparent; border: none; color: var(--text-color); }
-.research-panel .rarity-counts-display .rarity-count i { font-size: 0.9em; }
-.research-panel .rarity-counts-display .rarity-count.common { color: #495057; } .research-panel .rarity-counts-display .rarity-count.common i { color: #6c757d; }
-.research-panel .rarity-counts-display .rarity-count.uncommon { color: #0f5132; } .research-panel .rarity-counts-display .rarity-count.uncommon i { color: #198754; }
-.research-panel .rarity-counts-display .rarity-count.rare { color: #6f42c1; } .research-panel .rarity-counts-display .rarity-count.rare i { color: #8a2be2; }
-.research-panel .rarity-counts-display .rarity-count.error { color: var(--danger-color); font-style: italic; }
-.research-panel .initial-discovery-element .element-action { text-align: center; margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--border-color-light); }
-.research-panel .initial-discovery-element .element-cost { font-weight: bold; font-size: 0.9em; color: var(--link-color); }
-.daily-actions { margin-bottom: 15px; flex-shrink: 0; }
-.daily-actions h3 { font-size: 1.1em; font-family: 'Garamond', serif; text-align: center; margin-bottom: 10px; color: var(--link-color); border: none; padding: 0; }
-.daily-actions .action-buttons-area { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.daily-actions .button { width: 90%; margin: 0; }
-.research-results { margin-top: 15px; border-top: 1px solid var(--panel-divider-color); padding-top: 15px; flex-grow: 1; display: flex; flex-direction: column; min-height: 0; /* Needed for flex-grow + overflow */ }
-.research-results h3 { font-size: 1.1em; font-family: 'Garamond', serif; text-align: center; margin-bottom: 10px; color: var(--link-color); border: none; flex-shrink: 0; }
-#research-results-content { background-color: rgba(248, 244, 232, 0.8); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color-light); min-height: 150px; overflow-y: auto; flex-grow: 1; /* Allow results area to scroll */ }
-.research-results-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0 !important; }
-#research-results-content > p { text-align: center; color: #888; margin-top: 15px; font-size: 0.9em; }
-#research-results-content .research-result-item { display: block; border-bottom: none; margin: 0; padding: 0; background: transparent; }
-#research-results-content .concept-card { min-height: auto; padding: 8px; background: linear-gradient(145deg, #f0f0f0, #e5e5e5); border-color: #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.08); transition: none; cursor: default; }
-#research-results-content .concept-card:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-#research-results-content .card-header { padding: 4px 8px 3px 4px; margin-bottom: 4px; min-height: 35px; margin-left: 6px; }
-#research-results-content .card-header .card-name { font-size: 0.9em; }
-#research-results-content .card-visual { display: none; } /* Hide visual in results */
-#research-results-content .card-footer { margin-top: 5px; min-height: auto; padding-bottom: 0; margin-left: 4px;}
-#research-results-content .card-brief-desc { display: none; } /* Hide description */
-#research-results-content .card-affinities { margin-bottom: 5px; }
-#research-results-content .research-actions { margin-top: 8px; display: flex; gap: 8px; justify-content: center; }
-#research-results-content .research-actions .button { padding: 5px 10px; font-size: 0.8em; }
-#research-results-content .duplicate-message { background-color: #eee; border: 1px solid #ccc; color: #666; padding: 8px; border-radius: 5px; text-align: center; margin: 8px 0 12px 0; font-size: 0.9em; }
-#research-results-content .repository-item-discovery { background-color: #fff8dc; border: 2px dashed #b8860b; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 10px; }
-#research-results-content .repository-item-discovery h4 { margin-bottom: 8px; color: var(--primary-color); font-size: 1.1em; }
-#research-results-content .repository-item-discovery h4 i { margin-right: 6px; }
-
-/* Workshop: Grimoire Library Contents */
-.grimoire-library { flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; } /* Make library fill space and manage overflow */
-.grimoire-library .grimoire-controls { flex-shrink: 0; /* Prevent controls from shrinking */ display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 10px; margin-bottom: 15px; background-color: rgba(255,255,255,0.35); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color-dark); }
-.grimoire-library .grimoire-controls label { margin: 0 4px 0 8px; font-weight: bold; color: var(--link-color); font-family: 'Merriweather', serif; font-size: 0.9em; }
-.grimoire-library .grimoire-controls select, .grimoire-library .grimoire-controls input[type="text"] { padding: 5px 6px; border-radius: 5px; border: 1px solid var(--border-color-dark); background-color: #fff8e7; font-family: 'Merriweather', serif; font-size: 0.9em; }
-.grimoire-library .grimoire-controls input[type="text"] { width: 120px; }
-.grimoire-library .grimoire-shelves-area { flex-shrink: 0; /* Prevent shelves from shrinking */ display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 5px; margin-bottom: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05)); border-radius: 6px; border-top: 1px solid var(--border-color-dark); border-bottom: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-.grimoire-library .grimoire-shelf { flex: 1 1 150px; background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); border: 1px solid var(--border-color-light); border-radius: 6px; padding: 10px 12px; text-align: center; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; min-height: 60px; display: flex; flex-direction: column; justify-content: center; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.grimoire-library .grimoire-shelf h4 { font-size: 0.95em; margin: 0 0 4px 0; color: var(--link-color); font-family: 'Garamond', serif; text-align: center; border: none; padding: 0; }
-.grimoire-library .grimoire-shelf h4 .info-icon { font-size: 0.8em; }
-.grimoire-library .grimoire-shelf .shelf-count { font-size: 0.8em; color: #6a5a4a; font-style: italic; }
-.grimoire-library .grimoire-shelf:hover { background-color: #fffefa; border-color: var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); transform: translateY(-1px); }
-.grimoire-library .grimoire-shelf.active-shelf { background-color: var(--secondary-color); border-color: var(--primary-color); border-style: solid; box-shadow: inset 0 1px 4px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.05); transform: scale(1.01); }
-.grimoire-library .grimoire-shelf.drag-over { border-style: dashed; border-color: var(--success-color); background-color: #e8f5e8; box-shadow: inset 0 0 8px rgba(40, 167, 69, 0.4); transform: scale(1.03); }
-.grimoire-library .concept-card.dragging { opacity: 0.6; transform: scale(0.95) rotate(3deg); border: 2px dashed var(--accent-color); cursor: grabbing; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; }
-.grimoire-library .show-all-shelf { background: #f8f9fa; border-color: #dee2e6; }
-.grimoire-library .show-all-shelf:hover { border-color: #adb5bd; background-color: #e9ecef; }
-.grimoire-library .show-all-shelf.active-shelf { border-color: #6c757d; background-color: #e2e6ea; transform: scale(1.01); }
-#grimoire-grid-workshop { flex-grow: 1; /* Allow grid to take remaining space */ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; padding: 15px; background-color: rgba(255, 250, 235, 0.8); border-radius: 8px; border: 1px solid var(--border-color-light); margin-top: 8px; overflow-y: auto; /* Enable scrolling for the grid */ }
+/* Library Area Content */
+.library-area .grimoire-controls { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 10px; margin-bottom: 15px; background-color: rgba(255,255,255,0.35); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color-dark); }
+.library-area .grimoire-controls label { margin: 0 4px 0 8px; font-weight: bold; color: var(--link-color); font-family: 'Merriweather', serif; font-size: 0.9em; }
+.library-area .grimoire-controls select, .library-area .grimoire-controls input[type="text"] { padding: 5px 6px; border-radius: 5px; border: 1px solid var(--border-color-dark); background-color: #fff8e7; font-family: 'Merriweather', serif; font-size: 0.9em; }
+.library-area .grimoire-controls input[type="text"] { width: 120px; }
+.library-area .grimoire-shelves-area { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 5px; margin-bottom: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05)); border-radius: 6px; border-top: 1px solid var(--border-color-dark); border-bottom: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+.library-area .grimoire-shelf { flex: 1 1 150px; background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); border: 1px solid var(--border-color-light); border-radius: 6px; padding: 10px 12px; text-align: center; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; min-height: 60px; display: flex; flex-direction: column; justify-content: center; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.library-area .grimoire-shelf h4 { font-size: 0.95em; margin: 0 0 4px 0; color: var(--link-color); font-family: 'Garamond', serif; text-align: center; border: none; padding: 0; }
+.library-area .grimoire-shelf h4 .info-icon { font-size: 0.8em; }
+.library-area .grimoire-shelf .shelf-count { font-size: 0.8em; color: #6a5a4a; font-style: italic; }
+.library-area .grimoire-shelf:hover { background-color: #fffefa; border-color: var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); transform: translateY(-1px); }
+.library-area .grimoire-shelf.active-shelf { background-color: var(--secondary-color); border-color: var(--primary-color); border-style: solid; box-shadow: inset 0 1px 4px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.05); transform: scale(1.01); }
+.library-area .grimoire-shelf.drag-over { border-style: dashed; border-color: var(--success-color); background-color: #e8f5e8; box-shadow: inset 0 0 8px rgba(40, 167, 69, 0.4); transform: scale(1.03); }
+.library-area .concept-card.dragging { opacity: 0.6; transform: scale(0.95) rotate(3deg); border: 2px dashed var(--accent-color); cursor: grabbing; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; }
+.library-area .show-all-shelf { background: #f8f9fa; border-color: #dee2e6; }
+.library-area .show-all-shelf:hover { border-color: #adb5bd; background-color: #e9ecef; }
+.library-area .show-all-shelf.active-shelf { border-color: #6c757d; background-color: #e2e6ea; transform: scale(1.01); }
+#grimoire-grid-workshop { flex-grow: 1; /* Allow grid to take remaining space */ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; padding: 15px; background-color: rgba(255, 250, 235, 0.8); border-radius: 8px; border: 1px solid var(--border-color-light); margin-top: 8px; overflow-y: auto; /* Enable scrolling for the grid */ min-height: 300px; /* Ensure grid has some height */ }
 #grimoire-grid-workshop > p { text-align: center; color: #666; margin-top: 20px; font-style: italic; grid-column: 1 / -1; }
-
-/* Workshop: Rituals Sidebar */
-#dailyRitualsDisplayWorkshop { list-style: none; padding-left: 0; font-size: 0.9em; overflow-y: auto; /* Ensure rituals list scrolls if needed */ }
-#dailyRitualsDisplayWorkshop li { background-color: rgba(255, 248, 220, 0.9); padding: 8px 10px; margin-bottom: 6px; border-radius: 5px; border: 1px solid #b8a880; transition: background-color 0.3s ease; }
-#dailyRitualsDisplayWorkshop li.completed { text-decoration: line-through; color: #777; background-color: rgba(220, 220, 200, 0.8); }
-#dailyRitualsDisplayWorkshop li.focus-ritual { border-left: 3px solid #b8860b; font-style: italic; }
-#dailyRitualsDisplayWorkshop .ritual-reward { font-size: 0.9em; color: var(--link-color); margin-left: 6px; font-style: italic; }
 
 /* --- Repository Screen --- */
 .repository-screen { background-color: var(--background-dark); }
@@ -345,12 +310,20 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #repositoryInsights h5 { margin-top: 12px; color: var(--link-color); font-size: 1em; }
 #milestonesSection ul { list-style: none; padding-left: 0; }
 #milestonesSection li { background-color: #fffefa; border-left: 4px solid #b8860b; padding: 6px 10px; margin-bottom: 5px; border-radius: 0 4px 4px 0; font-size: 0.9em; }
+/* Daily Rituals in Repository */
+#dailyRitualsSection ul { list-style: none; padding-left: 0; font-size: 0.9em; }
+#dailyRitualsSection li { background-color: rgba(255, 248, 220, 0.9); padding: 8px 10px; margin-bottom: 6px; border-radius: 5px; border: 1px solid #b8a880; transition: background-color 0.3s ease; }
+#dailyRitualsSection li.completed { text-decoration: line-through; color: #777; background-color: rgba(220, 220, 200, 0.8); }
+#dailyRitualsSection li.focus-ritual { border-left: 3px solid #b8860b; font-style: italic; }
+#dailyRitualsSection .ritual-reward { font-size: 0.9em; color: var(--link-color); margin-left: 6px; font-style: italic; }
+
 
 /* --- Popups & Overlay --- */
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 99; backdrop-filter: blur(1.5px); }
 .popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #fdf5e6, #faf0e6); border: 1px solid var(--border-color-dark); padding: 0; border-radius: 10px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); z-index: 100; width: 92%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
 .close-button { position: absolute; top: 8px; right: 10px; background: none; border: none; font-size: 1.8em; color: #b8a880; cursor: pointer; line-height: 1; z-index: 101; transition: color 0.2s ease; padding: 2px 5px; }
 .close-button:hover { color: var(--primary-color); }
+.close-button:disabled { color: #ccc; cursor: not-allowed; }
 
 /* --- Concept Detail Popup --- */
 .popup.card-popup { max-width: 800px; background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); border: 2px solid var(--border-color-dark); }
@@ -404,7 +377,6 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 #myNotesSection details { margin: 0; }
 #myNotesSection summary { background-color: #e8d8c0; }
 #myNotesSection .collapsible-content { padding: 12px 15px; border: none; background: #fffefa; border-radius: 0 0 5px 5px; }
-/* Profile Comparison */
 .profile-comparison { display: flex; flex-direction: column; text-align: left; gap: 15px; padding: 10px 12px; }
 @media (min-width: 480px) { .profile-comparison { flex-direction: row; justify-content: space-around; gap: 20px; } }
 .profile-column h5 { text-align: center; font-family: 'Garamond', serif; font-size: 1em; }
@@ -438,6 +410,32 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .card-popup .focus-button.hidden { display: none; }
 .card-popup .popup-sell-button { background-color: var(--danger-color); border-color: #a52a2a; color: white; text-shadow: none; }
 .card-popup .popup-sell-button:hover:not(:disabled) { background-color: #c82333; }
+
+/* --- Research Results Popup --- */
+.research-results-popup { max-width: 750px; /* Can be wider than other popups */ }
+.research-results-popup h3 { text-align: center; margin-bottom: 15px; color: var(--primary-color); }
+.research-popup-content { padding: 15px; max-height: 65vh; /* Limit height */ overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Layout cards */ gap: 15px; background-color: rgba(245, 240, 225, 0.5); border-top: 1px solid var(--border-color-light); border-bottom: 1px solid var(--border-color-light); }
+.research-popup-content .research-result-item { /* Container for card + buttons */ background-color: rgba(255, 250, 240, 0.8); border: 1px solid var(--border-color-dark); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.research-popup-content .concept-card { /* Style the card within the item */ min-height: auto; padding: 8px; background: linear-gradient(145deg, #f0f0f0, #e5e5e5); border-color: #ccc; box-shadow: none; transition: none; cursor: default; flex-grow: 1; /* Allow card to take space */ margin-bottom: 10px; border: none; }
+.research-popup-content .concept-card::before { display: none; } /* Hide category border */
+.research-popup-content .card-header { padding: 4px 8px 3px 4px; margin-bottom: 4px; min-height: 35px; margin-left: 0;}
+.research-popup-content .card-header .card-name { font-size: 0.95em; }
+.research-popup-content .card-visual { display: none; }
+.research-popup-content .card-footer { margin-top: 5px; min-height: auto; padding-bottom: 0; margin-left: 0;}
+.research-popup-content .card-brief-desc { display: block; /* Show brief desc */ font-size: 0.85em; min-height: calc(1.4em * 2); flex-grow: 0; }
+.research-popup-content .card-affinities { margin-bottom: 5px; }
+.research-popup-content .card-actions { /* Actions for Keep/Sell */ position: static; opacity: 1; pointer-events: auto; margin-top: auto; display: flex; justify-content: space-around; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color-light); }
+.research-popup-content .card-actions .button { /* Adjust button size/style */ padding: 5px 10px; font-size: 0.8em; width: 45%; }
+.research-popup-content .keep-button { background-color: var(--success-color); border-color: #1e5a3a; }
+.research-popup-content .keep-button:hover:not(:disabled) { background-color: #3cb371; }
+.research-popup-content .sell-button { background-color: var(--danger-color); border-color: #a52a2a; color: white;}
+.research-popup-content .sell-button:hover:not(:disabled) { background-color: #c82333; }
+.research-popup-content .research-result-item.choice-made .card-actions { display: none; /* Hide buttons after choice */ }
+.research-popup-content .research-result-item.choice-made::after { /* Visual feedback for choice */ content: attr(data-choice-made); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 1.8em; font-weight: bold; color: rgba(0,0,0,0.3); z-index: 10; pointer-events: none; text-transform: uppercase; border: 3px solid rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; }
+.research-popup-content p { /* Placeholder/message */ text-align: center; color: #666; font-size: 1em; grid-column: 1 / -1; } /* Span across grid */
+.research-popup-actions { padding: 10px 15px; border-top: 1px solid var(--border-color-dark); text-align: center; background-color: var(--background-medium); }
+.research-popup-actions small { font-size: 0.9em; color: #555; }
+
 
 /* --- Reflection Modal --- */
 .reflection-modal { max-width: 500px; }
@@ -601,9 +599,8 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .card-focus-button:hover:not(:disabled) { background-color: #e0d0b0; }
 .card-focus-button.marked:hover:not(:disabled) { background-color: #ffeca0; }
 .card-focus-button:disabled { background-color: #ccc; border-color: #aaa; color: #777; opacity: 0.6; cursor: not-allowed; }
-/* Research results card variation */
-.research-note-card { border-color: #aaa; background: linear-gradient(145deg, #f5f5f5, #e8e8e8); opacity: 0.95; }
-.research-note-card:hover { transform: none; box-shadow: 0 4px 8px rgba(80, 50, 20, 0.1), inset 0 0 1px rgba(255, 255, 255, 0.5); }
+/* Research results card variation (Removed as results are now in popup) */
+/* .research-note-card { ... } */
 
 /* --- Styles for Integrated Deep Dive (in Persona) --- */
 .element-description .element-deep-dive-container { margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color-light); }
@@ -622,19 +619,6 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 
 
 /* --- Responsiveness --- */
-@media (max-width: 1200px) {
-    .workshop-layout { grid-template-columns: 250px 1fr 200px; /* Adjust column widths */ gap: 15px; }
-}
-
-@media (max-width: 991px) {
-    .workshop-layout { grid-template-columns: 1fr; /* Stack columns */ grid-template-areas: "research" "library" "rituals"; }
-    .research-panel { order: 1; max-height: none; /* Remove max height when stacked */ }
-    .grimoire-library { order: 2; }
-    .rituals-sidebar { order: 3; max-height: 300px; /* Limit height when stacked */ }
-    #grimoire-grid-workshop { max-height: 50vh; /* Adjust height */ }
-    #research-results-content { max-height: 30vh; } /* Adjust height */
-}
-
 @media (max-width: 767px) {
   .app-container { margin: 5px; border-radius: 5px;}
   .screen { padding: 15px 10px; }
@@ -651,14 +635,13 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
   .insight-scroll-panel { max-height: none; overflow-y: visible;}
   .nav-button { padding: 6px 8px; font-size: 0.85em; }
   /* Workshop specific mobile adjustments */
-  .research-panel .initial-discovery-element { padding: 8px 10px; }
-  .grimoire-library .grimoire-controls { flex-direction: column; align-items: stretch; }
-  .grimoire-library .grimoire-controls .filter-controls { display: grid; grid-template-columns: auto 1fr; gap: 5px; width: 100%;}
-  .grimoire-library .grimoire-controls label { text-align: right; margin: 0; }
-  .grimoire-library .grimoire-controls input[type="text"] { width: auto; }
-  .grimoire-library .grimoire-shelves-area { justify-content: center; }
+  .library-area .grimoire-controls { flex-direction: column; align-items: stretch; }
+  .library-area .grimoire-controls .filter-controls { display: grid; grid-template-columns: auto 1fr; gap: 5px; width: 100%;}
+  .library-area .grimoire-controls label { text-align: right; margin: 0; }
+  .library-area .grimoire-controls input[type="text"] { width: auto; }
+  .library-area .grimoire-shelves-area { justify-content: center; }
   #grimoire-grid-workshop { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding: 10px; max-height: 60vh; }
-  #research-results-content { max-height: 35vh; }
+  .research-popup-content { grid-template-columns: 1fr; max-height: 70vh;} /* Stack results in popup */
 }
 
 @media (max-width: 480px) {
@@ -684,13 +667,13 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
     .card-popup .detailed-description { font-size: 0.9em; max-height: 120px; }
     .card-popup .popup-actions { justify-content: space-around; }
     /* Workshop specific mobile adjustments */
-    .research-panel .initial-discovery-element { flex-direction: column; /* Stack header/content */ }
-    .research-panel .element-research-buttons { gap: 8px; }
+    .element-research-buttons-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     .aspects-navigation .aspect-node { font-size: 0.85em; padding: 6px 10px; }
     .chart-container { height: 280px; max-width: 95%; padding: 10px; }
     #grimoire-grid-workshop { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Smaller cards */ }
-    .grimoire-library .grimoire-controls .filter-controls { grid-template-columns: 1fr; } /* Stack filters fully */
-    .grimoire-library .grimoire-controls label { text-align: left; }
+    .library-area .grimoire-controls .filter-controls { grid-template-columns: 1fr; } /* Stack filters fully */
+    .library-area .grimoire-controls label { text-align: left; }
+    .research-popup-content { max-height: 75vh;}
 }
 
 /* --- END OF COMPLETE style.css --- */
