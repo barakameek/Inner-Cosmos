@@ -1,10 +1,10 @@
-// --- START OF MODIFIED main.js (for Workshop Screen) ---
+// --- START OF COMPLETE main.js (Corrected Imports) ---
 
-import * as UI from './js/ui.js';
-import * as State from './js/state.js';
-import * as GameLogic from './js/gameLogic.js';
-import * as Utils from './js/utils.js'; // Maybe needed for drag/drop data
-import * as Config from './js/config.js'; // Maybe needed
+import * as UI from './js/ui.js'; // Correct path
+import * as State from './js/state.js'; // Correct path
+import * as GameLogic from './js/gameLogic.js'; // Correct path
+import * as Utils from './js/utils.js'; // Correct path
+import * as Config from './js/config.js'; // Correct path
 
 console.log("main.js loading... (Workshop Screen integration)");
 
@@ -122,7 +122,14 @@ function setupNavigationListeners() {
     if (startBtn) startBtn.addEventListener('click', () => { UI.initializeQuestionnaireUI(); UI.showScreen('questionnaireScreen'); });
     if (loadBtn) loadBtn.addEventListener('click', () => {
         if (State.loadGameState()) {
-            UI.showScreen('personaScreen'); // Or wherever appropriate after load
+            // Determine the correct screen to show after load
+            if (State.getState().questionnaireCompleted) {
+                 UI.showScreen('personaScreen');
+            } else if (State.getState().currentElementIndex > -1) {
+                 UI.showScreen('questionnaireScreen');
+            } else {
+                UI.showScreen('welcomeScreen'); // Fallback if something is odd
+            }
             GameLogic.checkForDailyLogin();
             UI.populateGrimoireFilters();
             UI.displayMilestones();
@@ -138,10 +145,18 @@ function setupNavigationListeners() {
 
 function handleNavClick(event) {
     const targetScreen = event.target.dataset.target;
-    if (targetScreen && targetScreen !== 'settingsButton') { // Exclude settings button which has its own handler
+    // Allow navigation even if the button might be technically hidden by flow
+    // if the state indicates post-questionnaire (e.g., after loading a saved game)
+    const isPostQuestionnaire = State.getState().questionnaireCompleted;
+    const canNavigate = isPostQuestionnaire || ['welcomeScreen', 'questionnaireScreen'].includes(targetScreen) || event.target.id === 'settingsButton';
+
+    if (targetScreen && targetScreen !== 'settingsButton' && canNavigate) {
         UI.showScreen(targetScreen);
     } else if (targetScreen === 'settingsButton') {
         // Settings button has its own handler in setupGlobalEventListeners
+    } else if (!canNavigate) {
+        console.log("Navigation blocked: Questionnaire not complete.");
+        UI.showTemporaryMessage("Complete the Experimentation first!", 2500);
     } else {
          console.warn("Nav button clicked without target screen:", event.target);
     }
@@ -280,6 +295,7 @@ function setupWorkshopScreenListeners() {
         controls.addEventListener('change', () => UI.refreshGrimoireDisplay());
         const searchInput = document.getElementById('grimoireSearchInputWorkshop');
         if (searchInput) {
+            // Use 'input' for instant feedback, 'change' fires less often
             searchInput.addEventListener('input', () => UI.refreshGrimoireDisplay());
         }
     }
@@ -307,20 +323,23 @@ function setupWorkshopScreenListeners() {
             const card = event.target.closest('.concept-card');
 
             if (focusButton && focusButton.dataset.conceptId && !focusButton.disabled) {
-                event.stopPropagation(); // Prevent card click handler
+                event.stopPropagation(); // Prevent card click handler from firing too
                 const conceptId = parseInt(focusButton.dataset.conceptId);
                 GameLogic.handleCardFocusToggle(conceptId);
-                // Update button visuals immediately
+                // Update button visuals immediately (optional, UI.refresh might cover it)
                  const isFocused = State.getFocusedConcepts().has(conceptId);
                  focusButton.classList.toggle('marked', isFocused);
                  focusButton.innerHTML = `<i class="fas ${isFocused ? 'fa-star' : 'fa-regular fa-star'}"></i>`;
                  focusButton.title = isFocused ? 'Remove Focus' : 'Mark as Focus';
             } else if (sellButton && sellButton.dataset.conceptId) {
-                 event.stopPropagation(); // Prevent card click handler
+                 event.stopPropagation(); // Prevent card click handler from firing too
                  GameLogic.handleSellConcept(event);
             } else if (card && card.dataset.conceptId) {
-                const conceptId = parseInt(card.dataset.conceptId);
-                UI.showConceptDetailPopup(conceptId);
+                // Only trigger if not clicking a button inside the card
+                if(!focusButton && !sellButton) {
+                     const conceptId = parseInt(card.dataset.conceptId);
+                     UI.showConceptDetailPopup(conceptId);
+                }
             }
         });
 
@@ -333,7 +352,11 @@ function setupWorkshopScreenListeners() {
             if (card && card.dataset.conceptId) {
                 draggedCardId = parseInt(card.dataset.conceptId);
                 event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', draggedCardId); // Pass ID
+                try { // Use try/catch for IE compatibility if needed, though text/plain is standard
+                   event.dataTransfer.setData('text/plain', draggedCardId.toString());
+                } catch (e) {
+                   event.dataTransfer.setData('Text', draggedCardId.toString());
+                }
                 // Optional: Add dragging class for visual feedback
                 setTimeout(() => card.classList.add('dragging'), 0);
                 console.log(`Drag Start: Card ID ${draggedCardId}`);
@@ -376,7 +399,7 @@ function setupWorkshopScreenListeners() {
                      shelf.classList.remove('drag-over');
                  }
                  // If leaving the whole shelves container
-                 if (!shelves.contains(event.relatedTarget)){
+                 if (event.currentTarget === shelves && !shelves.contains(event.relatedTarget)){
                      shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
                  }
             });
@@ -385,14 +408,21 @@ function setupWorkshopScreenListeners() {
                 event.preventDefault();
                  shelves.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over')); // Clean up visual feedback
                 const shelf = event.target.closest('.grimoire-shelf:not(.show-all-shelf)');
-                const droppedCardId = draggedCardId || parseInt(event.dataTransfer.getData('text/plain')); // Get ID
+                let droppedCardIdFromData = null;
+                 try { // Try standard 'text/plain' first
+                     droppedCardIdFromData = parseInt(event.dataTransfer.getData('text/plain'));
+                 } catch (e) { // Fallback for older browsers/IE
+                     droppedCardIdFromData = parseInt(event.dataTransfer.getData('Text'));
+                 }
+                 // Use the globally stored ID if dataTransfer fails (less reliable but backup)
+                const finalCardId = !isNaN(droppedCardIdFromData) ? droppedCardIdFromData : draggedCardId;
 
-                if (shelf && shelf.dataset.categoryId && droppedCardId) {
+                if (shelf && shelf.dataset.categoryId && finalCardId) {
                     const targetCategoryId = shelf.dataset.categoryId;
-                    console.log(`Drop: Card ID ${droppedCardId} onto Category ${targetCategoryId}`);
-                    GameLogic.handleCategorizeCard(droppedCardId, targetCategoryId);
+                    console.log(`Drop: Card ID ${finalCardId} onto Category ${targetCategoryId}`);
+                    GameLogic.handleCategorizeCard(finalCardId, targetCategoryId);
                 } else {
-                     console.log("Drop occurred outside a valid shelf or Card ID missing.");
+                     console.log("Drop occurred outside a valid shelf or Card ID missing.", { shelf, categoryId: shelf?.dataset.categoryId, finalCardId });
                  }
                  draggedCardId = null; // Reset dragged ID
             });
@@ -505,4 +535,4 @@ function setupPopupInteractionListeners() {
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 console.log("main.js loaded.");
-// --- END OF MODIFIED main.js ---
+// --- END OF COMPLETE main.js ---
