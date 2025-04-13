@@ -1,14 +1,12 @@
-// --- START OF COMPLETE main.js (Verified Imports - Attempt 3) ---
+// --- START OF COMPLETE main.js (Workshop v3 - Popup Results) ---
 
-// Correct imports assuming main.js is in the ROOT directory
-// and config.js, utils.js, state.js, ui.js, gameLogic.js are inside the 'js' folder.
 import * as UI from './js/ui.js';
 import * as State from './js/state.js';
 import * as GameLogic from './js/gameLogic.js';
 import * as Utils from './js/utils.js';
 import * as Config from './js/config.js';
 
-console.log("main.js loading... (Workshop Screen integration) - Verifying imports.");
+console.log("main.js loading... (Workshop v3 - Popup Results)");
 
 // --- Initialization ---
 function initializeApp() {
@@ -21,7 +19,7 @@ function initializeApp() {
         UI.showScreen('personaScreen'); // Show persona screen if questionnaire already done
         GameLogic.checkForDailyLogin(); // Check daily login on load
         UI.populateGrimoireFilters(); // Populate filters even if not showing screen yet
-        UI.displayMilestones();
+        UI.displayMilestones(); // Display milestones now in Repository
         UI.updateInsightDisplays();
         UI.updateFocusSlotsDisplay();
         UI.updateGrimoireCounter();
@@ -40,7 +38,7 @@ function initializeApp() {
     setupQuestionnaireListeners(); // Keep these active
     setupPersonaScreenListeners(); // Keep these active
     setupWorkshopScreenListeners(); // Add listeners for the new screen
-    setupRepositoryListeners(); // Keep these active
+    setupRepositoryListeners(); // Add listeners for repo (includes rituals now)
 
     // Initial UI updates based on loaded/initial state
     UI.updateInsightDisplays();
@@ -113,9 +111,8 @@ function setupGlobalEventListeners() {
 function setupNavigationListeners() {
     const navButtons = document.querySelectorAll('.nav-button');
     navButtons.forEach(button => {
-        // Ensure listener is only added once if this function is called multiple times
-        button.removeEventListener('click', handleNavClick); // Remove previous listener
-        button.addEventListener('click', handleNavClick); // Add new listener
+        button.removeEventListener('click', handleNavClick);
+        button.addEventListener('click', handleNavClick);
     });
 
     // Welcome Screen Buttons
@@ -124,17 +121,17 @@ function setupNavigationListeners() {
     if (startBtn) startBtn.addEventListener('click', () => { UI.initializeQuestionnaireUI(); UI.showScreen('questionnaireScreen'); });
     if (loadBtn) loadBtn.addEventListener('click', () => {
         if (State.loadGameState()) {
-            // Determine the correct screen to show after load
             if (State.getState().questionnaireCompleted) {
                  UI.showScreen('personaScreen');
             } else if (State.getState().currentElementIndex > -1) {
                  UI.showScreen('questionnaireScreen');
             } else {
-                UI.showScreen('welcomeScreen'); // Fallback if something is odd
+                UI.showScreen('welcomeScreen');
             }
             GameLogic.checkForDailyLogin();
             UI.populateGrimoireFilters();
-            UI.displayMilestones();
+            UI.displayMilestones(); // Setup milestones display
+            UI.displayDailyRituals(); // Setup rituals display
             UI.updateInsightDisplays();
             UI.updateFocusSlotsDisplay();
             UI.updateGrimoireCounter();
@@ -147,15 +144,13 @@ function setupNavigationListeners() {
 
 function handleNavClick(event) {
     const targetScreen = event.target.dataset.target;
-    // Allow navigation even if the button might be technically hidden by flow
-    // if the state indicates post-questionnaire (e.g., after loading a saved game)
     const isPostQuestionnaire = State.getState().questionnaireCompleted;
     const canNavigate = isPostQuestionnaire || ['welcomeScreen', 'questionnaireScreen'].includes(targetScreen) || event.target.id === 'settingsButton';
 
     if (targetScreen && targetScreen !== 'settingsButton' && canNavigate) {
         UI.showScreen(targetScreen);
     } else if (targetScreen === 'settingsButton') {
-        // Settings button has its own handler in setupGlobalEventListeners
+        // Settings handled globally
     } else if (!canNavigate) {
         console.log("Navigation blocked: Questionnaire not complete.");
         UI.showTemporaryMessage("Complete the Experimentation first!", 2500);
@@ -170,7 +165,7 @@ function setupQuestionnaireListeners() {
     const prevBtn = document.getElementById('prevElementButton');
     if (nextBtn) nextBtn.addEventListener('click', GameLogic.goToNextElement);
     if (prevBtn) prevBtn.addEventListener('click', GameLogic.goToPrevElement);
-    // Input listeners are added dynamically in UI.displayElementQuestions
+    // Input listeners added dynamically
 }
 
 function setupPersonaScreenListeners() {
@@ -183,80 +178,59 @@ function setupPersonaScreenListeners() {
     const dilemmaBtn = document.getElementById('elementalDilemmaButton');
     const synergyBtn = document.getElementById('exploreSynergyButton');
     const suggestSceneBtn = document.getElementById('suggestSceneButton');
-    const suggestedSceneContainer = document.getElementById('suggestedSceneContent'); // For meditate button listener
-
+    const suggestedSceneContainer = document.getElementById('suggestedSceneContent');
 
     if (detailedViewBtn && summaryViewBtn && personaDetailedView && personaSummaryView) {
         detailedViewBtn.addEventListener('click', () => {
             personaDetailedView.classList.remove('hidden'); personaDetailedView.classList.add('current');
             personaSummaryView.classList.add('hidden'); personaSummaryView.classList.remove('current');
             detailedViewBtn.classList.add('active'); summaryViewBtn.classList.remove('active');
-            GameLogic.displayPersonaScreenLogic(); // Refresh detailed view content
+            GameLogic.displayPersonaScreenLogic();
         });
         summaryViewBtn.addEventListener('click', () => {
             personaSummaryView.classList.remove('hidden'); personaSummaryView.classList.add('current');
             personaDetailedView.classList.add('hidden'); personaDetailedView.classList.remove('current');
             summaryViewBtn.classList.add('active'); detailedViewBtn.classList.remove('active');
-            UI.displayPersonaSummary(); // Render summary view content
+            UI.displayPersonaSummary();
         });
     }
 
-    // Listener for unlocking deep dive levels (delegated)
     if (personaElementsContainer) {
         personaElementsContainer.addEventListener('click', (event) => {
             const unlockButton = event.target.closest('.unlock-button');
-            if (unlockButton) {
-                GameLogic.handleUnlockLibraryLevel(event);
-            }
-            // Handle toggling details open/closed
-            const summary = event.target.closest('.element-detail-header');
-            if (summary && summary.parentElement.tagName === 'DETAILS') {
-                // Optional: Add logic if needed when details are toggled
-            }
+            if (unlockButton) { GameLogic.handleUnlockLibraryLevel(event); }
         });
     }
 
-    // Listener for clicking focused concepts (delegated)
     if (focusedConceptsContainer) {
         focusedConceptsContainer.addEventListener('click', (event) => {
             const targetItem = event.target.closest('.focus-concept-item');
-            if (targetItem && targetItem.dataset.conceptId) {
-                UI.showConceptDetailPopup(parseInt(targetItem.dataset.conceptId));
-            }
+            if (targetItem?.dataset.conceptId) { UI.showConceptDetailPopup(parseInt(targetItem.dataset.conceptId)); }
         });
     }
 
-     // Persona Action Buttons
     if (dilemmaBtn) dilemmaBtn.addEventListener('click', GameLogic.handleElementalDilemmaClick);
     if (synergyBtn) synergyBtn.addEventListener('click', GameLogic.handleExploreSynergyClick);
     if (suggestSceneBtn) suggestSceneBtn.addEventListener('click', GameLogic.handleSuggestSceneClick);
 
-     // Listener for Meditate button within the suggested scene output (delegated)
-     if (suggestedSceneContainer) {
+    if (suggestedSceneContainer) {
          suggestedSceneContainer.addEventListener('click', (event) => {
             const meditateButton = event.target.closest('.button[data-scene-id]');
-             if (meditateButton && !meditateButton.disabled) {
-                GameLogic.handleMeditateScene(event);
-             }
+             if (meditateButton && !meditateButton.disabled) { GameLogic.handleMeditateScene(event); }
          });
      }
 }
 
 function setupWorkshopScreenListeners() {
     const workshopScreen = document.getElementById('workshopScreen');
-    if (!workshopScreen) return; // Don't setup if screen doesn't exist
+    if (!workshopScreen) return;
 
-    // --- Research Panel Listeners ---
+    // --- Research Buttons Area ---
     const researchButtonsContainer = document.getElementById('element-research-buttons');
-    const freeResearchBtn = document.getElementById('freeResearchButtonWorkshop');
-    const seekGuidanceBtn = document.getElementById('seekGuidanceButtonWorkshop');
-    const researchResultsArea = document.getElementById('research-results-content');
-
-    // Delegate listener for research element buttons
     if (researchButtonsContainer) {
         researchButtonsContainer.addEventListener('click', (event) => {
             const button = event.target.closest('.initial-discovery-element.clickable');
-            if (button && button.dataset.elementKey) {
+            if (button?.dataset.elementKey) {
                  const freeResearchLeft = State.getInitialFreeResearchRemaining();
                  const isFreeClick = freeResearchLeft > 0;
                 GameLogic.handleResearchClick({ currentTarget: button, isFree: isFreeClick });
@@ -264,33 +238,13 @@ function setupWorkshopScreenListeners() {
         });
     }
 
+    // --- Daily Actions Area ---
+    const freeResearchBtn = document.getElementById('freeResearchButtonWorkshop');
+    const seekGuidanceBtn = document.getElementById('seekGuidanceButtonWorkshop');
     if (freeResearchBtn) freeResearchBtn.addEventListener('click', GameLogic.handleFreeResearchClick);
     if (seekGuidanceBtn) seekGuidanceBtn.addEventListener('click', GameLogic.triggerGuidedReflection);
 
-    // Delegate listeners for Add/Sell buttons in Research Results
-    if (researchResultsArea) {
-        researchResultsArea.addEventListener('click', (event) => {
-            const addButton = event.target.closest('.add-button');
-            const sellButton = event.target.closest('.sell-button');
-            const cardElement = event.target.closest('.concept-card');
-
-            if (addButton && addButton.dataset.conceptId) {
-                const conceptId = parseInt(addButton.dataset.conceptId);
-                GameLogic.addConceptToGrimoireById(conceptId, addButton); // Pass button for UI update
-            } else if (sellButton && sellButton.dataset.conceptId) {
-                GameLogic.handleSellConcept(event); // Use existing handler
-            } else if (cardElement && cardElement.dataset.conceptId) {
-                 // Click on card in results area should show popup
-                 const conceptId = parseInt(cardElement.dataset.conceptId);
-                 // Check if it was the Add or Sell button inside the card that was clicked
-                 if (!addButton && !sellButton) {
-                     UI.showConceptDetailPopup(conceptId);
-                 }
-            }
-        });
-    }
-
-    // --- Grimoire Library Listeners ---
+    // --- Library Area ---
     const controls = document.getElementById('grimoire-controls-workshop');
     const shelves = document.getElementById('grimoire-shelves-workshop');
     const grid = document.getElementById('grimoire-grid-workshop');
@@ -299,137 +253,92 @@ function setupWorkshopScreenListeners() {
     if (controls) {
         controls.addEventListener('change', () => UI.refreshGrimoireDisplay());
         const searchInput = document.getElementById('grimoireSearchInputWorkshop');
-        if (searchInput) {
-            // Use 'input' for instant feedback, 'change' fires less often
-            searchInput.addEventListener('input', () => UI.refreshGrimoireDisplay());
-        }
+        if (searchInput) { searchInput.addEventListener('input', () => UI.refreshGrimoireDisplay()); }
     }
 
-    // Shelf Clicks (for filtering)
+    // Shelf Clicks (Filtering)
     if (shelves) {
         shelves.addEventListener('click', (event) => {
             const shelf = event.target.closest('.grimoire-shelf');
-            if (shelf && shelf.dataset.categoryId) {
-                // Remove active class from all shelves
+            if (shelf?.dataset.categoryId) {
                 shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('active-shelf'));
-                // Add active class to the clicked shelf
                 shelf.classList.add('active-shelf');
-                // Refresh the grid, filtering by the clicked category
                 UI.refreshGrimoireDisplay({ filterCategory: shelf.dataset.categoryId });
             }
         });
     }
 
-    // Grimoire Grid Card Interactions (Details, Focus, Sell) - Delegated
+    // Grimoire Grid Interactions (Details, Focus, Sell) - Delegated
     if (grid) {
         grid.addEventListener('click', (event) => {
             const focusButton = event.target.closest('.card-focus-button');
             const sellButton = event.target.closest('.card-sell-button');
             const card = event.target.closest('.concept-card');
 
-            if (focusButton && focusButton.dataset.conceptId && !focusButton.disabled) {
-                event.stopPropagation(); // Prevent card click handler from firing too
+            if (focusButton?.dataset.conceptId && !focusButton.disabled) {
+                event.stopPropagation();
                 const conceptId = parseInt(focusButton.dataset.conceptId);
                 GameLogic.handleCardFocusToggle(conceptId);
-                // Update button visuals immediately (optional, UI.refresh might cover it)
-                 const isFocused = State.getFocusedConcepts().has(conceptId);
+                 const isFocused = State.getFocusedConcepts().has(conceptId); // Update button state immediately
                  focusButton.classList.toggle('marked', isFocused);
                  focusButton.innerHTML = `<i class="fas ${isFocused ? 'fa-star' : 'fa-regular fa-star'}"></i>`;
                  focusButton.title = isFocused ? 'Remove Focus' : 'Mark as Focus';
-            } else if (sellButton && sellButton.dataset.conceptId) {
-                 event.stopPropagation(); // Prevent card click handler from firing too
-                 GameLogic.handleSellConcept(event);
-            } else if (card && card.dataset.conceptId) {
-                // Only trigger if not clicking a button inside the card
-                if(!focusButton && !sellButton) {
-                     const conceptId = parseInt(card.dataset.conceptId);
-                     UI.showConceptDetailPopup(conceptId);
-                }
+            } else if (sellButton?.dataset.conceptId) {
+                 event.stopPropagation();
+                 GameLogic.handleSellConcept(event); // Sell from grimoire context
+            } else if (card?.dataset.conceptId && !focusButton && !sellButton) {
+                 UI.showConceptDetailPopup(parseInt(card.dataset.conceptId));
             }
         });
 
         // --- Drag and Drop Listeners for Grimoire ---
         let draggedCardId = null;
-
-        // Listener on the grid for starting drag
         grid.addEventListener('dragstart', (event) => {
             const card = event.target.closest('.concept-card[draggable="true"]');
-            if (card && card.dataset.conceptId) {
+            if (card?.dataset.conceptId) {
                 draggedCardId = parseInt(card.dataset.conceptId);
                 event.dataTransfer.effectAllowed = 'move';
-                try { // Use try/catch for IE compatibility if needed, though text/plain is standard
-                   event.dataTransfer.setData('text/plain', draggedCardId.toString());
-                } catch (e) {
-                   event.dataTransfer.setData('Text', draggedCardId.toString());
-                }
-                // Optional: Add dragging class for visual feedback
+                try { event.dataTransfer.setData('text/plain', draggedCardId.toString()); } catch (e) { event.dataTransfer.setData('Text', draggedCardId.toString()); }
                 setTimeout(() => card.classList.add('dragging'), 0);
                 console.log(`Drag Start: Card ID ${draggedCardId}`);
-            } else {
-                event.preventDefault(); // Prevent dragging if not a valid card
-            }
+            } else { event.preventDefault(); }
         });
-
-        // Listener on the grid for ending drag (cleanup)
         grid.addEventListener('dragend', (event) => {
             const card = event.target.closest('.concept-card');
-            if (card) {
-                card.classList.remove('dragging');
-            }
+            if (card) { card.classList.remove('dragging'); }
             draggedCardId = null;
-             // Remove drag-over styles from all shelves
-             shelves?.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over'));
+            shelves?.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over'));
             console.log("Drag End");
         });
-
-        // Listeners on the shelves area for drop targets
         if (shelves) {
             shelves.addEventListener('dragover', (event) => {
-                event.preventDefault(); // Necessary to allow drop
-                const shelf = event.target.closest('.grimoire-shelf:not(.show-all-shelf)'); // Exclude "Show All"
+                event.preventDefault();
+                const shelf = event.target.closest('.grimoire-shelf:not(.show-all-shelf)');
                 if (shelf) {
                     event.dataTransfer.dropEffect = 'move';
-                     // Add visual feedback (only to the current target shelf)
-                     shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
-                     shelf.classList.add('drag-over');
+                    shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
+                    shelf.classList.add('drag-over');
                 } else {
-                     event.dataTransfer.dropEffect = 'none';
-                     shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
+                    event.dataTransfer.dropEffect = 'none';
+                    shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
                 }
             });
-
             shelves.addEventListener('dragleave', (event) => {
                 const shelf = event.target.closest('.grimoire-shelf');
-                 if (shelf && !shelf.contains(event.relatedTarget)) { // Check if leaving the shelf element entirely
-                     shelf.classList.remove('drag-over');
-                 }
-                 // If leaving the whole shelves container
-                 if (event.currentTarget === shelves && !shelves.contains(event.relatedTarget)){
-                     shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
-                 }
+                 if (shelf && !shelf.contains(event.relatedTarget)) { shelf.classList.remove('drag-over'); }
+                 if (event.currentTarget === shelves && !shelves.contains(event.relatedTarget)){ shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over')); }
             });
-
             shelves.addEventListener('drop', (event) => {
                 event.preventDefault();
-                 shelves.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over')); // Clean up visual feedback
+                shelves.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over'));
                 const shelf = event.target.closest('.grimoire-shelf:not(.show-all-shelf)');
                 let droppedCardIdFromData = null;
-                 try { // Try standard 'text/plain' first
-                     droppedCardIdFromData = parseInt(event.dataTransfer.getData('text/plain'));
-                 } catch (e) { // Fallback for older browsers/IE
-                     droppedCardIdFromData = parseInt(event.dataTransfer.getData('Text'));
-                 }
-                 // Use the globally stored ID if dataTransfer fails (less reliable but backup)
+                try { droppedCardIdFromData = parseInt(event.dataTransfer.getData('text/plain')); } catch (e) { droppedCardIdFromData = parseInt(event.dataTransfer.getData('Text')); }
                 const finalCardId = !isNaN(droppedCardIdFromData) ? droppedCardIdFromData : draggedCardId;
-
-                if (shelf && shelf.dataset.categoryId && finalCardId) {
-                    const targetCategoryId = shelf.dataset.categoryId;
-                    console.log(`Drop: Card ID ${finalCardId} onto Category ${targetCategoryId}`);
-                    GameLogic.handleCategorizeCard(finalCardId, targetCategoryId);
-                } else {
-                     console.log("Drop occurred outside a valid shelf or Card ID missing.", { shelf, categoryId: shelf?.dataset.categoryId, finalCardId });
-                 }
-                 draggedCardId = null; // Reset dragged ID
+                if (shelf?.dataset.categoryId && finalCardId) {
+                    GameLogic.handleCategorizeCard(finalCardId, shelf.dataset.categoryId);
+                } else { console.log("Drop failed: Invalid target or missing card ID."); }
+                draggedCardId = null;
             });
         }
     }
@@ -443,33 +352,31 @@ function setupRepositoryListeners() {
         const meditateButton = event.target.closest('.button[data-scene-id]');
         const experimentButton = event.target.closest('.button[data-experiment-id]');
 
-        if (meditateButton && !meditateButton.disabled) {
-            GameLogic.handleMeditateScene(event);
-        } else if (experimentButton && !experimentButton.disabled) {
-            GameLogic.handleAttemptExperiment(event);
-        }
+        if (meditateButton && !meditateButton.disabled) { GameLogic.handleMeditateScene(event); }
+        else if (experimentButton && !experimentButton.disabled) { GameLogic.handleAttemptExperiment(event); }
     });
 }
 
 
 function setupPopupInteractionListeners() {
-    // Close Buttons
-    const closePopupBtn = document.getElementById('closePopupButton');
-    const closeReflectionBtn = document.getElementById('closeReflectionModalButton');
-    const closeDeepDiveBtn = document.getElementById('closeDeepDiveButton');
-    const closeDilemmaBtn = document.getElementById('closeDilemmaModalButton');
-    if (closePopupBtn) closePopupBtn.addEventListener('click', UI.hidePopups);
-    if (closeReflectionBtn) closeReflectionBtn.addEventListener('click', UI.hidePopups);
-    if (closeDeepDiveBtn) closeDeepDiveBtn.addEventListener('click', UI.hidePopups);
-    if (closeDilemmaBtn) closeDilemmaBtn.addEventListener('click', UI.hidePopups);
+    // Close Buttons (All Popups)
+    document.querySelectorAll('.popup .close-button').forEach(button => {
+         button.addEventListener('click', UI.hidePopups);
+    });
+    // Specific Close Button for Research Popup (might have disabled state logic)
+    const closeResearchBtn = document.getElementById('closeResearchResultsPopupButton');
+    if(closeResearchBtn) closeResearchBtn.addEventListener('click', UI.hidePopups);
+    // Optional Confirm button for Research Popup
+    const confirmResearchBtn = document.getElementById('confirmResearchChoicesButton');
+    if(confirmResearchBtn) confirmResearchBtn.addEventListener('click', UI.hidePopups);
 
 
-    // Concept Popup Actions
+    // Concept Detail Popup Actions
     const addBtn = document.getElementById('addToGrimoireButton');
     const focusBtn = document.getElementById('markAsFocusButton');
     const saveNoteBtn = document.getElementById('saveMyNoteButton');
     const loreContent = document.getElementById('popupLoreContent');
-    const sellBtnContainer = document.querySelector('#conceptDetailPopup .popup-actions'); // Delegate sell button listener
+    const sellBtnContainer = document.querySelector('#conceptDetailPopup .popup-actions');
 
     if (addBtn) addBtn.addEventListener('click', () => {
         const conceptId = GameLogic.getCurrentPopupConceptId();
@@ -480,20 +387,15 @@ function setupPopupInteractionListeners() {
     if (loreContent) { // Delegate listener for unlock buttons
         loreContent.addEventListener('click', (event) => {
             const button = event.target.closest('.unlock-lore-button');
-            if (button && !button.disabled && button.dataset.conceptId && button.dataset.loreLevel && button.dataset.cost) {
-                const conceptId = parseInt(button.dataset.conceptId);
-                const level = parseInt(button.dataset.loreLevel);
-                const cost = parseFloat(button.dataset.cost);
-                GameLogic.handleUnlockLore(conceptId, level, cost);
+            if (button?.dataset.conceptId && button.dataset.loreLevel && button.dataset.cost && !button.disabled) {
+                GameLogic.handleUnlockLore(parseInt(button.dataset.conceptId), parseInt(button.dataset.loreLevel), parseFloat(button.dataset.cost));
             }
         });
     }
      if (sellBtnContainer) { // Delegate listener for sell button added dynamically
          sellBtnContainer.addEventListener('click', (event) => {
              const sellButton = event.target.closest('.popup-sell-button');
-             if (sellButton && sellButton.dataset.conceptId) {
-                GameLogic.handleSellConcept(event);
-             }
+             if (sellButton?.dataset.conceptId) { GameLogic.handleSellConcept(event); }
          });
      }
 
@@ -502,12 +404,20 @@ function setupPopupInteractionListeners() {
     const confirmReflectionBtn = document.getElementById('confirmReflectionButton');
     const nudgeCheck = document.getElementById('scoreNudgeCheckbox');
     if (reflectionCheck && confirmReflectionBtn) {
-        reflectionCheck.addEventListener('change', () => {
-            confirmReflectionBtn.disabled = !reflectionCheck.checked;
-        });
-        confirmReflectionBtn.addEventListener('click', () => {
-            const nudge = nudgeCheck ? nudgeCheck.checked : false;
-            GameLogic.handleConfirmReflection(nudge);
+        reflectionCheck.addEventListener('change', () => { confirmReflectionBtn.disabled = !reflectionCheck.checked; });
+        confirmReflectionBtn.addEventListener('click', () => { GameLogic.handleConfirmReflection(nudgeCheck?.checked || false); });
+    }
+
+    // Research Results Popup Actions (Keep/Sell) - Delegated
+    const researchPopupContentEl = document.getElementById('researchPopupContent');
+    if (researchPopupContentEl) {
+        researchPopupContentEl.addEventListener('click', (event) => {
+            const actionButton = event.target.closest('.card-actions .button');
+            if (actionButton?.dataset.conceptId && actionButton.dataset.action) {
+                 const conceptId = parseInt(actionButton.dataset.conceptId);
+                 const action = actionButton.dataset.action;
+                 GameLogic.handleResearchPopupChoice(conceptId, action); // Let GameLogic handle the keep/sell decision
+            }
         });
     }
 
@@ -516,28 +426,22 @@ function setupPopupInteractionListeners() {
     if (deepDiveNodes) {
         deepDiveNodes.addEventListener('click', (event) => {
             const nodeButton = event.target.closest('.aspect-node');
-            if (nodeButton && !nodeButton.disabled && nodeButton.dataset.nodeId) {
-                const nodeId = nodeButton.dataset.nodeId;
-                 if (nodeId === 'contemplation') {
-                     GameLogic.handleContemplationNodeClick();
-                 } else {
-                     GameLogic.handleDeepDiveNodeClick(nodeId);
-                 }
+            if (nodeButton?.dataset.nodeId && !nodeButton.disabled) {
+                 if (nodeButton.dataset.nodeId === 'contemplation') { GameLogic.handleContemplationNodeClick(); }
+                 else { GameLogic.handleDeepDiveNodeClick(nodeButton.dataset.nodeId); }
             }
         });
     }
-    // Listener for completing contemplation task added dynamically in UI.displayContemplationTask
+    // Listener for completing contemplation task added dynamically
 
-     // Elemental Dilemma Modal
-     const confirmDilemmaBtn = document.getElementById('confirmDilemmaButton');
-     if (confirmDilemmaBtn) {
-         confirmDilemmaBtn.addEventListener('click', GameLogic.handleConfirmDilemma);
-     }
+    // Elemental Dilemma Modal
+    const confirmDilemmaBtn = document.getElementById('confirmDilemmaButton');
+    if (confirmDilemmaBtn) { confirmDilemmaBtn.addEventListener('click', GameLogic.handleConfirmDilemma); }
 }
 
 
 // --- App Start ---
 document.addEventListener('DOMContentLoaded', initializeApp);
 
-console.log("main.js loaded.");
+console.log("main.js loaded. (Workshop v3 - Popup Results)");
 // --- END OF COMPLETE main.js ---
