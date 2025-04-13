@@ -212,7 +212,84 @@ export function conductResearch(elementKeyToResearch) {
     else { console.warn("Selection logic failed, no concepts selected despite pool."); UI.displayResearchResults({ concepts: [], duplicateInsightGain: 0 }); gainAttunementForAction('researchFail', elementKeyToResearch); }
 }
 
+// Make sure this function exists and has 'export' in your gameLogic.js
 
+export function handleConfirmReflection(nudgeAllowed) { // <<< ENSURE 'export' IS PRESENT
+    if (!currentPromptId) { console.error("No current prompt ID."); UI.hidePopups(); return; }
+    console.log(`Reflection confirmed: Context=${currentReflectionContext}, Prompt=${currentPromptId}, Nudge=${nudgeAllowed}`);
+    State.addSeenPrompt(currentPromptId);
+    let rewardAmt = 5.0; let attuneKey = null; let attuneAmt = 1.0; let milestoneAct = 'completeReflection';
+
+    // Determine reward amount
+    if (currentReflectionContext === 'Guided') { rewardAmt = Config.GUIDED_REFLECTION_COST + 2; }
+    else if (currentReflectionContext === 'RareConcept') { rewardAmt = 7.0; }
+    else if (currentReflectionContext === 'SceneMeditation') { const scene = sceneBlueprints.find(s => s.reflectionPromptId === currentPromptId); rewardAmt = (scene?.meditationCost || Config.SCENE_MEDITATION_BASE_COST) + 5; }
+    else { rewardAmt = 5.0; }
+
+    // Handle Dissonance Confirmation
+    if (currentReflectionContext === 'Dissonance') {
+        milestoneAct = 'completeReflectionDissonance';
+        attuneAmt = 0.5; // Lower attunement gain for dissonance resolution
+
+        if (nudgeAllowed && reflectionTargetConceptId) {
+             // ... (Nudge logic remains the same) ...
+             console.log("Processing nudge for Dissonance...");
+             const concept = concepts.find(c => c.id === reflectionTargetConceptId);
+             const scores = State.getScores(); let nudged = false;
+             if (concept?.elementScores) {
+                 const newScores = { ...scores };
+                 for (const key in scores) {
+                     if (scores.hasOwnProperty(key) && concept.elementScores.hasOwnProperty(key)) {
+                         const uScore = scores[key]; const cScore = concept.elementScores[key]; const diff = cScore - uScore;
+                         if (Math.abs(diff) > 1.5) {
+                             const nudgeVal = Math.sign(diff) * Config.SCORE_NUDGE_AMOUNT;
+                             newScores[key] = Math.max(0, Math.min(10, uScore + nudgeVal));
+                             if (newScores[key] !== uScore) nudged = true;
+                         }
+                     }
+                 }
+                 if (nudged) {
+                     State.updateScores(newScores); console.log("Nudged Scores (7 Elements):", State.getScores());
+                     if (document.getElementById('personaScreen')?.classList.contains('current')) { UI.displayPersonaScreen(); }
+                     UI.showTemporaryMessage("Core understanding shifted.", 3500);
+                     gainAttunementForAction('scoreNudge', 'All', 0.5);
+                     updateMilestoneProgress('scoreNudgeApplied', 1);
+                 }
+             } else { console.warn(`Cannot apply nudge, concept data missing for ID ${reflectionTargetConceptId}`); }
+        }
+        // Add the concept *now* that reflection is confirmed
+        if (reflectionTargetConceptId) {
+             addConceptToGrimoireInternal(reflectionTargetConceptId, 'dissonanceConfirm');
+             // Check if research popup is open AND contains the item marked pending
+             const researchPopupIsOpen = document.getElementById('researchResultsPopup') && !document.getElementById('researchResultsPopup').classList.contains('hidden');
+             const pendingItem = document.querySelector(`#researchPopupContent .research-result-item[data-concept-id="${reflectionTargetConceptId}"][data-choice-made="pending_dissonance"]`);
+             if (researchPopupIsOpen && pendingItem) {
+                 // Update the specific item in the research popup now that it's kept
+                 UI.handleResearchPopupAction(reflectionTargetConceptId, 'kept_after_dissonance');
+             }
+        }
+    }
+
+    // Gain Insight & Attunement
+    gainInsight(rewardAmt, `Reflection (${currentReflectionContext || 'Unknown'})`);
+    if (currentReflectionContext === 'Standard' && currentReflectionCategory) { attuneKey = elementNameToKey[currentReflectionCategory]; }
+    else if (currentReflectionContext === 'RareConcept') { const cEntry = Array.from(State.getDiscoveredConcepts().entries()).find(([id, data]) => data.concept.uniquePromptId === currentPromptId); attuneKey = cEntry ? cEntry[1].concept.primaryElement : null; }
+    else if (currentReflectionContext === 'SceneMeditation') { const scene = sceneBlueprints.find(s => s.reflectionPromptId === currentPromptId); attuneKey = scene?.element || null; }
+    else { attuneKey = null; }
+    if (attuneKey) gainAttunementForAction('completeReflection', attuneKey, attuneAmt);
+    else gainAttunementForAction('completeReflectionGeneric', 'All', 0.2);
+
+    // Update Milestones & Rituals
+    updateMilestoneProgress(milestoneAct, 1);
+    checkAndUpdateRituals('completeReflection'); // Check base action
+    const ritualCtxMatch = `${currentReflectionContext}_${currentPromptId}`;
+    checkAndUpdateRituals('completeReflection', { contextMatch: ritualCtxMatch }); // Check specific context
+
+    // Clean up UI - Always hide all popups now
+    UI.hidePopups(); // Call the standard hide function
+    UI.showTemporaryMessage("Reflection complete! Insight gained.", 3000);
+    // clearPopupState(); // hidePopups now handles this conditionally
+} // End handleConfirmReflection
 // --- Grimoire / Collection Actions ---
 
 export function handleResearchPopupChoice(conceptId, action) {
