@@ -937,6 +937,30 @@ export function handleConfirmDilemma() { // Updated nudge logic for 7 elements
     }
     UI.hidePopups(); currentDilemma = null;
 } // End handleConfirmDilemma
-
+// --- Daily Login ---
+export function checkForDailyLogin() {
+    const today = new Date().toDateString();
+    const last = State.getState().lastLoginDate;
+    if (last !== today) {
+        console.log("First login today.");
+        State.resetDailyRituals();
+        gainInsight(5.0, "Daily Bonus");
+        UI.showTemporaryMessage("Rituals Reset. Free Research Available!", 3500);
+        // Ritual display now happens when Repository screen is shown
+        // UI.displayDailyRituals(); // Removed direct call here
+        if(document.getElementById('workshopScreen')?.classList.contains('current')) {
+            UI.displayWorkshopScreenContent(); // Refresh workshop state (e.g., free research button)
+        }
+        // Also refresh repository if it's the current screen to show reset rituals
+         if(document.getElementById('repositoryScreen')?.classList.contains('current')) {
+            UI.displayRepositoryContent();
+        }
+    } else {
+        console.log("Already logged in today.");
+         if(document.getElementById('workshopScreen')?.classList.contains('current')) {
+             UI.displayWorkshopScreenContent(); // Refresh workshop state
+         }
+    }
+} // End checkForDailyLogin
 console.log("gameLogic.js loaded. (Workshop v3 - Popup Results)");
 // --- END OF COMPLETE gameLogic.js ---
