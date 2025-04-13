@@ -1,6 +1,4 @@
---- START OF ui.js (Corrected hidePopups for Research v3) ---
 
-// ... (other imports and code remain the same) ...
 
 console.log("ui.js loading... (Workshop v3 - Corrected hidePopups)");
 
