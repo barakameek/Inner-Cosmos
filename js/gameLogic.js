@@ -750,7 +750,101 @@ export function triggerGuidedReflection() {
      }
 } // End triggerGuidedReflection
 
+export function updateMilestoneProgress(trackType, currentValue) {
+     let milestoneAchievedThisUpdate = false;
+     const achievedSet = State.getState().achievedMilestones;
+     if (!(achievedSet instanceof Set)) {
+         console.error("CRITICAL ERROR: gameState.achievedMilestones is not a Set!");
+         return;
+     }
 
+     milestones.forEach(m => {
+         if (!achievedSet.has(m.id)) {
+             let achieved = false;
+             const threshold = m.track.threshold;
+             let checkValue = null;
+
+             // Achievement Check Logic
+             if (m.track.action === trackType) {
+                 // Action-based tracking
+                 if (typeof currentValue === 'number' && currentValue >= (m.track.count || 1)) achieved = true;
+                 else if ((m.track.count === 1 || !m.track.count) && currentValue) achieved = true; // Trigger on first occurrence if count is 1 or undefined
+             } else if (m.track.state === trackType) {
+                 // State-based tracking
+                 const att = State.getAttunement();
+                 const lvls = State.getState().unlockedDeepDiveLevels;
+                 const discSize = State.getDiscoveredConcepts().size;
+                 const focSize = State.getFocusedConcepts().size;
+                 const insCount = State.getRepositoryItems().insights.size;
+                 const slots = State.getFocusSlots();
+
+                 if (trackType === 'elementAttunement') {
+                     if (m.track.element && att.hasOwnProperty(m.track.element)) {
+                         const valueToCheck = (typeof currentValue === 'object' && currentValue !== null && currentValue.hasOwnProperty(m.track.element))
+                                              ? currentValue[m.track.element] // Handle object passed for single update
+                                              : att[m.track.element]; // Use current state otherwise
+                         if (valueToCheck >= threshold) achieved = true;
+                     } else if (m.track.condition === 'any') {
+                         achieved = Object.values(att).some(v => v >= threshold);
+                     } else if (m.track.condition === 'all') {
+                         achieved = Object.values(att).every(v => v >= threshold);
+                     }
+                 } else if (trackType === 'unlockedDeepDiveLevels') {
+                     const levelsToCheck = (typeof currentValue === 'object' && currentValue !== null) ? currentValue : lvls;
+                     if (m.track.condition === 'any') achieved = Object.values(levelsToCheck).some(v => v >= threshold);
+                     else if (m.track.condition === 'all') achieved = Object.values(levelsToCheck).every(v => v >= threshold);
+                 } else if (trackType === 'discoveredConcepts.size') checkValue = discSize;
+                 else if (trackType === 'focusedConcepts.size') checkValue = focSize;
+                 else if (trackType === 'repositoryInsightsCount') checkValue = insCount;
+                 else if (trackType === 'focusSlotsTotal') checkValue = slots;
+                 else if (trackType === 'repositoryContents' && m.track.condition === "allTypesPresent") {
+                     const i = State.getRepositoryItems();
+                     achieved = i.scenes.size > 0 && i.experiments.size > 0 && i.insights.size > 0;
+                 } else if (trackType === 'unlockLore' && m.track.condition === 'anyLevel' && typeof currentValue === 'number') {
+                     achieved = currentValue >= threshold;
+                 }
+
+                 // Check threshold if checkValue was assigned
+                 if (!achieved && checkValue !== null && typeof checkValue === 'number' && checkValue >= threshold) achieved = true;
+             }
+
+             // Grant Reward if Achieved
+             if (achieved) {
+                 if (State.addAchievedMilestone(m.id)) {
+                     console.log("Milestone Achieved!", m.description);
+                     milestoneAchievedThisUpdate = true;
+                     UI.displayMilestones(); // Update UI immediately
+                     UI.showMilestoneAlert(m.description);
+                     if (m.reward) {
+                         if (m.reward.type === 'insight') gainInsight(m.reward.amount || 0, `Milestone: ${m.description}`);
+                         else if (m.reward.type === 'attunement') gainAttunementForAction('milestone', m.reward.element || 'All', m.reward.amount || 0);
+                         else if (m.reward.type === 'increaseFocusSlots') {
+                             const inc = m.reward.amount || 1;
+                             if (State.increaseFocusSlots(inc)) {
+                                 UI.updateFocusSlotsDisplay();
+                                 updateMilestoneProgress('focusSlotsTotal', State.getFocusSlots()); // Recursively update dependent milestones
+                             }
+                         } else if (m.reward.type === 'discoverCard') {
+                             const cId = m.reward.cardId;
+                             if (cId && !State.getDiscoveredConcepts().has(cId)) {
+                                 const cDisc = concepts.find(c => c.id === cId);
+                                 if (cDisc) {
+                                     addConceptToGrimoireInternal(cId, 'milestone'); // Use internal add
+                                     UI.showTemporaryMessage(`Milestone Reward: Discovered ${cDisc.name}!`, 3500);
+                                 }
+                             }
+                         }
+                     }
+                 } // End if state added milestone
+             } // End if achieved
+         } // End if !achievedSet.has(m.id)
+     }); // End milestones.forEach
+
+     // Refresh repository display if a milestone was achieved and it's visible
+     if (milestoneAchievedThisUpdate && document.getElementById('repositoryScreen')?.classList.contains('current')) {
+        UI.displayRepositoryContent();
+     }
+} // End updateMilestoneProgress
 // --- Notes, Library, Repository Actions ---
 export function handleSaveNote() { if (currentlyDisplayedConceptId === null) return; const notesTA = document.getElementById('myNotesTextarea'); if (!notesTA) return; const noteText = notesTA.value.trim(); if (State.updateNotes(currentlyDisplayedConceptId, noteText)) { const status = document.getElementById('noteSaveStatus'); if (status) { status.textContent = "Saved!"; status.classList.remove('error'); setTimeout(() => { status.textContent = ""; }, 2000); } } else { const status = document.getElementById('noteSaveStatus'); if (status) { status.textContent = "Error."; status.classList.add('error'); } } }
 export function handleUnlockLibraryLevel(event) { const button = event.target.closest('button'); if (!button || button.disabled) return; const key = button.dataset.elementKey; const level = parseInt(button.dataset.level); if (!key || isNaN(level)) { console.error("Invalid library unlock data"); return; } unlockDeepDiveLevelInternal(key, level); }
