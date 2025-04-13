@@ -1,203 +1,76 @@
-// --- START OF COMPLETE ui.js (Workshop v3 - Image OnError Fix) ---
+--- START OF ui.js (Corrected hidePopups for Research v3) ---
 
-// js/ui.js - Handles DOM Manipulation and UI Updates
-import * as State from './state.js';
-import * as Config from './config.js';
-import * as Utils from './utils.js';
-import * as GameLogic from './gameLogic.js'; // Needed for button actions
-// Import updated data structures with 7 elements
-import {
-    elementDetails, elementKeyToFullName, elementNameToKey, concepts, questionnaireGuided,
-    reflectionPrompts, elementDeepDive, dailyRituals, milestones, focusRituals,
-    sceneBlueprints, alchemicalExperiments, elementalInsights, focusDrivenUnlocks,
-    cardTypeKeys, elementNames, // Now includes RoleFocus
-    grimoireShelves, elementalDilemmas
-} from '../data.js';
+// ... (other imports and code remain the same) ...
 
-console.log("ui.js loading... (Workshop v3 - Image OnError Fix)");
+console.log("ui.js loading... (Workshop v3 - Corrected hidePopups)");
 
 // --- Helper Function for Image Errors ---
-// Defined within the module scope
 function handleImageError(imgElement) {
     console.warn(`Image failed to load: ${imgElement.src}. Displaying placeholder.`);
-    imgElement.style.display = 'none'; // Hide the broken image element
+    imgElement.style.display = 'none';
     const placeholder = imgElement.parentElement?.querySelector('.card-visual-placeholder');
-    if (placeholder) {
-        placeholder.style.display = 'flex'; // Show the FontAwesome placeholder (use flex to center)
-    }
+    if (placeholder) { placeholder.style.display = 'flex'; }
 }
-// Assign the function to the global window scope so inline onerror can find it
 window.handleImageError = handleImageError;
 
-
-// --- DOM Element References (Updated for Workshop v3) ---
-const saveIndicator = document.getElementById('saveIndicator');
-const screens = document.querySelectorAll('.screen');
-const welcomeScreen = document.getElementById('welcomeScreen');
-const loadButton = document.getElementById('loadButton');
-const questionnaireScreen = document.getElementById('questionnaireScreen');
-const elementProgressHeader = document.getElementById('elementProgressHeader');
-const questionContent = document.getElementById('questionContent');
-const progressText = document.getElementById('progressText');
-const dynamicScoreFeedback = document.getElementById('dynamicScoreFeedback');
-const feedbackElementSpan = document.getElementById('feedbackElement');
-const feedbackScoreSpan = document.getElementById('feedbackScore');
-const feedbackScoreBar = document.getElementById('feedbackScoreBar');
-const prevElementButton = document.getElementById('prevElementButton');
-const nextElementButton = document.getElementById('nextElementButton');
-const mainNavBar = document.getElementById('mainNavBar');
-const navButtons = document.querySelectorAll('.nav-button');
-const settingsButton = document.getElementById('settingsButton');
-const personaScreen = document.getElementById('personaScreen');
-const personaDetailedView = document.getElementById('personaDetailedView');
-const personaSummaryView = document.getElementById('personaSummaryView');
-const showDetailedViewBtn = document.getElementById('showDetailedViewBtn');
-const showSummaryViewBtn = document.getElementById('showSummaryViewBtn');
-const personaElementDetailsDiv = document.getElementById('personaElementDetails');
-const userInsightDisplayPersona = document.getElementById('userInsightDisplayPersona');
-const focusedConceptsDisplay = document.getElementById('focusedConceptsDisplay');
-const focusedConceptsHeader = document.getElementById('focusedConceptsHeader');
-const tapestryNarrativeP = document.getElementById('tapestryNarrative');
-const personaThemesList = document.getElementById('personaThemesList');
-const summaryContentDiv = document.getElementById('summaryContent');
-const summaryCoreEssenceTextDiv = document.getElementById('summaryCoreEssenceText');
-const summaryTapestryInfoDiv = document.getElementById('summaryTapestryInfo');
-const personaScoreChartCanvas = document.getElementById('personaScoreChartCanvas');
-const addInsightButton = document.getElementById('addInsightButton');
-const workshopScreen = document.getElementById('workshopScreen');
-const userInsightDisplayWorkshop = document.getElementById('userInsightDisplayWorkshop');
-const researchArea = document.getElementById('workshop-research-area');
-const elementResearchButtonsContainer = document.getElementById('element-research-buttons');
-const dailyActionsContainer = document.getElementById('daily-actions');
-const freeResearchButtonWorkshop = document.getElementById('freeResearchButtonWorkshop');
-const seekGuidanceButtonWorkshop = document.getElementById('seekGuidanceButtonWorkshop');
-const guidedReflectionCostDisplayWorkshop = document.getElementById('guidedReflectionCostDisplayWorkshop');
-const grimoireLibraryContainer = document.getElementById('workshop-library-area');
-const grimoireControlsWorkshop = document.getElementById('grimoire-controls-workshop');
-const grimoireFilterControls = grimoireControlsWorkshop?.querySelector('.filter-controls');
-const grimoireTypeFilterWorkshop = document.getElementById('grimoireTypeFilterWorkshop');
-const grimoireElementFilterWorkshop = document.getElementById('grimoireElementFilterWorkshop');
-const grimoireRarityFilterWorkshop = document.getElementById('grimoireRarityFilterWorkshop');
-const grimoireSortOrderWorkshop = document.getElementById('grimoireSortOrderWorkshop');
-const grimoireSearchInputWorkshop = document.getElementById('grimoireSearchInputWorkshop');
-const grimoireFocusFilterWorkshop = document.getElementById('grimoireFocusFilterWorkshop');
-const grimoireShelvesWorkshop = document.getElementById('grimoire-shelves-workshop');
-const grimoireGridWorkshop = document.getElementById('grimoire-grid-workshop');
-const repositoryScreen = document.getElementById('repositoryScreen');
-const repositoryFocusUnlocksDiv = document.getElementById('repositoryFocusUnlocks')?.querySelector('.repo-list');
-const repositoryScenesDiv = document.getElementById('repositoryScenes')?.querySelector('.repo-list');
-const repositoryExperimentsDiv = document.getElementById('repositoryExperiments')?.querySelector('.repo-list');
-const repositoryInsightsDiv = document.getElementById('repositoryInsights')?.querySelector('.repo-list');
-const milestonesDisplay = document.getElementById('milestonesDisplay');
-const dailyRitualsDisplayRepo = document.getElementById('dailyRitualsDisplayRepo');
-const conceptDetailPopup = document.getElementById('conceptDetailPopup');
-const popupOverlay = document.getElementById('popupOverlay');
-const closePopupButton = document.getElementById('closePopupButton');
-const popupCardTypeIcon = document.getElementById('popupCardTypeIcon');
-const popupConceptName = document.getElementById('popupConceptName');
-const popupConceptType = document.getElementById('popupConceptType');
-const popupVisualContainer = document.getElementById('popupVisualContainer');
-const popupBriefDescription = document.getElementById('popupBriefDescription');
-const popupDetailedDescription = document.getElementById('popupDetailedDescription');
-const popupResonanceGaugeContainer = document.getElementById('popupResonanceGaugeContainer');
-const popupResonanceGaugeBar = document.getElementById('popupResonanceGaugeBar');
-const popupResonanceGaugeLabel = document.getElementById('popupResonanceGaugeLabel');
-const popupResonanceGaugeText = document.getElementById('popupResonanceGaugeText');
-const popupRelatedConceptsTags = document.getElementById('popupRelatedConceptsTags');
-const popupLoreSection = document.getElementById('popupLoreSection');
-const popupLoreContent = document.getElementById('popupLoreContent');
-const popupRecipeDetailsSection = document.getElementById('popupRecipeDetails');
-const popupComparisonHighlights = document.getElementById('popupComparisonHighlights');
-const popupConceptProfile = document.getElementById('popupConceptProfile');
-const popupUserComparisonProfile = document.getElementById('popupUserComparisonProfile');
-const myNotesSection = document.getElementById('myNotesSection');
-const myNotesTextarea = document.getElementById('myNotesTextarea');
-const saveMyNoteButton = document.getElementById('saveMyNoteButton');
-const noteSaveStatusSpan = document.getElementById('noteSaveStatus');
-const addToGrimoireButton = document.getElementById('addToGrimoireButton');
-const markAsFocusButton = document.getElementById('markAsFocusButton');
-const researchResultsPopup = document.getElementById('researchResultsPopup');
-const researchPopupContent = document.getElementById('researchPopupContent');
-const closeResearchResultsPopupButton = document.getElementById('closeResearchResultsPopupButton');
-const researchPopupStatus = document.getElementById('researchPopupStatus');
-const confirmResearchChoicesButton = document.getElementById('confirmResearchChoicesButton');
-const reflectionModal = document.getElementById('reflectionModal');
-const reflectionModalTitle = document.getElementById('reflectionModalTitle');
-const closeReflectionModalButton = document.getElementById('closeReflectionModalButton');
-const reflectionElement = document.getElementById('reflectionElement');
-const reflectionPromptText = document.getElementById('reflectionPromptText');
-const reflectionCheckbox = document.getElementById('reflectionCheckbox');
-const scoreNudgeCheckbox = document.getElementById('scoreNudgeCheckbox');
-const scoreNudgeLabel = document.getElementById('scoreNudgeLabel');
-const confirmReflectionButton = document.getElementById('confirmReflectionButton');
-const reflectionRewardAmount = document.getElementById('reflectionRewardAmount');
-const settingsPopup = document.getElementById('settingsPopup');
-const closeSettingsPopupButton = document.getElementById('closeSettingsPopupButton');
-const forceSaveButton = document.getElementById('forceSaveButton');
-const resetAppButton = document.getElementById('resetAppButton');
-const milestoneAlert = document.getElementById('milestoneAlert');
-const milestoneAlertText = document.getElementById('milestoneAlertText');
-const closeMilestoneAlertButton = document.getElementById('closeMilestoneAlertButton');
-const toastElement = document.getElementById('toastNotification');
-const toastMessageElement = document.getElementById('toastMessage');
-const elementalDilemmaButton = document.getElementById('elementalDilemmaButton');
-const exploreSynergyButton = document.getElementById('exploreSynergyButton');
-const suggestSceneButton = document.getElementById('suggestSceneButton');
-const sceneSuggestCostDisplay = document.getElementById('sceneSuggestCostDisplay');
-const tapestryDeepDiveModal = document.getElementById('tapestryDeepDiveModal');
-const deepDiveTitle = document.getElementById('deepDiveTitle');
-const closeDeepDiveButton = document.getElementById('closeDeepDiveButton');
-const deepDiveNarrativeP = document.getElementById('deepDiveNarrativeP');
-const deepDiveFocusIcons = document.getElementById('deepDiveFocusIcons');
-const deepDiveAnalysisNodesContainer = document.getElementById('deepDiveAnalysisNodes');
-const deepDiveDetailContent = document.getElementById('deepDiveDetailContent');
-const contemplationNodeButton = document.getElementById('contemplationNode');
-const dilemmaModal = document.getElementById('dilemmaModal');
-const closeDilemmaModalButton = document.getElementById('closeDilemmaModalButton');
-const dilemmaSituationText = document.getElementById('dilemmaSituationText');
-const dilemmaQuestionText = document.getElementById('dilemmaQuestionText');
-const dilemmaSlider = document.getElementById('dilemmaSlider');
-const dilemmaSliderMinLabel = document.getElementById('dilemmaSliderMinLabel');
-const dilemmaSliderMaxLabel = document.getElementById('dilemmaSliderMaxLabel');
-const dilemmaSliderValueDisplay = document.getElementById('dilemmaSliderValueDisplay');
-const dilemmaNudgeCheckbox = document.getElementById('dilemmaNudgeCheckbox');
-const confirmDilemmaButton = document.getElementById('confirmDilemmaButton');
-const infoPopupElement = document.getElementById('infoPopup');
-const infoPopupContent = document.getElementById('infoPopupContent');
-const closeInfoPopupButton = document.getElementById('closeInfoPopupButton');
-const confirmInfoPopupButton = document.getElementById('confirmInfoPopupButton');
-const grimoireCountSpan = document.getElementById('grimoireCount');
+// --- DOM Element References ---
+// ... (references remain the same) ...
+const researchResultsPopup = document.getElementById('researchResultsPopup'); // Ensure this exists
+const researchPopupContent = document.getElementById('researchPopupContent'); // Ensure this exists
+const popupOverlay = document.getElementById('popupOverlay'); // Ensure this exists
 
 // --- Utility UI Functions ---
-// ... (showTemporaryMessage, showMilestoneAlert, hideMilestoneAlert, hidePopups remain the same) ...
-let toastTimeout = null;
-export function showTemporaryMessage(message, duration = 3000, isGuidance = false) { if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; } console.info(`Toast: ${message}`); toastMessageElement.textContent = message; toastElement.classList.toggle('guidance-toast', isGuidance); if (toastTimeout) { clearTimeout(toastTimeout); } toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden'); toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration); }
-let milestoneTimeout = null;
-export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, 5000); }
-export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
-export function hidePopups() { // Removed excludeResearchPopup flag
+// ... (showTemporaryMessage, showMilestoneAlert, hideMilestoneAlert remain the same) ...
+
+export function hidePopups() { // Removed excludeResearchPopup flag - logic moved inside
+    console.log("hidePopups called");
+    let researchPopupIsOpenAndPending = false;
+    if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) {
+        const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"]');
+        if (pendingItems && pendingItems.length > 0) {
+            researchPopupIsOpenAndPending = true;
+            console.log("Research popup is open with pending items.");
+        }
+    }
+
+    // Hide all popups *except* the research one if it's open and pending
     if (conceptDetailPopup) conceptDetailPopup.classList.add('hidden');
     if (reflectionModal) reflectionModal.classList.add('hidden');
     if (settingsPopup) settingsPopup.classList.add('hidden');
     if (tapestryDeepDiveModal) tapestryDeepDiveModal.classList.add('hidden');
     if (dilemmaModal) dilemmaModal.classList.add('hidden');
     if (infoPopupElement) infoPopupElement.classList.add('hidden');
-    if (researchResultsPopup) researchResultsPopup.classList.add('hidden'); // Always try to hide
+
+    if (researchResultsPopup && !researchPopupIsOpenAndPending) {
+        // Hide research popup only if it's NOT open and pending
+        researchResultsPopup.classList.add('hidden');
+        console.log("Hiding research results popup.");
+    } else if (researchResultsPopup && researchPopupIsOpenAndPending) {
+         console.log("Keeping research results popup open.");
+    }
+
 
     // Check if ANY popup is still visible before hiding overlay
     const anyPopupVisible = document.querySelector('.popup:not(.hidden)');
     if (!anyPopupVisible && popupOverlay) {
         popupOverlay.classList.add('hidden');
         // Only clear state if truly no popups are visible after hiding attempt
-        GameLogic.clearPopupState();
+        // Check GameLogic exists before calling (important during initial load/errors)
+         if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) {
+            GameLogic.clearPopupState();
+         }
         console.log("All popups hidden, cleared popup state.");
     } else if (anyPopupVisible) {
-        // If some other popup remains (shouldn't normally happen unless one fails to hide),
-        // keep the overlay visible but maybe still clear specific non-research state?
-        // For simplicity, let's assume successful hiding or rely on subsequent calls.
         console.log("Some popups remain visible, overlay kept.");
+        // If only the research popup remains, don't clear general popup state yet
+        if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState && !researchPopupIsOpenAndPending) {
+            // Maybe clear non-research specific state? Or just let it be.
+            // For now, clearPopupState is only called when *all* are hidden.
+        }
     }
 } // End hidePopups
+
+
 // --- Screen Management ---
 // ... (showScreen remains the same) ...
 let previousScreenId = 'welcomeScreen';
@@ -451,7 +324,6 @@ export function displayWorkshopScreenContent() {
             elementDiv.dataset.cost = researchCost;
             let rarityCountsHTML = ''; try { const rarityCounts = GameLogic.countUndiscoveredByRarity(key); rarityCountsHTML = ` <div class="rarity-counts-display" title="Undiscovered Concepts (Primary Element: ${elementName})"> <span class="rarity-count common" title="${rarityCounts.common} Common"><i class="fas fa-circle"></i> ${rarityCounts.common}</span> <span class="rarity-count uncommon" title="${rarityCounts.uncommon} Uncommon"><i class="fas fa-square"></i> ${rarityCounts.uncommon}</span> <span class="rarity-count rare" title="${rarityCounts.rare} Rare"><i class="fas fa-star"></i> ${rarityCounts.rare}</span> </div> `; } catch (error) { console.error(`Error getting rarity counts for ${key}:`, error); rarityCountsHTML = '<div class="rarity-counts-display error">Counts N/A</div>'; }
 
-            // --- MODIFIED HTML STRUCTURE ---
             elementDiv.innerHTML = `
                 <div class="element-header">
                     <i class="${iconClass}" style="color: ${color};"></i>
@@ -465,7 +337,6 @@ export function displayWorkshopScreenContent() {
                     <span class="element-cost">${costText}</span>
                 </div>
             `;
-            // --- END MODIFIED HTML STRUCTURE ---
 
             elementDiv.title = titleText;
             if (!isDisabled) { elementDiv.classList.add('clickable'); } else { elementDiv.classList.add('disabled'); }
@@ -473,10 +344,11 @@ export function displayWorkshopScreenContent() {
         });
     } else { console.error("Element research buttons container not found in Workshop!"); }
 
-    // Update Daily Action Buttons state (remains the same)
+    // Update Daily Action Buttons state
     if (freeResearchButtonWorkshop) { const freeAvailable = State.isFreeResearchAvailable(); freeResearchButtonWorkshop.disabled = !freeAvailable; freeResearchButtonWorkshop.textContent = freeAvailable ? "Perform Daily Meditation" : "Meditation Performed Today"; freeResearchButtonWorkshop.title = freeAvailable ? "Once per day, perform free research on your least attuned element." : "Daily free meditation already completed."; }
     if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) { const cost = Config.GUIDED_REFLECTION_COST; const canAfford = State.getInsight() >= cost; seekGuidanceButtonWorkshop.disabled = !canAfford; seekGuidanceButtonWorkshop.title = canAfford ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; guidedReflectionCostDisplayWorkshop.textContent = cost; }
 }
+
 // --- Rituals Display (Targets Repository) ---
 // ... (displayDailyRituals remains the same, targets repo) ...
 export function displayDailyRituals() {
@@ -531,42 +403,22 @@ export function displayResearchResults(results) {
     researchResultsPopup.classList.remove('hidden');
     if (popupOverlay) popupOverlay.classList.remove('hidden');
 }
-// Inside ui.js
-
 export function handleResearchPopupAction(conceptId, action) {
      if (!researchResultsPopup || researchResultsPopup.classList.contains('hidden')) return;
-
      const itemDiv = researchPopupContent?.querySelector(`.research-result-item[data-concept-id="${conceptId}"]`);
-     if (!itemDiv || itemDiv.dataset.processed === "true") return; // Already processed
-
-     itemDiv.dataset.processed = "true";
-     itemDiv.dataset.choiceMade = action; // Store choice for visual feedback ('keep', 'sell', 'pending_dissonance')
-     itemDiv.classList.add('choice-made');
-
-     // Visually disable buttons or remove actions div
+     if (!itemDiv || itemDiv.dataset.processed === "true") return;
+     itemDiv.dataset.processed = "true"; itemDiv.dataset.choiceMade = action; itemDiv.classList.add('choice-made');
      const actionsDiv = itemDiv.querySelector('.card-actions');
-     if (actionsDiv) actionsDiv.remove(); // Or style display: none;
-
-     // Check if all items in the popup are processed (ignoring pending dissonance)
+     if (actionsDiv) actionsDiv.remove();
      const allItems = researchPopupContent?.querySelectorAll('.research-result-item');
      let allProcessed = true;
-     allItems?.forEach(item => {
-         // Only consider items NOT pending dissonance for enabling close
-         if (item.dataset.processed !== "true" && item.dataset.choiceMade !== 'pending_dissonance') {
-             allProcessed = false;
-         }
-     });
-
+     allItems?.forEach(item => { if (item.dataset.processed !== "true" && item.dataset.choiceMade !== 'pending_dissonance') { allProcessed = false; } });
      if (allProcessed) {
          researchPopupStatus.textContent = "All choices made. You can now close this window.";
-         if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = false; // Enable close button
+         if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = false;
          console.log("All research choices processed. Popup can be closed.");
-     } else {
-          const remaining = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"]').length || 0;
-          researchPopupStatus.textContent = `Choose an action for the remaining ${remaining} finding(s).`;
-          if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = true; // Keep disabled
-     }
-} // End handleResearchPopupAction
+     } else { const remaining = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"]').length || 0; researchPopupStatus.textContent = `Choose an action for the remaining ${remaining} finding(s).`; if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = true; }
+}
 
 // --- Grimoire Screen UI (Targets Workshop Library) ---
 // ... (updateGrimoireCounter, populateGrimoireFilters, updateShelfCounts, displayGrimoire, refreshGrimoireDisplay, handleFirstGrimoireVisit) ...
@@ -693,7 +545,6 @@ export function renderCard(concept, context = 'grimoire') {
      if (context === 'grimoire' && concept.visualHandle) {
          const handle = concept.visualHandle;
          const fileName = handle.includes('.') ? handle : `${handle}${Config.UNLOCKED_ART_EXTENSION || '.jpg'}`;
-         // Use the global function via onclick (or add listener)
          visualContentHTML = `<img src="placeholder_art/${fileName}" alt="${concept.name} Art" class="card-art-image" onerror="handleImageError(this)"><i class="fas fa-image card-visual-placeholder" style="display: none;" title="Art Placeholder (Load Failed)"></i>`;
      } else if (context === 'grimoire') {
          visualContentHTML = `<i class="fas fa-question card-visual-placeholder" title="Visual Placeholder"></i>`;
@@ -908,9 +759,8 @@ export function displayRepositoryContent() {
     GameLogic.updateMilestoneProgress('repositoryContents', null);
 }
 export function renderRepositoryItem(item, type, cost, canDoAction, completed = false, unmetReqs = []) { /* Logic updated to pass cost/canDoAction */
-    const div = document.createElement('div'); div.classList.add('repository-item', `repo-item-${type}`); if (completed) div.classList.add('completed'); let actionsHTML = ''; let buttonDisabled = !canDoAction; let buttonTitle = ''; let buttonText = ''; if (type === 'scene') { buttonText = `Meditate (${cost} <i class="fas fa-brain insight-icon"></i>)`; if (!canDoAction) buttonTitle = `Requires ${cost} Insight`; else buttonTitle = `Meditate on ${item.name}`; actionsHTML = `<button class="button small-button" data-scene-id="${item.id}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}">${buttonText}</button>`; } else if (type === 'experiment') { buttonText = `Attempt (${cost} <i class="fas fa-brain insight-icon"></i>)`; if (completed) { buttonTitle = "Experiment Completed"; buttonDisabled = true; } else if (!canDoAction && unmetReqs.includes("Insight")) { buttonTitle = `Requires ${cost} Insight`; buttonDisabled = true; } else if (!canDoAction && unmetReqs.length > 0) { buttonTitle = `Requires: ${unmetReqs.join(', ')}`; buttonDisabled = true; } else { buttonTitle = `Attempt ${item.name}`; buttonDisabled = false;} actionsHTML = `<button class="button small-button" data-experiment-id="${item.id}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}">${buttonText}</button>`; if (completed) actionsHTML += ` <span class="completed-text">(Completed)</span>`; else if (!canDoAction && unmetReqs.length > 0) actionsHTML += ` <small class="req-missing">(Requires: ${unmetReqs.join(', ')})</small>`; } div.innerHTML = `<h4>${item.name} ${type === 'experiment' ? `(Req: ${item.requiredAttunement} ${elementKeyToFullName[item.requiredElement]} Attun.)` : ''}</h4><p>${item.description}</p><div class="repo-actions">${actionsHTML}</div>`; return div;
+    const div = document.createElement('div'); div.classList.add('repository-item', `repo-item-${type}`); if (completed) div.classList.add('completed'); let actionsHTML = ''; let buttonDisabled = !canDoAction; let buttonTitle = ''; let buttonText = ''; if (type === 'scene') { buttonText = `Meditate (${cost} <i class="fas fa-brain insight-icon"></i>)`; if (!canDoAction) buttonTitle = `Requires ${cost} Insight`; else buttonTitle = `Meditate on ${item.name}`; actionsHTML = `<button class="button small-button" data-scene-id="${item.id}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}">${buttonText}</button>`; } else if (type === 'experiment') { buttonText = `Attempt (${cost} <i class="fas fa-brain insight-icon"></i>)`; if (completed) { buttonTitle = "Experiment Completed"; buttonDisabled = true; } else if (!canDoAction && unmetReqs.includes("Insight")) { buttonTitle = `Requires ${cost} Insight`; buttonDisabled = true; } else if (!canDoAction && unmetReqs.length > 0) { buttonTitle = `Requires: ${unmetReqs.join(', ')}`; buttonDisabled = true; } else { buttonTitle = `Attempt ${item.name}`; buttonDisabled = false;} actionsHTML = `<button class="button small-button" data-experiment-id="${item.id}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}">${buttonText}</button>`; if (completed) actionsHTML += ` <span class="completed-text">(Completed)</span>`; else if (!canDoAction && unmetReqs.length > 0) actionsHTML += ` <small class="req-missing">(Requires: ${unmetReqs.join(', ')})</small>`; } div.innerHTML = `<h4>${item.name} ${type === 'experiment' ? `(Req: ${item.requiredAttunement} ${elementKeyToFullName[exp.requiredElement]} Attun.)` : ''}</h4><p>${item.description}</p><div class="repo-actions">${actionsHTML}</div>`; return div;
 }
-
 
 // --- Milestones UI (Unchanged) ---
 // ... (displayMilestones) ...
