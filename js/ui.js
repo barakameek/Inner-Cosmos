@@ -175,18 +175,29 @@ export function showTemporaryMessage(message, duration = 3000, isGuidance = fals
 let milestoneTimeout = null;
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, 5000); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
-export function hidePopups() {
+(excludeResearchPopup = false) { // Add optional flag
     if (conceptDetailPopup) conceptDetailPopup.classList.add('hidden');
     if (reflectionModal) reflectionModal.classList.add('hidden');
     if (settingsPopup) settingsPopup.classList.add('hidden');
     if (tapestryDeepDiveModal) tapestryDeepDiveModal.classList.add('hidden');
     if (dilemmaModal) dilemmaModal.classList.add('hidden');
     if (infoPopupElement) infoPopupElement.classList.add('hidden');
-    if (researchResultsPopup) researchResultsPopup.classList.add('hidden'); // Hide results popup too
 
+    // Only hide research popup if not explicitly excluded
+    if (researchResultsPopup && !excludeResearchPopup) {
+         researchResultsPopup.classList.add('hidden');
+    }
+
+    // Check if ANY popup is still visible before hiding overlay
     const anyPopupVisible = document.querySelector('.popup:not(.hidden)');
-    if (!anyPopupVisible && popupOverlay) popupOverlay.classList.add('hidden');
-    GameLogic.clearPopupState();
+    if (!anyPopupVisible && popupOverlay) {
+        popupOverlay.classList.add('hidden');
+    }
+
+    // Don't clear state if research popup might still be needed
+    if (!excludeResearchPopup || !researchResultsPopup || researchResultsPopup.classList.contains('hidden')) {
+         GameLogic.clearPopupState(); // Only clear fully if no popups remain
+    }
 }
 
 // --- Screen Management ---
@@ -441,18 +452,33 @@ export function displayWorkshopScreenContent() {
             else { costText = `${researchCost} <i class="fas fa-brain insight-icon"></i>`; if (insight < researchCost) { isDisabled = true; titleText = `Research ${elementData.name || elementName} (Requires ${researchCost} Insight)`; } else { isDisabled = false; titleText = `Research ${elementData.name || elementName} (Cost: ${researchCost} Insight)`; } isFreeClick = false; }
             elementDiv.dataset.cost = researchCost;
             let rarityCountsHTML = ''; try { const rarityCounts = GameLogic.countUndiscoveredByRarity(key); rarityCountsHTML = ` <div class="rarity-counts-display" title="Undiscovered Concepts (Primary Element: ${elementName})"> <span class="rarity-count common" title="${rarityCounts.common} Common"><i class="fas fa-circle"></i> ${rarityCounts.common}</span> <span class="rarity-count uncommon" title="${rarityCounts.uncommon} Uncommon"><i class="fas fa-square"></i> ${rarityCounts.uncommon}</span> <span class="rarity-count rare" title="${rarityCounts.rare} Rare"><i class="fas fa-star"></i> ${rarityCounts.rare}</span> </div> `; } catch (error) { console.error(`Error getting rarity counts for ${key}:`, error); rarityCountsHTML = '<div class="rarity-counts-display error">Counts N/A</div>'; }
-            elementDiv.innerHTML = ` <div class="element-header"> <i class="${iconClass}" style="color: ${color};"></i> <span class="element-name">${elementData.name || elementName}</span> <span class="element-score">${score.toFixed(1)} (${scoreLabel})</span> </div> <p class="element-concept">${elementData.coreConcept || 'Loading...'}</p> ${rarityCountsHTML} <div class="element-action ${isDisabled ? 'disabled' : ''}"> <span class="element-cost">${costText}</span> </div> `;
+
+            // --- MODIFIED HTML STRUCTURE ---
+            elementDiv.innerHTML = `
+                <div class="element-header">
+                    <i class="${iconClass}" style="color: ${color};"></i>
+                    <span class="element-name">${elementData.name || elementName}</span>
+                    <!-- Score removed from header -->
+                </div>
+                <div class="element-score-display"> ${score.toFixed(1)} (${scoreLabel}) </div> <!-- New score display line -->
+                <p class="element-concept">${elementData.coreConcept || 'Loading...'}</p>
+                ${rarityCountsHTML}
+                <div class="element-action ${isDisabled ? 'disabled' : ''}">
+                    <span class="element-cost">${costText}</span>
+                </div>
+            `;
+            // --- END MODIFIED HTML STRUCTURE ---
+
             elementDiv.title = titleText;
             if (!isDisabled) { elementDiv.classList.add('clickable'); } else { elementDiv.classList.add('disabled'); }
             elementResearchButtonsContainer.appendChild(elementDiv);
         });
     } else { console.error("Element research buttons container not found in Workshop!"); }
 
-    // Update Daily Action Buttons state
+    // Update Daily Action Buttons state (remains the same)
     if (freeResearchButtonWorkshop) { const freeAvailable = State.isFreeResearchAvailable(); freeResearchButtonWorkshop.disabled = !freeAvailable; freeResearchButtonWorkshop.textContent = freeAvailable ? "Perform Daily Meditation" : "Meditation Performed Today"; freeResearchButtonWorkshop.title = freeAvailable ? "Once per day, perform free research on your least attuned element." : "Daily free meditation already completed."; }
     if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) { const cost = Config.GUIDED_REFLECTION_COST; const canAfford = State.getInsight() >= cost; seekGuidanceButtonWorkshop.disabled = !canAfford; seekGuidanceButtonWorkshop.title = canAfford ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; guidedReflectionCostDisplayWorkshop.textContent = cost; }
 }
-
 // --- Rituals Display (Targets Repository) ---
 // ... (displayDailyRituals remains the same, targets repo) ...
 export function displayDailyRituals() {
