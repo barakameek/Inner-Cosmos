@@ -533,24 +533,42 @@ export function displayResearchResults(results) {
     researchResultsPopup.classList.remove('hidden');
     if (popupOverlay) popupOverlay.classList.remove('hidden');
 }
+// Inside ui.js
+
 export function handleResearchPopupAction(conceptId, action) {
      if (!researchResultsPopup || researchResultsPopup.classList.contains('hidden')) return;
+
      const itemDiv = researchPopupContent?.querySelector(`.research-result-item[data-concept-id="${conceptId}"]`);
-     if (!itemDiv || itemDiv.dataset.processed === "true") return;
-     itemDiv.dataset.processed = "true"; itemDiv.dataset.choiceMade = action; itemDiv.classList.add('choice-made');
+     if (!itemDiv || itemDiv.dataset.processed === "true") return; // Already processed
+
+     itemDiv.dataset.processed = "true";
+     itemDiv.dataset.choiceMade = action; // Store choice for visual feedback ('keep', 'sell', 'pending_dissonance')
+     itemDiv.classList.add('choice-made');
+
+     // Visually disable buttons or remove actions div
      const actionsDiv = itemDiv.querySelector('.card-actions');
-     if (actionsDiv) actionsDiv.remove();
+     if (actionsDiv) actionsDiv.remove(); // Or style display: none;
+
+     // Check if all items in the popup are processed (ignoring pending dissonance)
      const allItems = researchPopupContent?.querySelectorAll('.research-result-item');
      let allProcessed = true;
-     allItems?.forEach(item => { if (item.dataset.processed !== "true") { allProcessed = false; } });
+     allItems?.forEach(item => {
+         // Only consider items NOT pending dissonance for enabling close
+         if (item.dataset.processed !== "true" && item.dataset.choiceMade !== 'pending_dissonance') {
+             allProcessed = false;
+         }
+     });
+
      if (allProcessed) {
          researchPopupStatus.textContent = "All choices made. You can now close this window.";
-         closeResearchResultsPopupButton.disabled = false;
-         // confirmResearchChoicesButton?.classList.remove('hidden'); // Not using this button now
+         if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = false; // Enable close button
          console.log("All research choices processed. Popup can be closed.");
-     } else { researchPopupStatus.textContent = "Choose an action for the remaining finding(s)."; }
-}
-
+     } else {
+          const remaining = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"]').length || 0;
+          researchPopupStatus.textContent = `Choose an action for the remaining ${remaining} finding(s).`;
+          if (closeResearchResultsPopupButton) closeResearchResultsPopupButton.disabled = true; // Keep disabled
+     }
+} // End handleResearchPopupAction
 
 // --- Grimoire Screen UI (Targets Workshop Library) ---
 // ... (updateGrimoireCounter, populateGrimoireFilters, updateShelfCounts, displayGrimoire, refreshGrimoireDisplay, handleFirstGrimoireVisit) ...
