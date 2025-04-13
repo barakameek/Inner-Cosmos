@@ -757,7 +757,72 @@ export function updateMilestoneProgress(trackType, currentValue) {
          console.error("CRITICAL ERROR: gameState.achievedMilestones is not a Set!");
          return;
      }
+// Add this function definition inside gameLogic.js
 
+export function checkAndUpdateRituals(action, details = {}) {
+    let ritualCompletedThisCheck = false;
+    const currentState = State.getState();
+    const completedToday = currentState.completedRituals.daily || {};
+    const focused = currentState.focusedConcepts;
+    let currentRitualPool = [...dailyRituals];
+
+    // Add active focus rituals
+    if (focusRituals) {
+        focusRituals.forEach(ritual => {
+            if (!ritual.requiredFocusIds || !Array.isArray(ritual.requiredFocusIds) || ritual.requiredFocusIds.length === 0) return;
+            const reqIds = new Set(ritual.requiredFocusIds);
+            let allFocused = true;
+            for (const id of reqIds) { if (!focused.has(id)) { allFocused = false; break; } }
+            // Check RF score requirement if present
+            if (allFocused && ritual.requiredRoleFocusScore !== undefined && (State.getScores().RF || 0) < ritual.requiredRoleFocusScore) { allFocused = false; }
+            if (allFocused && ritual.requiredRoleFocusScoreBelow !== undefined && (State.getScores().RF || 0) >= ritual.requiredRoleFocusScoreBelow) { allFocused = false; }
+            if (allFocused) currentRitualPool.push({ ...ritual, isFocusRitual: true });
+        });
+    }
+
+    // Check progress against the combined pool
+    currentRitualPool.forEach(ritual => {
+        const completedData = completedToday[ritual.id] || { completed: false, progress: 0 };
+        if (completedData.completed) return; // Skip already completed
+
+        const track = ritual.track;
+        let triggerMet = false;
+
+        if (track.action === action) {
+            // Basic action match
+            triggerMet = true;
+            // Additional checks if specified in details
+            if (track.contextMatch && details.contextMatch !== track.contextMatch) triggerMet = false;
+            if (track.categoryId && details.categoryId !== track.categoryId) triggerMet = false;
+            if (track.rarity && details.rarity !== track.rarity) triggerMet = false;
+            if (track.conceptType && details.conceptId) {
+                const conceptData = State.getDiscoveredConceptData(details.conceptId)?.concept;
+                if (!conceptData || conceptData.cardType !== track.conceptType) triggerMet = false;
+            }
+        }
+        // Handle non-action based triggers if needed in the future
+
+        if (triggerMet) {
+            const progress = State.completeRitualProgress(ritual.id, 'daily');
+            const requiredCount = track.count || 1;
+            if (progress >= requiredCount) {
+                console.log(`Ritual Completed: ${ritual.description}`);
+                State.markRitualComplete(ritual.id, 'daily');
+                ritualCompletedThisCheck = true;
+                if (ritual.reward) {
+                    if (ritual.reward.type === 'insight') gainInsight(ritual.reward.amount || 0, `Ritual: ${ritual.description}`);
+                    else if (ritual.reward.type === 'attunement') gainAttunementForAction('ritual', ritual.reward.element || 'All', ritual.reward.amount || 0);
+                    else if (ritual.reward.type === 'token') console.log(`TODO: Grant ${ritual.reward.tokenType || 'Research'} token`);
+                }
+            }
+        }
+    }); // End forEach ritual
+
+    // Update UI only if a ritual was completed *and* the repository is visible
+    if (ritualCompletedThisCheck && document.getElementById('repositoryScreen')?.classList.contains('current')) {
+        UI.displayDailyRituals();
+    }
+} // End checkAndUpdateRituals
      milestones.forEach(m => {
          if (!achievedSet.has(m.id)) {
              let achieved = false;
