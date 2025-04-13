@@ -466,18 +466,8 @@ export function handleDeepDiveNodeClick(nodeId) {
     UI.updateDeepDiveContent(content, nodeId);
 } 
 
-export function handleCompleteContemplation(task) {
-    if (!task || !task.reward || !task.requiresCompletionButton) return;
-    console.log(`Contemplation task completed: ${task.type}`);
-    if (task.reward.type === 'insight' && task.reward.amount > 0) {
-        gainInsight(task.reward.amount, `Contemplation Task`);
-    }
-    UI.showTemporaryMessage("Contemplation complete!", 2500);
-    UI.clearContemplationTask();
-}
 
 
-// --- END: Add these functions to gameLogic.js ---
 
 // --- Tapestry Deep Dive Logic ---
 export function handleContemplationNodeClick() { const cooldownEnd = State.getContemplationCooldownEnd(); if (cooldownEnd && Date.now() < cooldownEnd) { UI.showTemporaryMessage("Contemplation still cooling down.", 2500); UI.updateContemplationButtonState(); return; } if (spendInsight(Config.CONTEMPLATION_COST, "Focused Contemplation")) { const contemplation = generateFocusedContemplation(); if (contemplation) { UI.displayContemplationTask(contemplation); State.setContemplationCooldown(Date.now() + Config.CONTEMPLATION_COOLDOWN); UI.updateContemplationButtonState(); } else { UI.updateDeepDiveContent("<p><em>Could not generate contemplation task.</em></p>", 'contemplation'); gainInsight(Config.CONTEMPLATION_COST, "Refund: Contemplation Fail"); UI.updateContemplationButtonState(); } } else { UI.updateContemplationButtonState(); } }
