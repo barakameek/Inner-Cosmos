@@ -175,7 +175,7 @@ export function showTemporaryMessage(message, duration = 3000, isGuidance = fals
 let milestoneTimeout = null;
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, 5000); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
-(excludeResearchPopup = false) { // Add optional flag
+export function hidePopups(excludeResearchPopup = false) {
     if (conceptDetailPopup) conceptDetailPopup.classList.add('hidden');
     if (reflectionModal) reflectionModal.classList.add('hidden');
     if (settingsPopup) settingsPopup.classList.add('hidden');
