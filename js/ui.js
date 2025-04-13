@@ -74,8 +74,9 @@ export function hidePopups() { // Removed excludeResearchPopup flag - logic move
 let previousScreenId = 'welcomeScreen';
 export function showScreen(screenId) {
     console.log("UI: Showing screen:", screenId);
-    const currentState = State.getState();
-    const isPostQuestionnaire = currentState.questionnaireCompleted;
+    // CORRECTED: Access state via the imported module object 'State'
+    const currentState = State.getState(); // Get state object first
+    const isPostQuestionnaire = currentState.questionnaireCompleted; // Access property from the object
 
     screens.forEach(screen => {
         if(screen) {
@@ -135,6 +136,7 @@ export function showScreen(screenId) {
         } else if (screenId === 'repositoryScreen') { displayRepositoryContent(); }
 
     } else if (screenId === 'questionnaireScreen') {
+         // Use currentState here as well
          if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
              displayElementQuestions(currentState.currentElementIndex);
          }
