@@ -1,4 +1,4 @@
-// --- START OF COMPLETE main.js (Verified Imports) ---
+// --- START OF COMPLETE main.js (Verified Imports - Attempt 3) ---
 
 // Correct imports assuming main.js is in the ROOT directory
 // and config.js, utils.js, state.js, ui.js, gameLogic.js are inside the 'js' folder.
@@ -7,9 +7,6 @@ import * as State from './js/state.js';
 import * as GameLogic from './js/gameLogic.js';
 import * as Utils from './js/utils.js';
 import * as Config from './js/config.js';
-// data.js is in the ROOT directory, so its path is different
-// import { concepts } from '../data.js'; // Example if main.js was inside /js/
-// No, main.js is in root, so data.js is just './data.js' if needed, but it's loaded via index.html script tag.
 
 console.log("main.js loading... (Workshop Screen integration) - Verifying imports.");
 
@@ -285,7 +282,10 @@ function setupWorkshopScreenListeners() {
             } else if (cardElement && cardElement.dataset.conceptId) {
                  // Click on card in results area should show popup
                  const conceptId = parseInt(cardElement.dataset.conceptId);
-                 UI.showConceptDetailPopup(conceptId);
+                 // Check if it was the Add or Sell button inside the card that was clicked
+                 if (!addButton && !sellButton) {
+                     UI.showConceptDetailPopup(conceptId);
+                 }
             }
         });
     }
