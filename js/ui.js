@@ -175,31 +175,29 @@ export function showTemporaryMessage(message, duration = 3000, isGuidance = fals
 let milestoneTimeout = null;
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, 5000); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
-export function hidePopups(excludeResearchPopup = false) {
+export function hidePopups() { // Removed excludeResearchPopup flag
     if (conceptDetailPopup) conceptDetailPopup.classList.add('hidden');
     if (reflectionModal) reflectionModal.classList.add('hidden');
     if (settingsPopup) settingsPopup.classList.add('hidden');
     if (tapestryDeepDiveModal) tapestryDeepDiveModal.classList.add('hidden');
     if (dilemmaModal) dilemmaModal.classList.add('hidden');
     if (infoPopupElement) infoPopupElement.classList.add('hidden');
-
-    // Only hide research popup if not explicitly excluded
-    if (researchResultsPopup && !excludeResearchPopup) {
-         researchResultsPopup.classList.add('hidden');
-    }
+    if (researchResultsPopup) researchResultsPopup.classList.add('hidden'); // Always try to hide
 
     // Check if ANY popup is still visible before hiding overlay
     const anyPopupVisible = document.querySelector('.popup:not(.hidden)');
     if (!anyPopupVisible && popupOverlay) {
         popupOverlay.classList.add('hidden');
+        // Only clear state if truly no popups are visible after hiding attempt
+        GameLogic.clearPopupState();
+        console.log("All popups hidden, cleared popup state.");
+    } else if (anyPopupVisible) {
+        // If some other popup remains (shouldn't normally happen unless one fails to hide),
+        // keep the overlay visible but maybe still clear specific non-research state?
+        // For simplicity, let's assume successful hiding or rely on subsequent calls.
+        console.log("Some popups remain visible, overlay kept.");
     }
-
-    // Don't clear state if research popup might still be needed
-    if (!excludeResearchPopup || !researchResultsPopup || researchResultsPopup.classList.contains('hidden')) {
-         GameLogic.clearPopupState(); // Only clear fully if no popups remain
-    }
-}
-
+} // End hidePopups
 // --- Screen Management ---
 // ... (showScreen remains the same) ...
 let previousScreenId = 'welcomeScreen';
