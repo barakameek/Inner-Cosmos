@@ -244,7 +244,21 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 18p
 .research-area { background-color: var(--research-area-bg); border-color: var(--border-color-dark); flex-shrink: 0; }
 .library-area { background-color: var(--library-area-bg); border-color: var(--border-color-light); flex-grow: 1; /* Allow library to take remaining vertical space */ display: flex; flex-direction: column; overflow: hidden; /* Contain children */ }
 .workshop-section h2 { text-align: center; margin-bottom: 20px; }
-
+.research-area .initial-discovery-element .element-score-display {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #6a5a4a;
+    text-align: center;
+    margin-bottom: 8px; /* Space below score */
+    border-bottom: 1px dashed var(--border-color-light);
+    padding-bottom: 5px;
+}
+/* Adjust header padding slightly if needed */
+.research-area .initial-discovery-element .element-header {
+    padding-bottom: 2px; /* Reduced padding */
+    margin-bottom: 5px;
+    border-bottom: none; /* Remove border from header */
+}
 /* Research Area Content */
 .element-research-buttons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .element-research-buttons-grid .initial-discovery-element { border-radius: 6px; padding: 10px 12px; background-color: rgba(255, 250, 240, 0.9); border-color: var(--border-color-light); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
