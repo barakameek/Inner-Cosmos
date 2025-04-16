@@ -1,6 +1,4 @@
-// js/data.js - Core Application Data (Enhanced v4 - RF Element, Onboarding)
-
-console.log("data.js loading... Weaving RoleFocus, Defining Tasks, Refining Lore (v4)");
+console.log("data.js loading... Weaving RoleFocus, Defining Tasks, Refining Lore (v4.1)");
 
 // --- Element Definitions (Now 7 Elements) ---
 const elementDetails = {
@@ -94,7 +92,7 @@ const elementDetails = {
         examples: "Think structures like: Masturbation (Solo self-discovery journey), Serial Monogamy (Successive chapters of exclusivity), Lifelong Monogamy (Enduring twin-star partnership), Friends With Benefits (Intimacy without romantic commitment), Open Relationships (Primary bond + negotiated freedom), Swinging (Couple-centric recreational play), Polyamorous constellations (Triads/Quads, Hierarchical structures, Egalitarian networks), Solo Polyamory (Independent core with multiple connections), Relationship Anarchy (Building unique connections without rules), Group Sex adventures (Shared momentary experiences), Anonymous encounters (Fleeting, low-stakes sparks).",
         personaConnection: "How this shapes *your* unique sexy magic: It defines your ideal 'relationship constellation' – the structure, number of partners, and types of connections within which your intimate self feels most authentic, expressed, and fulfilled (or if you prefer to shine brightly as a solitary star!)."
     },
-    "RoleFocus": { // NEW ELEMENT
+    "RoleFocus": {
         name: "Role Focus: Energetic Polarity",
         coreQuestion: "Within power dynamics, where does your energy naturally resonate? Are you drawn to the assertive charge of Leading (Dominance), the receptive flow of Following (submission), or the dynamic interplay of Both (Switch)?",
         coreConcept: "This element explores your inherent energetic leaning within consensual power exchange dynamics. It's not just about specific acts, but about the underlying polarity: do you feel most energized, authentic, or fulfilled when embodying the guiding, initiating, 'yang' energy of Dominance? Or does the yielding, responsive, trusting 'yin' energy of submission feel like coming home? Or perhaps the versatile ability to inhabit both poles, fluidly shifting between them (Switching), is where your truest expression lies?",
@@ -119,7 +117,6 @@ const grimoireShelves = [
     { id: "dislikedLimit", name: "Boundaries Drawn", description: "Concepts that strike a discordant note, feel deeply uncomfortable, violate your ethics, or clearly mark the edge of your current map ('Here be dragons!'). Respecting these boundaries is wisdom and self-care." },
     { id: "coreIdentity", name: "Pillars of Self", description: "Concepts feeling absolutely fundamental, like load-bearing pillars in the architecture of your current persona and desires. These feel deeply, undeniably like *you*, shaping how you interact with the world." }
 ];
-
 // --- Concepts Data (Now includes RF score for ALL) ---
 const concepts = [
     // --- Common Concepts ---
@@ -1606,8 +1603,8 @@ const elementNameToKey = Object.fromEntries(Object.entries(elementKeyToFullName)
 const cardTypeKeys = ["Orientation", "Identity/Role", "Practice/Kink", "Psychological/Goal", "Relationship Style"];
 // This must now include RoleFocus to match the structure
 const elementNames = ["Attraction", "Interaction", "Sensory", "Psychological", "Cognitive", "Relational", "RoleFocus"];
-
 // --- Questionnaire Data (Now includes RoleFocus) ---
+
 const questionnaireGuided = {
     "Attraction": [
         { qId: "a1", type: "slider", text: "How focused is your 'Desire Compass'? Does it swing wide, or point very specifically?", minValue: 0, maxValue: 10, defaultValue: 5, minLabel: "Very Broad / Many Things Spark Interest", maxLabel: "Very Specific / Narrow Triggers", scoreWeight: 1.0 },
@@ -1640,23 +1637,9 @@ const questionnaireGuided = {
         { qId: "r3", type: "radio", text: "How important is relationship 'hierarchy' (e.g., having one designated 'primary' partner above others)?", options: [ { value: "Very Important / Need a Clear Primary", points: -1.0 }, { value: "Somewhat Important / Prefer Some Hierarchy", points: -0.5 }, { value: "Neutral / Depends Entirely on the Relationship(s)", points: 0 }, { value: "Generally Prefer Non-Hierarchical Connections", points: 1.0 }, { value: "Strongly Against Hierarchy (Relationship Anarchy)", points: 1.5 } ], scoreWeight: 1.0 }
     ],
     "RoleFocus": [ // NEW QUESTIONS
-        { qId: "rf1", type: "slider", text: "In interactions involving power dynamics, where does your energy naturally settle?", minValue: 0, maxValue: 10, defaultValue: 5, minLabel: "Strongly Yielding / Following (Submissive)", maxLabel: "Strongly Asserting / Leading (Dominant)", scoreWeight: 1.0 },
-        { qId: "rf2", type: "checkbox", text: "Which energetic expressions feel most fulfilling or authentic to you in power-aware contexts? (Select up to 2)", options: [
-            { value: "Taking Charge / Making Decisions / Controlling", points: 1.5 },
-            { value: "Guiding / Protecting / Nurturing (from a leading position)", points: 1.0 },
-            { value: "Adapting / Switching between Leading & Following", points: 0.0 },
-            { value: "Following Instructions / Trusting Guidance / Obeying", points: -1.5 },
-            { value: "Serving / Pleasing / Focusing on Partner's Needs (from a following position)", points: -1.0 },
-            { value: "Resisting / Challenging / Playful Bratting", points: 0.5 }, // Can be Dom testing or Sub expression
-            { value: "Collaborating / Power dynamics feel irrelevant", points: -0.5 }
-         ], scoreWeight: 1.0, maxChoices: 2 },
-        { qId: "rf3", type: "radio", text: "Do you feel more energized taking responsibility for a scene/interaction, or letting go of that responsibility?", options: [
-            { value: "Energized by Taking Responsibility / Leading", points: 1.5 },
-            { value: "Slightly Prefer Leading / More Comfortable Giving Direction", points: 0.5 },
-            { value: "Comfortable Either Way / Depends on Partner/Mood", points: 0.0 },
-            { value: "Slightly Prefer Letting Go / More Comfortable Receiving Direction", points: -0.5 },
-            { value: "Energized by Letting Go of Responsibility / Following", points: -1.5 }
-        ], scoreWeight: 1.0 }
+         { qId: "rf1", type: "slider", text: "In interactions involving power dynamics, where does your energy naturally settle?", minValue: 0, maxValue: 10, defaultValue: 5, minLabel: "Strongly Yielding / Following (Submissive)", maxLabel: "Strongly Asserting / Leading (Dominant)", scoreWeight: 1.0 },
+        { qId: "rf2", type: "checkbox", text: "Which energetic expressions feel most fulfilling or authentic to you in power-aware contexts? (Select up to 2)", options: [ { value: "Taking Charge / Making Decisions / Controlling", points: 1.5 }, { value: "Guiding / Protecting / Nurturing (from a leading position)", points: 1.0 }, { value: "Adapting / Switching between Leading & Following", points: 0.0 }, { value: "Following Instructions / Trusting Guidance / Obeying", points: -1.5 }, { value: "Serving / Pleasing / Focusing on Partner's Needs (from a following position)", points: -1.0 }, { value: "Resisting / Challenging / Playful Bratting", points: 0.5 }, { value: "Collaborating / Power dynamics feel irrelevant", points: -0.5 } ], scoreWeight: 1.0, maxChoices: 2 },
+        { qId: "rf3", type: "radio", text: "Do you feel more energized taking responsibility for a scene/interaction, or letting go of that responsibility?", options: [ { value: "Energized by Taking Responsibility / Leading", points: 1.5 }, { value: "Slightly Prefer Leading / More Comfortable Giving Direction", points: 0.5 }, { value: "Comfortable Either Way / Depends on Partner/Mood", points: 0.0 }, { value: "Slightly Prefer Letting Go / More Comfortable Receiving Direction", points: -0.5 }, { value: "Energized by Letting Go of Responsibility / Following", points: -1.5 } ], scoreWeight: 1.0 }
     ]
 };
 
@@ -1811,27 +1794,11 @@ const elementDeepDive = {
         { level: 3, title: "Level 3: Navigating the Cosmos - Rules, Anarchy, & Emotion", insightCost: 50, content: "<p>If exploring multiple connections (Poly [25], Open [26]), how do you navigate? Clear rules/hierarchy? Or let each define itself (RA [27])? Handling jealousy, compersion? What skills are essential?</p>" }
     ],
     "RF": [ // NEW DEEP DIVE
-        {
-            level: 1,
-            title: "Level 1: Sensing the Current - Your Natural Polarity",
-            insightCost: 10,
-            content: "<p>Role Focus explores your innate energetic leaning in power dynamics. Imagine a flowing river: are you more comfortable being the strong current directing the flow (Dominant), the receptive banks guiding the water (submissive), or the eddy that playfully swirls between both (Switch)? Where does your energy feel most *at home* when power is part of the equation? Recognize this initial pull without judgment.</p>"
-        },
-        {
-            level: 2,
-            title: "Level 2: Embodied Expressions - Dominance, Submission, Switching",
-            insightCost: 25,
-            content: "<p>How does this polarity translate into action or feeling? If Dominant [High RF], does it manifest as decisive control [11], protective care [58], or confident presence [4]? If submissive [Low RF], is it found in trusting obedience [5], devoted service [10], or the release of vulnerability [17]? If a Switch [Mid RF], what scenarios invite you to embody each pole? Connect your RF score to specific Identity/Role [e.g., 4, 5, 6] or Practice/Kink concepts in your Grimoire.</p>"
-        },
-        {
-            level: 3,
-            title: "Level 3: The Alchemy of Exchange - Polarity in Relationship",
-            insightCost: 50,
-            content: "<p>Polarity rarely exists in a vacuum. How does your Role Focus interact with your partners' [R]? Do you seek complementary energies (Dom/sub pairing) or similar ones (e.g., two Switches exploring fluidity)? How do you communicate needs and boundaries around power [C]? Can understanding your RF deepen empathy [P] for different perspectives within the D/s spectrum? Consider how your Role Focus shapes the intricate alchemy of power exchange in your connections.</p>"
-        }
+        { level: 1, title: "Level 1: Sensing the Current - Your Natural Polarity", insightCost: 10, content: "<p>Role Focus explores your innate energetic leaning in power dynamics... are you more comfortable being the strong current directing the flow (Dominant), the receptive banks guiding the water (submissive), or the eddy that playfully swirls between both (Switch)?...</p>" },
+        { level: 2, title: "Level 2: Embodied Expressions - Dominance, Submission, Switching", insightCost: 25, content: "<p>How does this polarity translate into action or feeling? If Dominant [High RF], does it manifest as decisive control [11]...? If submissive [Low RF], is it found in trusting obedience [5]...? If a Switch [Mid RF], what scenarios invite you to embody each pole? Connect your RF score to specific concepts...</p>" },
+        { level: 3, title: "Level 3: The Alchemy of Exchange - Polarity in Relationship", insightCost: 50, content: "<p>Polarity rarely exists in a vacuum. How does your Role Focus interact with your partners' [R]? Do you seek complementary energies (Dom/sub pairing)...? How do you communicate needs and boundaries around power [C]?...</p>" }
     ]
 };
-
 // --- Focus Rituals Data ---
 const focusRituals = [
     { id: "fr01", requiredFocusIds: [4], description: "Focus Ritual: Ponder a specific moment you felt confidently, ethically in charge (Dom Energy). What did that feel like physically & mentally?", reward: { type: "insight", amount: 3 }, track: { action: "completeReflection", count: 1, period: "daily", contextMatch: "FocusRitual_fr01" } },
@@ -2029,15 +1996,16 @@ const cardTypeThemes = { // Slightly enhanced
 
 // --- Onboarding Tasks (Now defined) ---
  const onboardingTasks = [
-    { id: 'task01', phaseRequired: 1, description: "View Your Persona", reward: { type: 'insight', amount: 1 }, track: { action: 'showScreen', value: 'personaScreen' }, hint: "Welcome! Tap 'Persona' in the top navigation to see your initial scores and tapestry." },
-    { id: 'task02', phaseRequired: 1, description: "Explore the Workshop", reward: { type: 'insight', amount: 1 }, track: { action: 'showScreen', value: 'workshopScreen' }, hint: "Next, visit the 'Workshop'. This is where you'll research new Concepts and manage your collection (Grimoire)." },
-    { id: 'task03', phaseRequired: 2, description: "Conduct Initial Research", reward: { type: 'insight', amount: 2 }, track: { action: 'conductResearch', count: 1 }, hint: "In the Workshop, use one of your FREE research attempts! Click any Element button under 'Research Bench'." },
-    { id: 'task04', phaseRequired: 2, description: "Add to Your Grimoire", reward: { type: 'insight', amount: 2 }, track: { action: 'addToGrimoire', count: 1 }, hint: "After Research, results appear in a popup. Choose 'Keep' for a Concept you like to add it permanently to your Grimoire Library!" },
-    { id: 'task05', phaseRequired: 3, description: "Choose Your First Focus", reward: { type: 'insight', amount: 3 }, track: { action: 'markFocus', count: 1 }, hint: "Go back to the 'Workshop' and view your Library. Click a card's ☆ icon (or 'Mark as Focus' in its detail popup) to add it to your Persona Tapestry." },
-    { id: 'task06', phaseRequired: 3, description: "Witness Your Tapestry Evolve", reward: { type: 'insight', amount: 2 }, track: { action: 'showScreen', value: 'personaScreen', condition: "focusChanged" }, hint: "Return to the 'Persona' screen. See how adding a Focus changes your Tapestry Narrative and Themes!" },
-    { id: 'task07', phaseRequired: 4, description: "Seek Deeper Insight", reward: { type: 'insight', amount: 2 }, track: { action: 'triggerReflection', count: 1 }, hint: "Reflections offer Insight and Attunement. They trigger sometimes, or you can 'Seek Guidance' in the Workshop (costs Insight)." },
-    { id: 'task08', phaseRequired: 4, description: "Explore the Repository", reward: { type: 'insight', amount: 1 }, track: { action: 'showScreen', value: 'repositoryScreen' }, hint: "Finally, check the 'Repository' tab. Track Milestones, Daily Rituals, and special discoveries like Scenes or Experiments here. You're ready to explore!" }
+    { id: 'task01', phaseRequired: 1, title: "Step 1: Your Persona", text: "This is your <strong>Persona</strong> screen. It shows your core elemental scores (like Attraction, Interaction) based on the initial Experimentation. These scores reflect your innate tendencies.", hint: "Tap 'Persona' in the top navigation.", highlightElementId: "personaScreen" },
+    { id: 'task02', phaseRequired: 2, title: "Step 2: The Workshop", text: "Now, let's visit the <strong>Workshop</strong>. This is your lab! Here you'll manage your discovered <strong>Concepts</strong> (in the Grimoire Library) and conduct <strong>Research</strong> to find new ones.", hint: "Tap 'Workshop' in the top navigation.", highlightElementId: "workshopScreen" },
+    { id: 'task03', phaseRequired: 3, title: "Step 3: Research", text: "Under 'Research Bench', click any Element button (like <i class='fa-solid fa-magnet'></i> Attraction) to start. You have <strong>3 FREE</strong> research attempts!", hint: "Click an element button in the 'Research Bench' area.", highlightElementId: "element-research-buttons" },
+    { id: 'task04', phaseRequired: 4, title: "Step 4: Your Grimoire", text: "Research results appear in a popup. Choose 'Keep' to add a Concept to your permanent <strong>Grimoire Library</strong> below. Selling gives you Insight <i class='fas fa-brain insight-icon'></i>, the main currency.", hint: "Click 'Keep' or 'Sell' on a discovered Concept card in the popup.", highlightElementId: "researchResultsPopup" }, // Highlight popup if possible, else workshop
+    { id: 'task05', phaseRequired: 5, title: "Step 5: Focus Concepts", text: "In the Grimoire Library, click the ☆ star icon on a card (or 'Mark as Focus' in its detail popup) to add it to your <strong>Persona Tapestry</strong>. Focused Concepts shape your narrative.", hint: "Find a card in the 'Grimoire Library' grid and click its star ☆ icon.", highlightElementId: "grimoire-grid-workshop" },
+    { id: 'task06', phaseRequired: 6, title: "Step 6: Weave Your Tapestry", text: "Return to the <strong>Persona</strong> screen. Notice how your 'Focused Concepts', 'Focus Themes', and 'Tapestry Narrative' have updated based on your choice!", hint: "Tap 'Persona' in the top navigation again.", highlightElementId: "personaScreen" },
+    { id: 'task07', phaseRequired: 7, title: "Step 7: Seek Insight", text: "Adding concepts and other actions sometimes trigger <strong>Reflections</strong> (like this tutorial!). Confirming reflections grants Insight <i class='fas fa-brain insight-icon'></i> and Attunement. You can also 'Seek Guidance' in the Workshop.", hint: "Reflections appear in popups like this. Confirm when ready.", highlightElementId: "reflectionModal" }, // Highlight reflection modal if possible
+    { id: 'task08', phaseRequired: 8, title: "Step 8: The Repository", text: "The <strong>Repository</strong> tracks Milestones, Daily Rituals, and special discoveries like Scene Blueprints or Experiments. Check back often! You're now ready to explore the Lab!", hint: "Tap 'Repository' in the top navigation.", highlightElementId: "repositoryScreen" }
  ];
+
 
 // --- Elemental Dilemmas (Now includes RF) ---
  const elementalDilemmas = [
@@ -2070,33 +2038,16 @@ const cardTypeThemes = { // Slightly enhanced
 // --- FINAL EXPORT BLOCK ---
 export {
     // Core Data
-    elementDetails,
-    concepts,
-    elementKeyToFullName,
-    elementNameToKey,
-    cardTypeKeys,
-    elementNames, // Now includes RoleFocus
+    elementDetails, concepts, elementKeyToFullName, elementNameToKey, cardTypeKeys, elementNames,
     // Gameplay Data
-    questionnaireGuided, // Now includes RoleFocus questions
-    reflectionPrompts, // Now includes RoleFocus prompts
-    elementDeepDive, // Now includes RoleFocus content
-    focusRituals, // Now includes RoleFocus rituals
-    dailyRituals,
-    milestones, // Now includes RoleFocus milestones
+    questionnaireGuided, reflectionPrompts, elementDeepDive, focusRituals, dailyRituals, milestones,
     // Repository Items
-    sceneBlueprints,
-    alchemicalExperiments, // Now includes RoleFocus experiments
-    elementalInsights, // Now includes RoleFocus insights
+    sceneBlueprints, alchemicalExperiments, elementalInsights,
     // Unlock Mechanisms
-    focusDrivenUnlocks, // Now includes RoleFocus unlocks
-    categoryDrivenUnlocks,
+    focusDrivenUnlocks, categoryDrivenUnlocks,
     // UI/Config Helpers
-    onboardingTasks, // Now defined
-    elementInteractionThemes, // Now includes RoleFocus themes
-    cardTypeThemes,
-    grimoireShelves,
-    elementalDilemmas // Now includes RoleFocus dilemmas
+    onboardingTasks, elementInteractionThemes, cardTypeThemes, grimoireShelves, elementalDilemmas
 };
 
-console.log("data.js FULLY loaded... RoleFocus integrated, concepts updated, tasks defined!");
+console.log("data.js FULLY loaded... RoleFocus integrated, concepts updated, tasks defined! (v4.1)");
 // --- END OF FILE data.js ---
