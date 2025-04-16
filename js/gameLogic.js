@@ -1,3 +1,5 @@
+// --- START OF CORRECTED gameLogic.js ---
+
 // js/gameLogic.js - Application Logic (Enhanced v4 - RF, Onboarding, Logging)
 
 import * as State from './state.js';
@@ -57,7 +59,7 @@ function checkOnboardingInternal(actionName, targetPhase, conditionValue = null)
         let conditionMet = false;
 
         // Check if the action and optional value match the task requirements
-        if (track.action === actionName) {
+        if (track?.action === actionName) { // Add null check for track
             conditionMet = (!track.value || track.value === conditionValue);
         }
         // Add checks for state-based triggers if needed in the future
@@ -79,7 +81,7 @@ function checkOnboardingInternal(actionName, targetPhase, conditionValue = null)
 export function gainInsight(amount, source = "Unknown") {
     if (typeof amount !== 'number' || isNaN(amount) || amount === 0) return;
     // State.changeInsight now handles logging & saving automatically
-    const changed = State.changeInsight(amount);
+    const changed = State.changeInsight(amount, source); // Pass source to state
     if (changed) {
         // Update UI displays (which includes log if visible)
         UI.updateInsightDisplays();
@@ -153,7 +155,7 @@ export function gainAttunementForAction(actionType, elementKey = null, amount = 
             case 'scoreNudge': baseAmount = (Config.SCORE_NUDGE_AMOUNT * 2) / (targetKeys.length || 1); break;
             case 'dilemmaNudge': baseAmount = (0.3 / (targetKeys.length || 1)); break;
             case 'completeReflectionGeneric': baseAmount = 0.2; break;
-            case 'contemplation': baseAmount = (elementKey === 'All') ? 0.1 : 0.4; break;
+            case 'contemplation': baseAmount = (elementKey === 'All') ? 0.1 : 0.4; break; // Logic adjusted, might need refinement
             case 'researchSuccess': baseAmount = 0.5; break;
             case 'researchFail': baseAmount = 0.1; break;
             case 'researchSpecial': baseAmount = 0.8; break;
@@ -537,8 +539,8 @@ export function handleConfirmReflection(nudgeAllowed) {
             if (reflectionTargetConceptId) {
                 if (addConceptToGrimoireInternal(reflectionTargetConceptId, 'dissonanceConfirm')) {
                      // Update the research popup item state if it's still open and pending
-                     const researchPopupIsOpen = researchResultsPopup && !researchResultsPopup.classList.contains('hidden');
-                     const pendingItem = researchPopupContent?.querySelector(`.research-result-item[data-concept-id="${reflectionTargetConceptId}"][data-choice-made="pending_dissonance"]`);
+                     const researchPopupIsOpen = document.getElementById('researchResultsPopup') && !document.getElementById('researchResultsPopup').classList.contains('hidden');
+                     const pendingItem = document.getElementById('researchPopupContent')?.querySelector(`.research-result-item[data-concept-id="${reflectionTargetConceptId}"][data-choice-made="pending_dissonance"]`);
                      if (researchPopupIsOpen && pendingItem) { UI.handleResearchPopupAction(reflectionTargetConceptId, 'kept_after_dissonance'); }
                 } else { console.warn(`Failed to add concept ${reflectionTargetConceptId} after dissonance confirmation.`); }
             }
@@ -798,7 +800,7 @@ function unlockDeepDiveLevelInternal(elementKey, levelToUnlock) {
     const deepDiveData = elementDeepDive[elementKey] || []; const levelData = deepDiveData.find(l => l.level === levelToUnlock); const currentLevel = State.getState().unlockedDeepDiveLevels[elementKey] || 0;
     if (!levelData || levelToUnlock !== currentLevel + 1) { return; } const cost = levelData.insightCost || 0;
     if (spendInsight(cost, `Unlock Insight: ${elementKeyToFullName[elementKey]} Lv ${levelToUnlock}`)) {
-        if (State.unlockLibraryLevel(elementKey, levelToUnlock)) { /* ... Update UI, milestones, rituals ... */ checkOnboardingInternal('unlockLibrary', 6); }
+        if (State.unlockLibraryLevel(elementKey, levelToUnlock)) { /* ... Update UI, milestones, rituals ... */ checkOnboardingInternal('unlockLibrary', 6); UI.displayPersonaScreenLogic(); } // Refresh Persona screen to show new unlocked level
         else { /* Handle state failure, refund */ gainInsight(cost, `Refund: Library unlock state error`); }
     }
 }
@@ -819,12 +821,12 @@ function attemptExperimentInternal(experimentId) {
     if (!spendInsight(cost, `Attempt Exp: ${exp.name}`)) return;
     console.log(`Logic: Attempting: ${exp.name}`); updateMilestoneProgress('attemptExperiment', 1); checkAndUpdateRituals('attemptExperiment');
     const roll = Math.random();
-    if (roll < (exp.successRate || 0.5)) { /* Handle Success */ State.addRepositoryItem('experiments', exp.id); if (exp.successReward) { /* Grant reward */ } }
-    else { /* Handle Failure */ if (exp.failureConsequence) { /* Apply consequence */ } }
+    if (roll < (exp.successRate || 0.5)) { /* Handle Success */ State.addRepositoryItem('experiments', exp.id); if (exp.successReward) { /* Grant reward */ } UI.showTemporaryMessage(`Experiment '${exp.name}' Succeeded!`, 3500); }
+    else { /* Handle Failure */ if (exp.failureConsequence) { /* Apply consequence */ } UI.showTemporaryMessage(`Experiment '${exp.name}' Failed... Try again later.`, 3500); }
     if(repositoryScreen?.classList.contains('current')) UI.displayRepositoryContent();
 }
 export function handleSuggestSceneClick() {
-    const focused = State.getFocusedConcepts(); const suggestionOutputDiv = getElement('sceneSuggestionOutput'); const suggestedSceneContentDiv = getElement('suggestedSceneContent');
+    const focused = State.getFocusedConcepts(); const suggestionOutputDiv = document.getElementById('sceneSuggestionOutput'); const suggestedSceneContentDiv = document.getElementById('suggestedSceneContent');
     if (focused.size === 0) { UI.showTemporaryMessage("Focus on concepts first.", 3000); return; }
     const cost = Config.SCENE_SUGGESTION_COST; if (!spendInsight(cost, "Suggest Scene")) return;
     console.log("Logic: Suggesting scenes based on focus..."); const { focusScores } = calculateFocusScores(); const discoveredScenes = State.getRepositoryItems().scenes;
@@ -857,7 +859,7 @@ export function handleUnlockLore(conceptId, level, cost) {
     if (spendInsight(cost, `Unlock Lore: ${concept.name} Lvl ${level}`)) { if(unlockLoreInternal(conceptId, level, `Insight Purchase`)) { checkOnboardingInternal('unlockLore', 6); } }
 }
 function unlockLoreInternal(conceptId, level, source = "Unknown") {
-    if (State.unlockLoreLevel(conceptId, level)) { const conceptName = State.getDiscoveredConceptData(conceptId)?.concept?.name || `ID ${conceptId}`; console.log(`Logic: Unlocked lore level ${level} for ${conceptName} via ${source}`); if (getCurrentPopupConceptId() === conceptId && conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) { requestAnimationFrame(() => { /* ... Update specific lore entry in popup ... */ }); } else { UI.refreshGrimoireDisplay(); } updateMilestoneProgress('unlockLore', level); return true; }
+    if (State.unlockLoreLevel(conceptId, level)) { const conceptName = State.getDiscoveredConceptData(conceptId)?.concept?.name || `ID ${conceptId}`; console.log(`Logic: Unlocked lore level ${level} for ${conceptName} via ${source}`); if (getCurrentPopupConceptId() === conceptId && conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) { requestAnimationFrame(() => { UI.showConceptDetailPopup(conceptId); /* Update specific lore entry in popup */ }); } else { UI.refreshGrimoireDisplay(); } updateMilestoneProgress('unlockLore', level); return true; }
     else { console.error(`Logic Error: Failed to update lore level in state for ${conceptId}`); return false; }
 }
 
@@ -893,7 +895,7 @@ export function handleCompleteContemplation(task) { if (!task || !task.reward ||
 
 // --- Elemental Dilemma Logic ---
 export function handleElementalDilemmaClick() { const availableDilemmas = elementalDilemmas; if (!availableDilemmas || availableDilemmas.length === 0) { UI.showTemporaryMessage("No dilemmas available.", 3000); return; } currentDilemma = availableDilemmas[Math.floor(Math.random() * availableDilemmas.length)]; UI.displayElementalDilemma(currentDilemma); }
-export function handleConfirmDilemma() { const modal = getElement('dilemmaModal'); const slider = getElement('dilemmaSlider'); const nudgeCheckbox = getElement('dilemmaNudgeCheckbox'); if (!modal || !slider || !nudgeCheckbox || !currentDilemma) { UI.hidePopups(); return; } const sliderValue = parseFloat(slider.value); const nudgeAllowed = nudgeCheckbox.checked; const keyMin = currentDilemma.elementKeyMin; const keyMax = currentDilemma.elementKeyMax; console.log(`Dilemma ${currentDilemma.id} confirmed. Value: ${sliderValue}, Nudge: ${nudgeAllowed}`); gainInsight(3, `Dilemma Choice: ${currentDilemma.id}`); if (nudgeAllowed) { const scores = State.getScores(); const newScores = { ...scores }; let nudged = false; const maxNudgeEffect = Config.SCORE_NUDGE_AMOUNT * 1.5; const proportionMin = (10 - sliderValue) / 10; const proportionMax = sliderValue / 10; const nudgeMin = proportionMin * maxNudgeEffect - (proportionMax * maxNudgeEffect * 0.3); const nudgeMax = proportionMax * maxNudgeEffect - (proportionMin * maxNudgeEffect * 0.3); if (keyMin && newScores[keyMin] !== undefined) { const originalMin = newScores[keyMin]; newScores[keyMin] = Math.max(0, Math.min(10, newScores[keyMin] + nudgeMin)); if (newScores[keyMin] !== originalMin) nudged = true; } if (keyMax && newScores[keyMax] !== undefined) { const originalMax = newScores[keyMax]; newScores[keyMax] = Math.max(0, Math.min(10, newScores[keyMax] + nudgeMax)); if (newScores[keyMax] !== originalMax) nudged = true; } if (nudged) { State.updateScores(newScores); console.log("Nudged Scores after Dilemma:", State.getScores()); if(personaScreen?.classList.contains('current')) UI.displayPersonaScreen(); UI.showTemporaryMessage("Dilemma choice influenced core understanding.", 3500); gainAttunementForAction('dilemmaNudge', 'All'); updateMilestoneProgress('scoreNudgeApplied', 1); } } UI.hidePopups(); currentDilemma = null; }
+export function handleConfirmDilemma() { const modal = document.getElementById('dilemmaModal'); const slider = document.getElementById('dilemmaSlider'); const nudgeCheckbox = document.getElementById('dilemmaNudgeCheckbox'); if (!modal || !slider || !nudgeCheckbox || !currentDilemma) { UI.hidePopups(); return; } const sliderValue = parseFloat(slider.value); const nudgeAllowed = nudgeCheckbox.checked; const keyMin = currentDilemma.elementKeyMin; const keyMax = currentDilemma.elementKeyMax; console.log(`Dilemma ${currentDilemma.id} confirmed. Value: ${sliderValue}, Nudge: ${nudgeAllowed}`); gainInsight(3, `Dilemma Choice: ${currentDilemma.id}`); if (nudgeAllowed) { const scores = State.getScores(); const newScores = { ...scores }; let nudged = false; const maxNudgeEffect = Config.SCORE_NUDGE_AMOUNT * 1.5; const proportionMin = (10 - sliderValue) / 10; const proportionMax = sliderValue / 10; const nudgeMin = proportionMin * maxNudgeEffect - (proportionMax * maxNudgeEffect * 0.3); const nudgeMax = proportionMax * maxNudgeEffect - (proportionMin * maxNudgeEffect * 0.3); if (keyMin && newScores[keyMin] !== undefined) { const originalMin = newScores[keyMin]; newScores[keyMin] = Math.max(0, Math.min(10, newScores[keyMin] + nudgeMin)); if (newScores[keyMin] !== originalMin) nudged = true; } if (keyMax && newScores[keyMax] !== undefined) { const originalMax = newScores[keyMax]; newScores[keyMax] = Math.max(0, Math.min(10, newScores[keyMax] + nudgeMax)); if (newScores[keyMax] !== originalMax) nudged = true; } if (nudged) { State.updateScores(newScores); console.log("Nudged Scores after Dilemma:", State.getScores()); if(personaScreen?.classList.contains('current')) UI.displayPersonaScreen(); UI.showTemporaryMessage("Dilemma choice influenced core understanding.", 3500); gainAttunementForAction('dilemmaNudge', 'All'); updateMilestoneProgress('scoreNudgeApplied', 1); } } UI.hidePopups(); currentDilemma = null; }
 
 // --- Daily Login ---
 export function checkForDailyLogin() { const today = new Date().toDateString(); const lastLogin = State.getState().lastLoginDate; if (lastLogin !== today) { console.log("Logic: First login today. Resetting rituals."); State.resetDailyRituals(); gainInsight(5.0, "Daily Bonus"); UI.showTemporaryMessage("Daily Rituals Reset. Free Research Available!", 3500); if(workshopScreen?.classList.contains('current')) { UI.displayWorkshopScreenContent(); } if(repositoryScreen?.classList.contains('current')) { UI.displayRepositoryContent(); } } else { console.log("Logic: Already logged in today."); if(workshopScreen?.classList.contains('current')) { UI.displayWorkshopScreenContent(); } } }
@@ -953,12 +955,15 @@ export function updateMilestoneProgress(trackType, currentValue) {
 
      milestones.forEach(m => {
          if (achievedSet.has(m.id)) return; // Skip achieved
-         let achieved = false; const track = m.track; const threshold = track.threshold;
+         let achieved = false; const track = m.track;
+         // *** BUG FIX ***: Read threshold from Config for ms024 since it was removed from data.js
+         const threshold = (m.id === 'ms024') ? Config.MAX_FOCUS_SLOTS : track.threshold;
+         const countThreshold = track.count || 1; // Threshold for action counts
 
          // Action-based checks
          if (track.action === trackType) {
-             if (typeof currentValue === 'number' && currentValue >= (track.count || 1)) achieved = true;
-             else if ((!track.count || track.count === 1) && currentValue) achieved = true; // Simple trigger
+             if (typeof currentValue === 'number' && currentValue >= countThreshold) achieved = true;
+             else if (countThreshold === 1 && currentValue) achieved = true; // Simple trigger check
          }
          // State-based checks
          else if (track.state === trackType) {
@@ -988,5 +993,13 @@ export function updateMilestoneProgress(trackType, currentValue) {
      if (milestoneAchievedThisUpdate && document.getElementById('repositoryScreen')?.classList.contains('current')) { UI.displayRepositoryContent(); }
 }
 
+// Helper function needed by handleConfirmReflection
+function _calculateFocusSetHash() {
+    if (!gameState.focusedConcepts || gameState.focusedConcepts.size === 0) { return ''; }
+    const sortedIds = Array.from(gameState.focusedConcepts).sort((a, b) => a - b);
+    return sortedIds.join(',');
+}
+
+
 console.log("gameLogic.js loaded. (Enhanced v4)");
-// --- END OF FULL and COMPLETE gameLogic.js ---
+// --- END OF CORRECTED gameLogic.js ---
