@@ -1,8 +1,10 @@
+// --- START OF CORRECTED utils.js ---
+
 // js/utils.js - Utility Functions (Enhanced for 7 Elements + v4)
 
 // Import updated data structures only if needed for lookups WITHIN utils itself
-// In this case, we only need elementDetails for getElementShortName.
-import { elementDetails, elementKeyToFullName, elementNameToKey } from '../data.js';
+// elementDetails needed for getElementShortName. elementKeyToFullName needed for reverse lookup.
+import { elementDetails, elementKeyToFullName } from '../data.js'; // Removed elementNameToKey as it's less reliable
 
 console.log("utils.js loading... (Enhanced for 7 Elements + v4)");
 
@@ -35,35 +37,38 @@ export function getAffinityLevel(score) {
 
 /**
  * Gets the short name for an element (e.g., "Attraction").
- * @param {string} fullName - The full name from elementDetails (e.g., "Attraction Focus: The Spark Plug").
+ * @param {string} fullNameOrShortName - The full descriptive name (e.g., "Attraction Focus: The Spark Plug") OR the short name key ("Attraction").
  * @returns {string} The short name or the original name if format unknown.
  */
-export function getElementShortName(fullName) {
-    if (!fullName) return "Unknown";
-    // Find the element key corresponding to the full name
-    const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === fullName);
-    if (key && elementDetails[key]?.name) {
-        return elementDetails[key].name.split(':')[0]; // Get part before colon
+export function getElementShortName(fullNameOrShortName) {
+    if (!fullNameOrShortName) return "Unknown";
+
+    // Check if it's already the short name key in elementDetails
+    if (elementDetails[fullNameOrShortName]) {
+        const detail = elementDetails[fullNameOrShortName];
+        return detail.name?.split(':')[0] || fullNameOrShortName;
     }
-    // Fallback if not found in elementDetails keys directly (e.g., using name from elementNames)
-     const matchingDetail = Object.values(elementDetails).find(detail => detail.name === fullName);
-     if (matchingDetail?.name) {
-        return matchingDetail.name.split(':')[0];
-     }
+
+    // Check if it's a full name and try to extract short name
+    if (fullNameOrShortName.includes(':')) {
+        return fullNameOrShortName.split(':')[0];
+    }
+
     // Final fallback
-    return fullName.split(':')[0] || fullName;
+    return fullNameOrShortName;
 }
 
 
 /**
- * Gets the color associated with an element name (full name like "Attraction").
+ * Gets the color associated with an element name.
  * Now includes RoleFocus.
- * @param {string} elementName - The full name of the element (e.g., "Attraction", "RoleFocus").
+ * Expects the short name key ("Attraction", "Interaction", etc.) as input.
+ * @param {string} elementNameKey - The short name key of the element (e.g., "Attraction", "RoleFocus").
  * @returns {string} The hex color code.
  */
-export function getElementColor(elementName) {
+export function getElementColor(elementNameKey) {
     // Using fallback colors directly for reliability.
-    // Ensure these match CSS variables in style.css :root
+    // Keys here MUST match the keys of elementDetails and elementNames
     const fallbackColors = {
         "Attraction": '#FF6347',      // Tomato Red (--attraction-color)
         "Interaction": '#4682B4',     // Steel Blue (--interaction-color)
@@ -73,17 +78,13 @@ export function getElementColor(elementName) {
         "Relational": '#FF8C00',      // Dark Orange (--relational-color)
         "RoleFocus": '#40E0D0'        // Turquoise (--rolefocus-color)
     };
-    // Try to find the key corresponding to the full name first
-    const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elementName);
-     if (key && elementKeyToFullName[key] && fallbackColors[elementKeyToFullName[key]]) {
-         return fallbackColors[elementKeyToFullName[key]];
+
+     if (fallbackColors[elementNameKey]) {
+         return fallbackColors[elementNameKey];
      }
-     // Fallback check directly against the name provided
-     if (fallbackColors[elementName]) {
-         return fallbackColors[elementName];
-     }
+
     // Last resort default
-    console.warn(`Color not found for element: ${elementName}`);
+    console.warn(`Color not found for element key: ${elementNameKey}`);
     return '#CCCCCC'; // Default grey
 }
 
@@ -127,13 +128,12 @@ export function getCardTypeIcon(cardType) {
 
 /**
  * Gets the Font Awesome icon class for a given element name (now including RoleFocus).
- * Uses the short name for matching.
- * @param {string} elementName - The full name of the element (e.g., "Attraction Focus: The Spark Plug").
+ * Expects the short name key ("Attraction", "Interaction", etc.) as input.
+ * @param {string} elementNameKey - The short name key of the element (e.g., "Attraction").
  * @returns {string} The Font Awesome class string.
  */
-export function getElementIcon(elementName) {
-    const shortName = getElementShortName(elementName);
-     switch (shortName) {
+export function getElementIcon(elementNameKey) {
+     switch (elementNameKey) {
          case "Attraction": return "fa-solid fa-magnet";
          case "Interaction": return "fa-solid fa-people-arrows"; // Changed from arrows-left-right
          case "Sensory": return "fa-solid fa-hand-sparkles";
@@ -141,7 +141,9 @@ export function getElementIcon(elementName) {
          case "Cognitive": return "fa-solid fa-lightbulb";
          case "Relational": return "fa-solid fa-link";
          case "RoleFocus": return "fa-solid fa-gauge-high";
-         default: return "fa-solid fa-atom"; // Generic fallback
+         default:
+             console.warn(`Icon not found for element key: ${elementNameKey}`);
+             return "fa-solid fa-atom"; // Generic fallback
      }
 }
 
@@ -239,4 +241,4 @@ export function formatTimestamp(timestamp) {
 
 
 console.log("utils.js loaded.");
-// --- END OF FILE utils.js ---
+// --- END OF CORRECTED utils.js ---
