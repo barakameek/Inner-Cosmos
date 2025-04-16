@@ -1601,7 +1601,6 @@ const concepts = [
 const elementKeyToFullName = { A: "Attraction", I: "Interaction", S: "Sensory", P: "Psychological", C: "Cognitive", R: "Relational", RF: "RoleFocus" };
 const elementNameToKey = Object.fromEntries(Object.entries(elementKeyToFullName).map(([key, value]) => [elementDetails[value]?.name || value, key]));
 const cardTypeKeys = ["Orientation", "Identity/Role", "Practice/Kink", "Psychological/Goal", "Relationship Style"];
-// This must now include RoleFocus to match the structure
 const elementNames = ["Attraction", "Interaction", "Sensory", "Psychological", "Cognitive", "Relational", "RoleFocus"];
 // --- Questionnaire Data (Now includes RoleFocus) ---
 
@@ -2003,6 +2002,7 @@ const cardTypeThemes = { // Slightly enhanced
     { id: 'task05', phaseRequired: 5, title: "Step 5: Focus Concepts", text: "In the Grimoire Library, click the ☆ star icon on a card (or 'Mark as Focus' in its detail popup) to add it to your <strong>Persona Tapestry</strong>. Focused Concepts shape your narrative.", hint: "Find a card in the 'Grimoire Library' grid and click its star ☆ icon.", highlightElementId: "grimoire-grid-workshop" },
     { id: 'task06', phaseRequired: 6, title: "Step 6: Weave Your Tapestry", text: "Return to the <strong>Persona</strong> screen. Notice how your 'Focused Concepts', 'Focus Themes', and 'Tapestry Narrative' have updated based on your choice!", hint: "Tap 'Persona' in the top navigation again.", highlightElementId: "personaScreen" },
     { id: 'task07', phaseRequired: 7, title: "Step 7: Seek Insight", text: "Adding concepts and other actions sometimes trigger <strong>Reflections</strong> (like this tutorial!). Confirming reflections grants Insight <i class='fas fa-brain insight-icon'></i> and Attunement. You can also 'Seek Guidance' in the Workshop.", hint: "Reflections appear in popups like this. Confirm when ready.", highlightElementId: "reflectionModal" }, // Highlight reflection modal if possible
+    // Corrected Phase 8 text: Removed Config reference
     { id: 'task08', phaseRequired: 8, title: "Step 8: The Repository", text: "The <strong>Repository</strong> tracks Milestones, Daily Rituals, and special discoveries like Scene Blueprints or Experiments. Check back often! You're now ready to explore the Lab!", hint: "Tap 'Repository' in the top navigation.", highlightElementId: "repositoryScreen" }
  ];
 
@@ -2049,5 +2049,4 @@ export {
     onboardingTasks, elementInteractionThemes, cardTypeThemes, grimoireShelves, elementalDilemmas
 };
 
-console.log("data.js FULLY loaded... RoleFocus integrated, concepts updated, tasks defined! (v4.1)");
-// --- END OF FILE data.js ---
+console.log("data.js FULLY loaded... RoleFocus integrated, concepts updated, tasks defined! (v4.2)");
