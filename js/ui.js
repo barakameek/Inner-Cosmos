@@ -1,4 +1,3 @@
-// --- START OF CORRECTED ui.js (Resumed) ---
 
 // js/ui.js - User Interface Logic (Enhanced v4)
 
@@ -17,7 +16,18 @@ import {
 console.log("ui.js loading... (Enhanced v4.3 - Fixed Scope/Decl Errors)");
 
 // --- Helper Function for Image Errors ---
-function handleImageError(imgElement) { console.warn(`Image failed to load: ${imgElement.src}. Displaying placeholder.`); imgElement.style.display = 'none'; const placeholder = imgElement.parentElement?.querySelector('.card-visual-placeholder'); if (placeholder) { placeholder.style.display = 'flex'; placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src.split('/').pop()})`; } }
+function handleImageError(imgElement) {
+    console.warn(`Image failed to load: ${imgElement?.src}. Displaying placeholder.`);
+    if (imgElement) {
+        imgElement.style.display = 'none'; // Hide broken img
+        const placeholder = imgElement.parentElement?.querySelector('.card-visual-placeholder');
+        if (placeholder) {
+            placeholder.style.display = 'flex'; // Ensure placeholder is visible
+            placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src?.split('/')?.pop() || 'unknown'})`;
+        }
+    }
+}
+// Expose to global scope for onerror attribute
 window.handleImageError = handleImageError;
 
 
@@ -169,24 +179,20 @@ const onboardingHighlight = getElement('onboardingHighlight');
 
 
 // --- Module-level Variables ---
-let personaChartInstance = null; // *** BUG FIX: Declare only ONCE at module level ***
+let personaChartInstance = null; // Declare only ONCE at module level
 let toastTimeout = null;
 let milestoneTimeout = null;
 let insightBoostTimeoutId = null; // Added for insight boost timer
 let previousScreenId = 'welcomeScreen';
 
 // --- Utility UI Functions ---
-// (showTemporaryMessage, showMilestoneAlert, hideMilestoneAlert, hidePopups, showInfoPopup)
-// ... (These functions remain unchanged) ...
 export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, isGuidance = false) { if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; } console.info(`Toast: ${message}`); toastMessageElement.textContent = message; toastElement.classList.toggle('guidance-toast', isGuidance); if (toastTimeout) clearTimeout(toastTimeout); toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden'); toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration); }
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, Config.MILESTONE_ALERT_DURATION); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
 export function hidePopups() { console.log("UI: hidePopups called"); let researchPopupIsOpenAndPending = false; if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) { const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]'); if (pendingItems && pendingItems.length > 0) { researchPopupIsOpenAndPending = true; console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`); } } document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => { if (!(popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending)) { popup.classList.add('hidden'); } }); const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)'); if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.add('hidden'); if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) { GameLogic.clearPopupState(); console.log("UI: All general popups hidden, cleared popup state."); } } else if (anyGeneralPopupVisible) { console.log("UI: Some general popups remain visible, overlay kept."); } else if (onboardingOverlay?.classList.contains('visible')) { console.log("UI: Onboarding is visible, main popup overlay remains hidden."); popupOverlay?.classList.add('hidden'); } }
 export function showInfoPopup(message) { if (infoPopupElement && infoPopupContent) { infoPopupContent.textContent = message; infoPopupElement.classList.remove('hidden'); if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.remove('hidden'); } } else { console.error("Info popup elements not found."); showTemporaryMessage("Error displaying info.", 2000); } }
 
-
 // --- Screen Management ---
-// ... (showScreen function remains unchanged) ...
 export function showScreen(screenId) {
     console.log(`UI: Attempting to show screen: ${screenId}`);
     const currentState = State.getState();
@@ -227,6 +233,7 @@ export function showScreen(screenId) {
         }
     }
 
+    // Call relevant display logic AFTER the screen is made visible
     switch (screenId) {
         case 'personaScreen': if (isPostQuestionnaire) { const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen'; if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView) { togglePersonaView(false); } else { if (personaSummaryView?.classList.contains('current')) { displayPersonaSummary(); } else { GameLogic.displayPersonaScreenLogic(); } } displayInsightLog(); } break;
         case 'workshopScreen': if (isPostQuestionnaire) { displayWorkshopScreenContent(); handleFirstGrimoireVisit(); refreshGrimoireDisplay(); } break;
@@ -239,16 +246,14 @@ export function showScreen(screenId) {
     previousScreenId = screenId;
 }
 
-
 // --- Insight Display & Log ---
-// ... (updateInsightDisplays, updateDependentUI, displayInsightLog, updateInsightBoostButtonState functions unchanged) ...
 export function updateInsightDisplays() { const insightValue = State.getInsight(); const insight = insightValue.toFixed(1); if (userInsightDisplayPersona) userInsightDisplayPersona.textContent = insight; if (userInsightDisplayWorkshop) userInsightDisplayWorkshop.textContent = insight; updateInsightBoostButtonState(); updateDependentUI(); if (personaScreen?.classList.contains('current') && insightLogContainer && !insightLogContainer.classList.contains('log-hidden')) { displayInsightLog(); } }
 function updateDependentUI() { const insightValue = State.getInsight(); if (workshopScreen?.classList.contains('current')) { displayWorkshopScreenContent(); } else if (elementResearchButtonsContainer) { elementResearchButtonsContainer.querySelectorAll('.initial-discovery-element').forEach(button => { if (!button.dataset.isFree || button.dataset.isFree === 'false') { const cost = parseFloat(button.dataset.cost); const canAfford = insightValue >= cost; button.classList.toggle('disabled', !canAfford); button.title = canAfford ? `Research (Cost: ${cost})` : `Requires ${cost} Insight`; button.querySelector('.element-action')?.classList.toggle('disabled', !canAfford); } }); } if (personaScreen?.classList.contains('current')) { updateSuggestSceneButtonState(); personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container').forEach(container => { const key = container.dataset.elementKey; if (key) displayElementDeepDive(key, container); }); } if (repositoryScreen?.classList.contains('current')) { displayRepositoryContent(); } updateContemplationButtonState(); if (conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) { const popupConceptId = GameLogic.getCurrentPopupConceptId(); if (popupConceptId !== null) { popupLoreContent?.querySelectorAll('.unlock-lore-button').forEach(button => { const cost = parseFloat(button.dataset.cost); button.disabled = !(insightValue >= cost); button.title = (insightValue >= cost) ? `Unlock for ${cost} Insight` : `Requires ${cost} Insight`; }); } } if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) { const cost = Config.GUIDED_REFLECTION_COST; seekGuidanceButtonWorkshop.disabled = insightValue < cost; seekGuidanceButtonWorkshop.title = insightValue >= cost ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; } }
 export function displayInsightLog() { if (!insightLogContainer) return; const logEntries = State.getInsightLog(); insightLogContainer.innerHTML = '<h5>Recent Insight Changes:</h5>'; if (logEntries.length === 0) { insightLogContainer.innerHTML += '<p><i>No recent changes logged.</i></p>'; return; } logEntries.slice().reverse().forEach(entry => { const entryDiv = document.createElement('div'); entryDiv.classList.add('insight-log-entry'); const amountClass = entry.amount > 0 ? 'log-amount-gain' : 'log-amount-loss'; const sign = entry.amount > 0 ? '+' : ''; entryDiv.innerHTML = ` <span class="log-timestamp">${entry.timestamp}</span> <span class="log-source">${entry.source || 'Unknown Source'}</span> <span class="log-amount ${amountClass}">${sign}${entry.amount.toFixed(1)}</span> `; insightLogContainer.appendChild(entryDiv); }); }
 export function updateInsightBoostButtonState() { const btn = getElement('addInsightButton'); if (!btn) return; const cooldownEnd = State.getInsightBoostCooldownEnd(); const now = Date.now(); if (insightBoostTimeoutId) { clearTimeout(insightBoostTimeoutId); insightBoostTimeoutId = null; } if (cooldownEnd && now < cooldownEnd) { const remaining = Math.ceil((cooldownEnd - now) / 1000); btn.disabled = true; btn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${remaining}s`; btn.title = `Insight boost available in ${remaining} seconds.`; insightBoostTimeoutId = setTimeout(updateInsightBoostButtonState, 1000); } else { btn.disabled = false; btn.innerHTML = `<i class="fas fa-plus"></i> Add Insight`; btn.title = `Get an Insight boost (${Config.INSIGHT_BOOST_AMOUNT} Insight, ${Config.INSIGHT_BOOST_COOLDOWN / 60000} min cooldown)`; } }
 
+
 // --- Questionnaire UI ---
-// ... (initializeQuestionnaireUI, updateElementProgressHeader, displayElementQuestions, updateSliderFeedbackText, updateDynamicFeedback, getQuestionnaireAnswers functions unchanged) ...
 export function initializeQuestionnaireUI() {
     console.log("UI: Initializing Questionnaire UI for 7 Elements");
     State.updateElementIndex(0); // Reset index in state
@@ -285,9 +290,9 @@ export function displayElementQuestions(index) {
         return;
     }
 
-    const elementName = elementNames[displayIndex];
+    const elementName = elementNames[displayIndex]; // Use the full name from elementNames
     const elementData = elementDetails[elementName] || {};
-    const questions = questionnaireGuided[elementName] || [];
+    const questions = questionnaireGuided[elementName] || []; // Use the full name as key
 
     if (!questionContent) { console.error("questionContent element missing!"); return; }
 
@@ -361,7 +366,7 @@ export function displayElementQuestions(index) {
     });
     // Update slider feedback text for all sliders on display
     questionContent.querySelectorAll('.slider.q-input').forEach(slider => {
-        updateSliderFeedbackText(slider, elementName);
+        updateSliderFeedbackText(slider, elementName); // Pass full element name
     });
 
     // Update dynamic score feedback and header/footer
@@ -384,12 +389,13 @@ export function updateSliderFeedbackText(sliderElement, elementName) {
     const display = getElement(`display_${qId}`);
     if(display) display.textContent = currentValue.toFixed(1);
 
-    if (!elementName) {
-        console.warn("updateSliderFeedbackText called without elementName!");
+    // *** BUG FIX: Ensure elementName matches keys in elementDetails ***
+    if (!elementName || !elementDetails[elementName]) {
+        console.warn(`updateSliderFeedbackText called without valid elementName: ${elementName}`);
         feedbackElement.textContent = `(Score: ${currentValue.toFixed(1)})`;
         return;
     }
-    const interpretations = elementDetails?.[elementName]?.scoreInterpretations;
+    const interpretations = elementDetails[elementName]?.scoreInterpretations;
     if (!interpretations) {
          console.warn(`Interpretations missing for element: ${elementName}`);
         feedbackElement.textContent = `(Score: ${currentValue.toFixed(1)})`;
@@ -402,6 +408,7 @@ export function updateSliderFeedbackText(sliderElement, elementName) {
 }
 
 export function updateDynamicFeedback(elementName, currentAnswers) {
+    // *** BUG FIX: Ensure elementName matches keys in elementDetails ***
     const elementData = elementDetails?.[elementName];
     if (!elementData || !dynamicScoreFeedback || !feedbackElementSpan || !feedbackScoreSpan || !feedbackScoreBar) {
         if(dynamicScoreFeedback) dynamicScoreFeedback.style.display = 'none';
@@ -468,7 +475,7 @@ export function getQuestionnaireAnswers() {
 
 
 // --- Persona Screen UI ---
-// ... (togglePersonaView, displayPersonaScreen, displayElementAttunement, updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary functions unchanged) ...
+
 export function togglePersonaView(showDetailed) {
     if (personaDetailedView && personaSummaryView && showDetailedViewBtn && showSummaryViewBtn) {
         const detailedIsCurrent = personaDetailedView.classList.contains('current');
@@ -497,17 +504,23 @@ export function displayPersonaScreen() {
     const showDeepDiveContainer = State.getState().questionnaireCompleted;
 
     // Iterate through all 7 elements
-    elementNames.forEach(elementName => {
-        const key = elementNameToKey[elementName]; // Find key using the element's NAME
-        if (!key) { console.warn(`Could not find key for element name: ${elementName}`); return; }
+    elementNames.forEach(elementName => { // elementName is the *full name* here
+        // *** BUG FIX: Use the correct lookup to get the key ***
+        const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elementName);
+        //const key = elementNameToKey[elementName]; // This was likely the source of error
+
+        if (!key) {
+            console.warn(`UI displayPersonaScreen: Could not find key for element name: ${elementName}`);
+            return;
+        }
 
         const score = (typeof scores[key] === 'number' && !isNaN(scores[key])) ? scores[key] : 5.0;
         const scoreLabel = Utils.getScoreLabel(score);
         const elementData = elementDetails[elementName] || {}; // Get details using NAME
         const interpretation = elementData.scoreInterpretations?.[scoreLabel] || "Interpretation not available.";
         const barWidth = score ? (score / 10) * 100 : 0;
-        const color = Utils.getElementColor(elementName);
-        const iconClass = Utils.getElementIcon(elementName); // Get icon using NAME
+        const color = Utils.getElementColor(elementName); // Use NAME
+        const iconClass = Utils.getElementIcon(elementName); // Use NAME
 
         // Create details container
         const details = document.createElement('details');
@@ -578,12 +591,20 @@ export function displayElementAttunement() {
     Object.keys(attunement).forEach(key => {
         const attunementValue = attunement[key] || 0;
         const percentage = (attunementValue / Config.MAX_ATTUNEMENT) * 100;
-        const fullName = elementKeyToFullName[key]; // Get full name from key
-        if (!fullName) { console.warn(`Full name not found for key: ${key}`); return; }
+        // *** BUG FIX: Use key to get full name ***
+        const fullName = elementKeyToFullName[key];
+        if (!fullName) {
+            console.warn(`UI displayElementAttunement: Full name not found for key: ${key}`);
+            return;
+        }
         const color = Utils.getElementColor(fullName); // Use full name for color
 
         const targetDetails = personaElementDetailsDiv.querySelector(`.element-detail-entry[data-element-key="${key}"]`);
-        if (!targetDetails) { console.warn(`Target details container not found for key ${key}`); return; }
+        if (!targetDetails) {
+            // This was causing errors before because the element name lookup failed in displayPersonaScreen
+            console.warn(`UI displayElementAttunement: Target details container not found for key ${key}. Check displayPersonaScreen logic.`);
+            return;
+        }
 
         const descriptionDiv = targetDetails.querySelector('.element-description');
         if (!descriptionDiv) { console.warn(`No .element-description found for ${key}`); return; }
@@ -614,6 +635,7 @@ export function displayElementAttunement() {
     });
 }
 
+// ... (updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary functions unchanged) ...
 export function updateFocusSlotsDisplay() {
     const focused = State.getFocusedConcepts();
     const totalSlots = State.getFocusSlots();
@@ -654,6 +676,13 @@ export function displayFocusedConceptsPersona() {
                 const imageUrl = `url('placeholder_art/${fileName}')`;
                 item.style.backgroundImage = imageUrl;
                 item.classList.add('has-background-image');
+                 // Add img tag for onerror handling
+                 const img = document.createElement('img');
+                 img.src = `placeholder_art/${fileName}`;
+                 img.alt = ''; // Decorative
+                 img.style.display = 'none'; // Hide the actual image tag
+                 img.onerror = function() { handleImageError(this.parentElement); }; // Pass the container div
+                 item.appendChild(img);
             }
 
             // Determine icon and color
@@ -727,8 +756,12 @@ export function drawPersonaChart(scores) {
     const tickColor = computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513';
     const gridColor = Utils.hexToRgba(computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513', 0.2);
 
+    // *** BUG FIX: Use the correct lookup method for labels and data points ***
     const labels = elementNames.map(name => Utils.getElementShortName(elementDetails[name]?.name || name));
-    const dataPoints = elementNames.map(name => scores[elementNameToKey[name]] ?? 0);
+    const dataPoints = elementNames.map(name => {
+        const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === name);
+        return scores[key] ?? 0;
+    });
     const backgroundColors = elementNames.map(name => Utils.hexToRgba(Utils.getElementColor(name), 0.5));
     const borderColors = elementNames.map(name => Utils.getElementColor(name));
 
@@ -785,7 +818,14 @@ export function displayPersonaSummary() {
     let coreEssenceHTML = '';
     if (elementDetails && elementNameToKey && elementKeyToFullName) {
         elementNames.forEach(elName => { // Use elementNames (includes RF)
-            const key = elementNameToKey[elName];
+            // *** BUG FIX: Correct key lookup ***
+            const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elName);
+            if (!key) {
+                console.warn(`UI displayPersonaSummary: Could not find key for element name: ${elName}`);
+                coreEssenceHTML += `<p><strong>${Utils.getElementShortName(elementDetails[elName]?.name || elName)}:</strong> Score lookup error.</p>`;
+                return; // Skip this element if key lookup fails
+            }
+
             const score = scores[key];
             if (typeof score === 'number') {
                 const label = Utils.getScoreLabel(score);
@@ -816,7 +856,7 @@ export function displayPersonaSummary() {
         if (themes.length > 0) {
             tapestryHTML += '<strong>Dominant Themes:</strong><ul>';
             themes.slice(0, 3).forEach(theme => { // Show top 3 themes
-                 const elementFullName = elementKeyToFullName[theme.key];
+                 const elementFullName = elementKeyToFullName[theme.key]; // Use key here
                  const color = Utils.getElementColor(elementFullName);
                 tapestryHTML += `<li style="border-left: 3px solid ${color}; padding-left: 5px;">${theme.name} Focus (${theme.count} concept${theme.count > 1 ? 's' : ''})</li>`;
             });
@@ -832,6 +872,7 @@ export function displayPersonaSummary() {
     // Draw Chart
     drawPersonaChart(scores);
 }
+
 
 
 // --- Workshop Screen UI ---
@@ -2474,8 +2515,9 @@ export function showOnboarding(phase) {
     }
 
     console.log(`UI: Showing onboarding phase ${phase}`);
-    // Populate content - using description if available, else text
-    onboardingContent.innerHTML = `<p>${task.description || task.text || 'Follow the instructions...'}</p>`;
+    // Use description or text from task data
+    const taskText = task.description || task.text || 'Follow the instructions...';
+    onboardingContent.innerHTML = `<p>${taskText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`; // Allow bold
     if (task.hint) {
         onboardingContent.innerHTML += `<p><small><em>Hint: ${task.hint}</em></small></p>`;
     }
@@ -2488,16 +2530,24 @@ export function showOnboarding(phase) {
     onboardingOverlay.classList.add('visible'); // Use 'visible' class for opacity transition
     onboardingOverlay.classList.remove('hidden');
     onboardingPopup.classList.remove('hidden');
+    // *** BUG FIX: Remove aria-hidden when overlay is visible ***
+    onboardingOverlay.removeAttribute('aria-hidden');
     popupOverlay?.classList.add('hidden'); // Hide the main popup overlay
 
-    // Highlight the relevant UI element
-    updateOnboardingHighlight(task.highlightElementId);
+    // Highlight the relevant UI element (potentially slightly delayed to allow screen transition)
+    // This addresses Bug #2 - Highlight Timing
+    setTimeout(() => {
+        updateOnboardingHighlight(task.highlightElementId);
+    }, 100); // Delay slightly
+
 }
 
 export function hideOnboarding() {
     if (onboardingOverlay) {
         onboardingOverlay.classList.add('hidden');
         onboardingOverlay.classList.remove('visible');
+        // *** BUG FIX: Restore aria-hidden when overlay is hidden ***
+        onboardingOverlay.setAttribute('aria-hidden', 'true');
     }
     if (onboardingPopup) onboardingPopup.classList.add('hidden');
     updateOnboardingHighlight(null); // Clear any highlight
@@ -2514,7 +2564,8 @@ function updateOnboardingHighlight(elementId) {
 
     const targetElement = elementId ? getElement(elementId) : null;
 
-    if (targetElement && targetElement.offsetParent !== null) { // Check if element is visible
+    // *** BUG FIX: Added check targetElement.offsetParent !== null ***
+    if (targetElement && targetElement.offsetParent !== null) { // Check if element is visible AND in the layout
         const rect = targetElement.getBoundingClientRect();
         // Position the highlight div around the target element
         onboardingHighlight.style.left = `${rect.left - 5 + window.scrollX}px`; // Adjust positioning (e.g., padding)
@@ -2541,7 +2592,6 @@ export function updateNoteSaveStatus(message, isError = false) {
         setTimeout(() => { if(noteSaveStatusSpan) noteSaveStatusSpan.textContent = ""; }, 2500);
     }
 }
-
 
 console.log("ui.js loaded. (Enhanced v4.3 - Fixed Scope/Decl Errors)");
 // --- END OF CORRECTED ui.js ---
