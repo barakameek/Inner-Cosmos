@@ -1,4 +1,3 @@
-// js/ui.js - Handles DOM Manipulation and UI Updates (Enhanced v4.1 - Fixed Chart JS)
 import * as State from './state.js';
 import * as Config from './config.js';
 import * as Utils from './utils.js';
@@ -11,24 +10,17 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.1 - Fixed Chart JS)");
+console.log("ui.js loading... (Enhanced v4.2 - Fixed Chart Scope)");
 
 // --- Helper Function for Image Errors ---
-function handleImageError(imgElement) {
-    console.warn(`Image failed to load: ${imgElement.src}. Displaying placeholder.`);
-    imgElement.style.display = 'none'; // Hide broken image icon
-    const placeholder = imgElement.parentElement?.querySelector('.card-visual-placeholder');
-    if (placeholder) {
-        placeholder.style.display = 'flex'; // Ensure placeholder is visible
-        placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src.split('/').pop()})`;
-    }
-}
+// ... (handleImageError function unchanged) ...
+function handleImageError(imgElement) { console.warn(`Image failed to load: ${imgElement.src}. Displaying placeholder.`); imgElement.style.display = 'none'; const placeholder = imgElement.parentElement?.querySelector('.card-visual-placeholder'); if (placeholder) { placeholder.style.display = 'flex'; placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src.split('/').pop()})`; } }
 window.handleImageError = handleImageError;
 
 
 // --- DOM Element References ---
 const getElement = (id) => document.getElementById(id);
-// ... (All other element references remain the same as the previous ui.js version) ...
+// ... (All other element references unchanged) ...
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
 const welcomeScreen = getElement('welcomeScreen');
@@ -169,32 +161,19 @@ const onboardingSkipButton = getElement('onboardingSkipButton');
 const onboardingHighlight = getElement('onboardingHighlight');
 
 
+// --- Module-level Variables ---
+let personaChartInstance = null; // Declare chart instance here
+let toastTimeout = null;
+let milestoneTimeout = null;
+let previousScreenId = 'welcomeScreen';
+
 // --- Utility UI Functions ---
 // (showTemporaryMessage, showMilestoneAlert, hideMilestoneAlert, hidePopups, showInfoPopup)
 // ... Unchanged from previous correct ui.js version ...
-let toastTimeout = null;
-export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, isGuidance = false) {
-    if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; }
-    console.info(`Toast: ${message}`);
-    toastMessageElement.textContent = message;
-    toastElement.classList.toggle('guidance-toast', isGuidance);
-    if (toastTimeout) clearTimeout(toastTimeout);
-    toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden');
-    toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration);
-}
-let milestoneTimeout = null;
+export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, isGuidance = false) { if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; } console.info(`Toast: ${message}`); toastMessageElement.textContent = message; toastElement.classList.toggle('guidance-toast', isGuidance); if (toastTimeout) clearTimeout(toastTimeout); toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden'); toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration); }
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, Config.MILESTONE_ALERT_DURATION); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
-export function hidePopups() {
-    console.log("UI: hidePopups called");
-    let researchPopupIsOpenAndPending = false;
-    if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) { const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]'); if (pendingItems && pendingItems.length > 0) { researchPopupIsOpenAndPending = true; console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`); } }
-    document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => { if (!(popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending)) { popup.classList.add('hidden'); } });
-    const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)');
-    if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.add('hidden'); if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) { GameLogic.clearPopupState(); console.log("UI: All general popups hidden, cleared popup state."); } }
-    else if (anyGeneralPopupVisible) { console.log("UI: Some general popups remain visible, overlay kept."); }
-    else if (onboardingOverlay?.classList.contains('visible')) { console.log("UI: Onboarding is visible, main popup overlay remains hidden."); popupOverlay?.classList.add('hidden'); }
-}
+export function hidePopups() { console.log("UI: hidePopups called"); let researchPopupIsOpenAndPending = false; if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) { const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]'); if (pendingItems && pendingItems.length > 0) { researchPopupIsOpenAndPending = true; console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`); } } document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => { if (!(popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending)) { popup.classList.add('hidden'); } }); const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)'); if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.add('hidden'); if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) { GameLogic.clearPopupState(); console.log("UI: All general popups hidden, cleared popup state."); } } else if (anyGeneralPopupVisible) { console.log("UI: Some general popups remain visible, overlay kept."); } else if (onboardingOverlay?.classList.contains('visible')) { console.log("UI: Onboarding is visible, main popup overlay remains hidden."); popupOverlay?.classList.add('hidden'); } }
 export function showInfoPopup(message) { if (infoPopupElement && infoPopupContent) { infoPopupContent.textContent = message; infoPopupElement.classList.remove('hidden'); if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.remove('hidden'); } } else { console.error("Info popup elements not found."); showTemporaryMessage("Error displaying info.", 2000); } }
 
 // --- Screen Management ---
@@ -909,77 +888,49 @@ export function drawPersonaChart(scores) {
     const ctx = canvas.getContext('2d');
     if (!ctx) { console.error("Could not get canvas context for chart!"); return; }
 
-    // Get computed styles for fonts and colors
     const computedStyle = getComputedStyle(document.documentElement);
     const pointLabelFont = computedStyle.getPropertyValue('--font-main').trim() || 'serif';
     const pointLabelColor = computedStyle.getPropertyValue('--text-muted-color').trim() || '#6a5a4a';
     const tickColor = computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513';
-    const gridColor = Utils.hexToRgba(computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513', 0.2); // Use utils for RGBA
+    const gridColor = Utils.hexToRgba(computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513', 0.2);
 
     const labels = elementNames.map(name => Utils.getElementShortName(elementDetails[name]?.name || name));
     const dataPoints = elementNames.map(name => scores[elementNameToKey[name]] ?? 0);
     const backgroundColors = elementNames.map(name => Utils.hexToRgba(Utils.getElementColor(name), 0.5));
     const borderColors = elementNames.map(name => Utils.getElementColor(name));
 
-    const chartData = { /* ... data setup unchanged ... */ };
-     chartData.datasets[0].backgroundColor = backgroundColors; // Ensure updates apply
-     chartData.datasets[0].borderColor = borderColors;
-     chartData.datasets[0].pointBackgroundColor = borderColors;
+    const chartData = {
+        labels: labels,
+        datasets: [{
+            label: 'Elemental Scores', data: dataPoints,
+            backgroundColor: backgroundColors, borderColor: borderColors, borderWidth: 2,
+            pointBackgroundColor: borderColors, pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: borderColors, pointRadius: 4, pointHoverRadius: 6
+        }]
+    };
 
     const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         scales: {
-            r: { // Radial axis configuration
-                angleLines: { display: true, color: gridColor }, // Use computed grid color
-                grid: { color: gridColor }, // Use computed grid color
-                pointLabels: {
-                    font: { size: 11, family: pointLabelFont }, // Use computed font
-                    color: pointLabelColor // Use computed color
-                },
-                suggestedMin: 0,
-                suggestedMax: 10,
-                ticks: {
-                    stepSize: 2,
-                    backdropColor: 'rgba(253, 248, 240, 0.8)',
-                    color: tickColor, // Use computed color
-                    font: { weight: 'bold' }
-                }
+            r: {
+                angleLines: { display: true, color: gridColor }, grid: { color: gridColor },
+                pointLabels: { font: { size: 11, family: pointLabelFont }, color: pointLabelColor },
+                suggestedMin: 0, suggestedMax: 10,
+                ticks: { stepSize: 2, backdropColor: 'rgba(253, 248, 240, 0.8)', color: tickColor, font: { weight: 'bold' } }
             }
         },
-        plugins: { /* ... plugins unchanged ... */ }
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.75)', titleFont: { family: pointLabelFont }, bodyFont: { family: pointLabelFont }, padding: 10,
+                callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.r !== null) { label += `${context.parsed.r.toFixed(1)} (${Utils.getScoreLabel(context.parsed.r)})`; } return label; } }
+            }
+        }
     };
 
     if (personaChartInstance) { personaChartInstance.destroy(); }
     personaChartInstance = new Chart(ctx, { type: 'radar', data: chartData, options: chartOptions });
 }
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.75)',
-                titleFont: { family: var(--font-main) },
-                bodyFont: { family: var(--font-main) },
-                padding: 10,
-                callbacks: {
-                    label: function(context) {
-                        let label = context.dataset.label || '';
-                        if (label) { label += ': '; }
-                        if (context.parsed.r !== null) {
-                            label += `${context.parsed.r.toFixed(1)} (${Utils.getScoreLabel(context.parsed.r)})`;
-                        }
-                        return label;
-                    }
-                }
-            }
-        }
-    };
-
-    if (personaChartInstance) {
-        personaChartInstance.destroy();
-    }
-    personaChartInstance = new Chart(ctx, { type: 'radar', data: chartData, options: chartOptions });
-}
-
 export function displayPersonaSummary() {
     if (!summaryContentDiv || !summaryCoreEssenceTextDiv || !summaryTapestryInfoDiv) {
         console.error("Summary view content divs not found!");
@@ -2657,5 +2608,5 @@ export function updateNoteSaveStatus(message, isError = false) {
 }
 
 
-console.log("ui.js loaded. (Enhanced v4.1 - Fixed Chart JS)");
+console.log("ui.js loaded. (Enhanced v4.2 - Fixed Chart Scope)");
 // --- END OF FILE ui.js ---
