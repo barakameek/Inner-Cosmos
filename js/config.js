@@ -1,6 +1,6 @@
-// js/config.js - Constants and Configuration (Inner Cosmos Theme - 7 Elements + Enhancements v4)
+// js/config.js - Constants and Configuration (Inner Cosmos Theme - 7 Elements + Enhancements v4.1)
 
-console.log("config.js loading... (Acknowledging 7 Elements + Enhancements v4)");
+console.log("config.js loading... (Acknowledging 7 Elements + Enhancements v4.1)");
 
 // --- Core Settings ---
 export const SAVE_KEY = 'innerCosmosSaveData_v2'; // Bumped version due to RF score addition and state changes
@@ -12,7 +12,7 @@ export const INITIAL_FREE_RESEARCH_COUNT = 3; // Number of free researches after
 
 // --- Onboarding/Tutorial ---
 export const ONBOARDING_ENABLED = true; // Toggle for the onboarding tutorial
-export const MAX_ONBOARDING_PHASE = 4; // Total number of phases in onboarding
+export const MAX_ONBOARDING_PHASE = 8; // CORRECTED: Total number of phases to match tasks in data.js
 
 // --- Action Costs ---
 export const BASE_RESEARCH_COST = 15; // Standard cost (applies to researching RoleFocus too)
@@ -58,5 +58,5 @@ export const INSIGHT_LOG_MAX_ENTRIES = 15; // How many recent Insight changes to
 // --- Deprecated/Review Items ---
 export const UNLOCKED_ART_EXTENSION = '.jpg'; // Note: Art state was removed from save/load - Keep for now
 
-console.log("config.js loaded.");
-// --- END OF FILE config.js ---
+console.log("config.js loaded. (v4.1)");
+// --- END OF CORRECTED config.js (v4.1) ---
