@@ -1,8 +1,8 @@
-// js/ui.js - Handles DOM Manipulation and UI Updates (Enhanced v4)
+// js/ui.js - Handles DOM Manipulation and UI Updates (Enhanced v4 - Onboarding, RF, Logging)
 import * as State from './state.js';
 import * as Config from './config.js';
 import * as Utils from './utils.js';
-import * as GameLogic from './gameLogic.js'; // Often needed for button actions / data retrieval
+import * as GameLogic from './gameLogic.js';
 import {
     elementDetails, elementKeyToFullName, elementNameToKey, concepts, questionnaireGuided,
     reflectionPrompts, elementDeepDive, dailyRituals, milestones, focusRituals,
@@ -23,17 +23,33 @@ function handleImageError(imgElement) {
         placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src.split('/').pop()})`;
     }
 }
-// Make it globally accessible if needed by onerror attribute in HTML (though dynamic creation is better)
-window.handleImageError = handleImageError;
+window.handleImageError = handleImageError; // Make accessible if needed by onerror
 
 
-// --- DOM Element References (Cached for performance) ---
-const getElement = (id) => document.getElementById(id); // Cache frequently accessed elements
+// --- DOM Element References ---
+const getElement = (id) => document.getElementById(id);
 
+// General UI
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
+const popupOverlay = getElement('popupOverlay');
+const mainNavBar = getElement('mainNavBar');
+const navButtons = document.querySelectorAll('.nav-button');
+const settingsButton = getElement('settingsButton');
+const infoPopupElement = getElement('infoPopup');
+const infoPopupContent = getElement('infoPopupContent');
+const milestoneAlert = getElement('milestoneAlert');
+const milestoneAlertText = getElement('milestoneAlertText');
+const toastElement = getElement('toastNotification');
+const toastMessageElement = getElement('toastMessage');
+const grimoireCountSpan = getElement('grimoireCount');
+
+// Welcome Screen
 const welcomeScreen = getElement('welcomeScreen');
 const loadButton = getElement('loadButton');
+const startGuidedButton = getElement('startGuidedButton');
+
+// Questionnaire Screen
 const questionnaireScreen = getElement('questionnaireScreen');
 const elementProgressHeader = getElement('elementProgressHeader');
 const questionContent = getElement('questionContent');
@@ -44,9 +60,8 @@ const feedbackScoreSpan = getElement('feedbackScore');
 const feedbackScoreBar = getElement('feedbackScoreBar');
 const prevElementButton = getElement('prevElementButton');
 const nextElementButton = getElement('nextElementButton');
-const mainNavBar = getElement('mainNavBar');
-const navButtons = document.querySelectorAll('.nav-button');
-const settingsButton = getElement('settingsButton');
+
+// Persona Screen
 const personaScreen = getElement('personaScreen');
 const personaDetailedView = getElement('personaDetailedView');
 const personaSummaryView = getElement('personaSummaryView');
@@ -54,7 +69,7 @@ const showDetailedViewBtn = getElement('showDetailedViewBtn');
 const showSummaryViewBtn = getElement('showSummaryViewBtn');
 const personaElementDetailsDiv = getElement('personaElementDetails');
 const userInsightDisplayPersona = getElement('userInsightDisplayPersona');
-const insightLogContainer = getElement('insightLogContainer'); // Added for log
+const insightLogContainer = getElement('insightLogContainer');
 const focusedConceptsDisplay = getElement('focusedConceptsDisplay');
 const focusedConceptsHeader = getElement('focusedConceptsHeader');
 const tapestryNarrativeP = getElement('tapestryNarrative');
@@ -64,6 +79,15 @@ const summaryCoreEssenceTextDiv = getElement('summaryCoreEssenceText');
 const summaryTapestryInfoDiv = getElement('summaryTapestryInfo');
 const personaScoreChartCanvas = getElement('personaScoreChartCanvas');
 const addInsightButton = getElement('addInsightButton');
+const elementalDilemmaButton = getElement('elementalDilemmaButton');
+const exploreSynergyButton = getElement('exploreSynergyButton');
+const suggestSceneButton = getElement('suggestSceneButton');
+const sceneSuggestCostDisplay = getElement('sceneSuggestCostDisplay');
+const deepDiveTriggerButton = getElement('deepDiveTriggerButton'); // Added button trigger
+const sceneSuggestionOutput = getElement('sceneSuggestionOutput');
+const suggestedSceneContent = getElement('suggestedSceneContent');
+
+// Workshop Screen
 const workshopScreen = getElement('workshopScreen');
 const userInsightDisplayWorkshop = getElement('userInsightDisplayWorkshop');
 const researchArea = getElement('workshop-research-area');
@@ -83,6 +107,8 @@ const grimoireSearchInputWorkshop = getElement('grimoireSearchInputWorkshop');
 const grimoireFocusFilterWorkshop = getElement('grimoireFocusFilterWorkshop');
 const grimoireShelvesWorkshop = getElement('grimoire-shelves-workshop');
 const grimoireGridWorkshop = getElement('grimoire-grid-workshop');
+
+// Repository Screen
 const repositoryScreen = getElement('repositoryScreen');
 const repositoryFocusUnlocksDiv = getElement('repositoryFocusUnlocks')?.querySelector('.repo-list');
 const repositoryScenesDiv = getElement('repositoryScenes')?.querySelector('.repo-list');
@@ -90,9 +116,10 @@ const repositoryExperimentsDiv = getElement('repositoryExperiments')?.querySelec
 const repositoryInsightsDiv = getElement('repositoryInsights')?.querySelector('.repo-list');
 const milestonesDisplay = getElement('milestonesDisplay');
 const dailyRitualsDisplayRepo = getElement('dailyRitualsDisplayRepo');
+
+// Concept Detail Popup
 const conceptDetailPopup = getElement('conceptDetailPopup');
-const popupOverlay = getElement('popupOverlay');
-const closePopupButton = getElement('closePopupButton');
+const closePopupButton = getElement('closePopupButton'); // Generic close button for this popup
 const popupCardTypeIcon = getElement('popupCardTypeIcon');
 const popupConceptName = getElement('popupConceptName');
 const popupConceptType = getElement('popupConceptType');
@@ -116,11 +143,15 @@ const saveMyNoteButton = getElement('saveMyNoteButton');
 const noteSaveStatusSpan = getElement('noteSaveStatus');
 const addToGrimoireButton = getElement('addToGrimoireButton');
 const markAsFocusButton = getElement('markAsFocusButton');
+
+// Research Results Popup
 const researchResultsPopup = getElement('researchResultsPopup');
 const researchPopupContent = getElement('researchPopupContent');
 const closeResearchResultsPopupButton = getElement('closeResearchResultsPopupButton');
 const researchPopupStatus = getElement('researchPopupStatus');
 const confirmResearchChoicesButton = getElement('confirmResearchChoicesButton');
+
+// Reflection Modal
 const reflectionModal = getElement('reflectionModal');
 const reflectionModalTitle = getElement('reflectionModalTitle');
 const closeReflectionModalButton = getElement('closeReflectionModalButton');
@@ -131,19 +162,14 @@ const scoreNudgeCheckbox = getElement('scoreNudgeCheckbox');
 const scoreNudgeLabel = getElement('scoreNudgeLabel');
 const confirmReflectionButton = getElement('confirmReflectionButton');
 const reflectionRewardAmount = getElement('reflectionRewardAmount');
+
+// Settings Popup
 const settingsPopup = getElement('settingsPopup');
 const closeSettingsPopupButton = getElement('closeSettingsPopupButton');
 const forceSaveButton = getElement('forceSaveButton');
 const resetAppButton = getElement('resetAppButton');
-const milestoneAlert = getElement('milestoneAlert');
-const milestoneAlertText = getElement('milestoneAlertText');
-const closeMilestoneAlertButton = getElement('closeMilestoneAlertButton');
-const toastElement = getElement('toastNotification');
-const toastMessageElement = getElement('toastMessage');
-const elementalDilemmaButton = getElement('elementalDilemmaButton');
-const exploreSynergyButton = getElement('exploreSynergyButton');
-const suggestSceneButton = getElement('suggestSceneButton');
-const sceneSuggestCostDisplay = getElement('sceneSuggestCostDisplay');
+
+// Tapestry Deep Dive Modal
 const tapestryDeepDiveModal = getElement('tapestryDeepDiveModal');
 const deepDiveTitle = getElement('deepDiveTitle');
 const closeDeepDiveButton = getElement('closeDeepDiveButton');
@@ -152,6 +178,8 @@ const deepDiveFocusIcons = getElement('deepDiveFocusIcons');
 const deepDiveAnalysisNodesContainer = getElement('deepDiveAnalysisNodes');
 const deepDiveDetailContent = getElement('deepDiveDetailContent');
 const contemplationNodeButton = getElement('contemplationNode');
+
+// Elemental Dilemma Modal
 const dilemmaModal = getElement('dilemmaModal');
 const closeDilemmaModalButton = getElement('closeDilemmaModalButton');
 const dilemmaSituationText = getElement('dilemmaSituationText');
@@ -162,11 +190,7 @@ const dilemmaSliderMaxLabel = getElement('dilemmaSliderMaxLabel');
 const dilemmaSliderValueDisplay = getElement('dilemmaSliderValueDisplay');
 const dilemmaNudgeCheckbox = getElement('dilemmaNudgeCheckbox');
 const confirmDilemmaButton = getElement('confirmDilemmaButton');
-const infoPopupElement = getElement('infoPopup');
-const infoPopupContent = getElement('infoPopupContent');
-const closeInfoPopupButton = getElement('closeInfoPopupButton');
-const confirmInfoPopupButton = getElement('confirmInfoPopupButton');
-const grimoireCountSpan = getElement('grimoireCount');
+
 // Onboarding Elements
 const onboardingOverlay = getElement('onboardingOverlay');
 const onboardingPopup = getElement('onboardingPopup');
@@ -175,6 +199,7 @@ const onboardingProgressSpan = getElement('onboardingProgress');
 const onboardingPrevButton = getElement('onboardingPrevButton');
 const onboardingNextButton = getElement('onboardingNextButton');
 const onboardingSkipButton = getElement('onboardingSkipButton');
+const onboardingHighlight = getElement('onboardingHighlight');
 
 
 // --- Utility UI Functions ---
@@ -192,7 +217,6 @@ export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, 
     toastElement.classList.remove('hidden'); // Ensure hidden is removed
     toastTimeout = setTimeout(() => {
         toastElement.classList.remove('visible');
-        // Wait for fade out before adding hidden
         setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500);
         toastTimeout = null;
     }, duration);
@@ -216,34 +240,38 @@ export function hidePopups() {
     console.log("UI: hidePopups called");
     let researchPopupIsOpenAndPending = false;
     if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) {
-        const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"]');
+        // Check if any items are still marked as unprocessed or pending dissonance
+        const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]');
         if (pendingItems && pendingItems.length > 0) {
             researchPopupIsOpenAndPending = true;
+            console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`);
         }
     }
 
-    document.querySelectorAll('.popup:not(#onboardingPopup)').forEach(popup => {
+    // Hide all general popups EXCEPT research popup if it's pending
+    document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => {
         if (popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending) {
-            // Skip hiding research popup if pending items exist
-             console.log("UI: Keeping research results popup open due to pending items.");
+             // Skip hiding research popup
         } else {
             popup.classList.add('hidden');
         }
     });
 
-    const anyPopupVisible = document.querySelector('.popup:not(.hidden):not(#onboardingPopup)');
-    // Only hide the main overlay if no NON-ONBOARDING popups are visible
-    if (!anyPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
+    // Determine if ANY general popup is still visible
+    const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)');
+
+    // Hide the main overlay only if no general popups remain visible AND onboarding is not active
+    if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
         popupOverlay.classList.add('hidden');
         if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) {
-            GameLogic.clearPopupState(); // Clear general popup state
+            GameLogic.clearPopupState(); // Clear general popup state (like currently viewed concept)
             console.log("UI: All general popups hidden, cleared popup state.");
         }
-    } else if (anyPopupVisible) {
+    } else if (anyGeneralPopupVisible) {
         console.log("UI: Some general popups remain visible, overlay kept.");
     } else if (onboardingOverlay?.classList.contains('visible')) {
-         console.log("UI: Onboarding is visible, general overlay remains hidden.");
-         popupOverlay?.classList.add('hidden');
+         console.log("UI: Onboarding is visible, main popup overlay remains hidden.");
+         popupOverlay?.classList.add('hidden'); // Ensure main overlay is hidden if onboarding is up
     }
 }
 
@@ -251,90 +279,114 @@ export function showInfoPopup(message) {
      if (infoPopupElement && infoPopupContent) {
          infoPopupContent.textContent = message;
          infoPopupElement.classList.remove('hidden');
+          // Show overlay only if onboarding isn't active
          if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
             popupOverlay.classList.remove('hidden');
          }
      } else {
          console.error("Info popup elements not found.");
-         showTemporaryMessage("Error displaying info.", 2000); // Fallback
+         showTemporaryMessage("Error displaying info.", 2000);
      }
 }
 
 // --- Screen Management ---
 let previousScreenId = 'welcomeScreen';
 export function showScreen(screenId) {
-    console.log(`UI: Showing screen: ${screenId}`);
+    console.log(`UI: Attempting to show screen: ${screenId}`);
     const currentState = State.getState();
     const isPostQuestionnaire = currentState.questionnaireCompleted;
     const onboardingComplete = currentState.onboardingComplete;
 
-    // Hide all screens first
-    screens.forEach(screen => {
-        if (screen) {
-            screen.classList.add('hidden');
-            screen.classList.remove('current');
-        }
-    });
-
-    // Show the target screen
+    // Ensure the target screen exists
     const targetScreenElement = getElement(screenId);
-    if (targetScreenElement) {
-        targetScreenElement.classList.remove('hidden');
-        targetScreenElement.classList.add('current');
-        console.log(`UI: Screen ${screenId} activated.`);
-    } else {
+    if (!targetScreenElement) {
         console.error(`UI Error: Screen element with ID '${screenId}' not found! Falling back to welcome.`);
         getElement('welcomeScreen')?.classList.remove('hidden');
         getElement('welcomeScreen')?.classList.add('current');
         screenId = 'welcomeScreen'; // Update screenId to reflect fallback
+    } else {
+        // Hide all screens first
+        screens.forEach(screen => {
+            if (screen) {
+                screen.classList.add('hidden');
+                screen.classList.remove('current');
+            }
+        });
+        // Show the target screen
+        targetScreenElement.classList.remove('hidden');
+        targetScreenElement.classList.add('current');
+        console.log(`UI: Screen ${screenId} activated.`);
     }
 
     // Manage Nav Bar visibility and active state
     if (mainNavBar) {
+        // Show nav only if questionnaire is done AND we are not on welcome/questionnaire
         const showNav = isPostQuestionnaire && screenId !== 'welcomeScreen' && screenId !== 'questionnaireScreen';
         mainNavBar.classList.toggle('hidden', !showNav);
+
         if (showNav) {
             navButtons.forEach(button => {
                 if (button) {
                     button.classList.toggle('active', button.dataset.target === screenId);
-                    // Show buttons only if questionnaire is complete OR it's settings OR workshop (post-q)
-                    const showButton = isPostQuestionnaire || button.id === 'settingsButton';
-                     button.classList.toggle('hidden-by-flow', !showButton && button.dataset.target !== 'personaScreen' && button.dataset.target !== 'repositoryScreen' && button.dataset.target !== 'workshopScreen');
+                    // Keep buttons hidden unless questionnaire complete (exception: settings)
+                     button.classList.toggle('hidden-by-flow', !isPostQuestionnaire && button.id !== 'settingsButton');
                 }
             });
-             // Explicitly show core post-questionnaire buttons if questionnaire IS complete
-             if (isPostQuestionnaire) {
-                 document.querySelectorAll('.hidden-by-flow[data-target="workshopScreen"], .hidden-by-flow[data-target="repositoryScreen"]').forEach(el => el.classList.remove('hidden-by-flow'));
-             }
         }
     }
 
-    // Update content based on the shown screen
-    if (screenId === 'personaScreen') {
-        // Trigger the appropriate view based on its current state
-         if (personaSummaryView?.classList.contains('current')) { displayPersonaSummary(); }
-         else { GameLogic.displayPersonaScreenLogic(); } // Default to detailed or whatever was last active
-         displayInsightLog(); // Refresh log when showing persona screen
-    } else if (screenId === 'workshopScreen') {
-        displayWorkshopScreenContent();
-        handleFirstGrimoireVisit();
-        refreshGrimoireDisplay();
-    } else if (screenId === 'repositoryScreen') {
-        displayRepositoryContent();
-    } else if (screenId === 'questionnaireScreen' && !isPostQuestionnaire) {
-        if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
-            displayElementQuestions(currentState.currentElementIndex);
-        } else {
-            console.warn("Questionnaire screen shown but index is invalid:", currentState.currentElementIndex);
-            // Potentially reset or show welcome screen? For now, log warning.
-        }
+    // Update content specific to the shown screen
+    switch(screenId) {
+        case 'personaScreen':
+            if (isPostQuestionnaire) {
+                const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen';
+                 if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView && showSummaryViewBtn && showDetailedViewBtn) {
+                     // Show summary view first time after questionnaire
+                     togglePersonaView(false);
+                 } else {
+                     // Show the view that was last active or default to detailed
+                     if (personaSummaryView?.classList.contains('current')) { displayPersonaSummary(); }
+                     else { GameLogic.displayPersonaScreenLogic(); }
+                 }
+                 displayInsightLog(); // Display log when showing persona screen
+            }
+            break;
+        case 'workshopScreen':
+            if (isPostQuestionnaire) {
+                displayWorkshopScreenContent();
+                handleFirstGrimoireVisit();
+                refreshGrimoireDisplay();
+            }
+            break;
+        case 'repositoryScreen':
+             if (isPostQuestionnaire) {
+                displayRepositoryContent();
+             }
+            break;
+        case 'questionnaireScreen':
+            if (!isPostQuestionnaire) {
+                 if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
+                     displayElementQuestions(currentState.currentElementIndex);
+                 } else {
+                     console.warn("Questionnaire screen shown but index is invalid:", currentState.currentElementIndex);
+                     // Perhaps reset questionnaire if index is bad?
+                      initializeQuestionnaireUI();
+                 }
+            } else {
+                 console.warn("Attempted to show questionnaire screen after completion.");
+                 showScreen('personaScreen'); // Redirect to persona if already done
+            }
+            break;
+         case 'welcomeScreen':
+             // Handled by initial showScreen logic
+             break;
     }
 
     // Scroll to top for main content screens
     if (['questionnaireScreen', 'workshopScreen', 'personaScreen', 'repositoryScreen'].includes(screenId)) {
         window.scrollTo(0, 0);
     }
-    previousScreenId = screenId;
+    previousScreenId = screenId; // Update previous screen tracking
 }
 
 
@@ -354,20 +406,31 @@ export function updateInsightDisplays() {
     }
 }
 
+// Central place to update UI elements that depend on Insight across the app
 function updateDependentUI() {
-    // Update elements that depend on insight value across different screens/popups
     const insightValue = State.getInsight();
 
-    // Workshop Screen elements
+    // Workshop Screen elements (research buttons)
     if (workshopScreen?.classList.contains('current')) {
-        displayWorkshopScreenContent(); // Re-render research buttons to check affordability
+        displayWorkshopScreenContent(); // Re-renders buttons, checking affordability
+    } else if (elementResearchButtonsContainer) {
+        // Lightweight update if workshop not visible (less common case)
+        elementResearchButtonsContainer.querySelectorAll('.initial-discovery-element').forEach(button => {
+            if (!button.dataset.isFree || button.dataset.isFree === 'false') {
+                 const cost = parseFloat(button.dataset.cost);
+                 const canAfford = insightValue >= cost;
+                 button.classList.toggle('disabled', !canAfford);
+                 button.title = canAfford ? `Research (Cost: ${cost})` : `Requires ${cost} Insight`;
+                 button.querySelector('.element-action')?.classList.toggle('disabled', !canAfford);
+            }
+        });
     }
 
     // Persona Screen elements
     if (personaScreen?.classList.contains('current')) {
         updateSuggestSceneButtonState();
-        // Re-render deep dive unlocks if visible
-        personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container:not(.hidden)').forEach(container => {
+        // Re-render deep dive unlocks to check affordability
+        personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container').forEach(container => {
             const key = container.dataset.elementKey;
             if (key) displayElementDeepDive(key, container);
         });
@@ -375,11 +438,11 @@ function updateDependentUI() {
 
     // Repository Screen elements
     if (repositoryScreen?.classList.contains('current')) {
-        displayRepositoryContent(); // Re-render scenes/experiments to check affordability
+        displayRepositoryContent(); // Re-renders scenes/experiments, checks affordability
     }
 
     // Popups
-    updateContemplationButtonState(); // Deep dive modal
+    updateContemplationButtonState(); // Deep dive modal button
     if (conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) {
         const popupConceptId = GameLogic.getCurrentPopupConceptId();
         if (popupConceptId !== null) {
@@ -391,26 +454,35 @@ function updateDependentUI() {
             });
         }
     }
-    // Research results popup sell values are static based on rarity, no update needed on insight change
+    // Guidance button cost check
+    if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) {
+        const cost = Config.GUIDED_REFLECTION_COST;
+        seekGuidanceButtonWorkshop.disabled = insightValue < cost;
+        seekGuidanceButtonWorkshop.title = insightValue >= cost ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`;
+    }
 }
 
 export function displayInsightLog() {
     if (!insightLogContainer) return;
-    const logEntries = State.getInsightLog();
+    const logEntries = State.getInsightLog(); // Get log from state
     insightLogContainer.innerHTML = '<h5>Recent Insight Changes:</h5>'; // Add a title
+
     if (logEntries.length === 0) {
         insightLogContainer.innerHTML += '<p><i>No recent changes logged.</i></p>';
         return;
     }
-    logEntries.slice().reverse().forEach(entry => { // Show newest first
+
+    // Display entries, newest first
+    logEntries.slice().reverse().forEach(entry => {
         const entryDiv = document.createElement('div');
         entryDiv.classList.add('insight-log-entry');
         const amountClass = entry.amount > 0 ? 'log-amount-gain' : 'log-amount-loss';
-        const sign = entry.amount > 0 ? '+' : '';
+        const sign = entry.amount > 0 ? '+' : ''; // Add sign for positive changes too
+
         entryDiv.innerHTML = `
             <span class="log-timestamp">${entry.timestamp}</span>
-            <span class="log-source">${entry.source}</span>
-            <span class="log-amount ${amountClass}">${sign}${entry.amount}</span>
+            <span class="log-source">${entry.source || 'Unknown Source'}</span>
+            <span class="log-amount ${amountClass}">${sign}${entry.amount.toFixed(1)}</span>
         `;
         insightLogContainer.appendChild(entryDiv);
     });
@@ -2572,7 +2644,7 @@ export function setupInitialUI() {
 export function showOnboarding(phase) {
     if (!onboardingOverlay || !onboardingPopup || !onboardingContent || !onboardingProgressSpan || !onboardingPrevButton || !onboardingNextButton || !onboardingSkipButton) {
         console.error("Onboarding UI elements missing!");
-        State.markOnboardingComplete(); // Mark complete if UI is broken
+        State.markOnboardingComplete(); // Mark complete if UI is broken to prevent blocking
         return;
     }
 
@@ -2584,22 +2656,29 @@ export function showOnboarding(phase) {
     const task = onboardingTasks.find(t => t.phaseRequired === phase);
     if (!task) {
         console.warn(`Onboarding task for phase ${phase} not found.`);
-        hideOnboarding();
+        hideOnboarding(); // Hide if task definition is missing
+        State.markOnboardingComplete(); // Mark complete to avoid getting stuck
         return;
     }
 
     console.log(`UI: Showing onboarding phase ${phase}`);
-    onboardingContent.innerHTML = `<h2>${task.title || `Step ${phase}`}</h2><p>${task.text || task.description}</p>`;
+    // Use description as main text, maybe add title later if needed
+    onboardingContent.innerHTML = `<p>${task.description || 'Follow the instructions...'}</p>`;
+    if (task.hint) {
+        onboardingContent.innerHTML += `<p><small><em>Hint: ${task.hint}</em></small></p>`;
+    }
     onboardingProgressSpan.textContent = `Step ${phase} of ${Config.MAX_ONBOARDING_PHASE}`;
 
     onboardingPrevButton.disabled = (phase === 1);
     onboardingNextButton.textContent = (phase === Config.MAX_ONBOARDING_PHASE) ? "Finish Orientation" : "Next";
 
-    onboardingOverlay.classList.add('visible');
+    // Make overlay and popup visible
+    onboardingOverlay.classList.add('visible'); // Use 'visible' class for opacity transition
     onboardingOverlay.classList.remove('hidden');
     onboardingPopup.classList.remove('hidden');
+    popupOverlay?.classList.add('hidden'); // Hide the main popup overlay
 
-    // Highlight the relevant UI element if specified
+    // Highlight the relevant UI element
     updateOnboardingHighlight(task.highlightElementId);
 }
 
@@ -2611,33 +2690,43 @@ export function hideOnboarding() {
     if (onboardingPopup) onboardingPopup.classList.add('hidden');
     updateOnboardingHighlight(null); // Clear any highlight
     console.log("UI: Hiding onboarding.");
+     // Ensure main popup overlay is also hidden if no other popups are open
+     const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)');
+     if (!anyGeneralPopupVisible && popupOverlay) {
+         popupOverlay.classList.add('hidden');
+     }
 }
 
 function updateOnboardingHighlight(elementId) {
-    const highlightDiv = document.getElementById('onboardingHighlight');
-    if (!highlightDiv) {
-         // Create highlight div if it doesn't exist
-         const newDiv = document.createElement('div');
-         newDiv.id = 'onboardingHighlight';
-         newDiv.className = 'onboarding-highlight'; // Use class for styling
-         document.body.appendChild(newDiv);
-         return updateOnboardingHighlight(elementId); // Recurse to use the created div
-    }
+    if (!onboardingHighlight) { console.warn("Onboarding highlight element missing"); return; }
 
     const targetElement = elementId ? getElement(elementId) : null;
 
     if (targetElement && targetElement.offsetParent !== null) { // Check if element is visible
         const rect = targetElement.getBoundingClientRect();
-        highlightDiv.style.left = `${rect.left - 5 + window.scrollX}px`; // Adjust positioning slightly
-        highlightDiv.style.top = `${rect.top - 5 + window.scrollY}px`;
-        highlightDiv.style.width = `${rect.width + 10}px`;
-        highlightDiv.style.height = `${rect.height + 10}px`;
-        highlightDiv.style.display = 'block';
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-         console.log(`Highlighting element: ${elementId}`);
+        // Position the highlight div around the target element
+        onboardingHighlight.style.left = `${rect.left - 5 + window.scrollX}px`; // Adjust positioning (e.g., padding)
+        onboardingHighlight.style.top = `${rect.top - 5 + window.scrollY}px`;
+        onboardingHighlight.style.width = `${rect.width + 10}px`;
+        onboardingHighlight.style.height = `${rect.height + 10}px`;
+        onboardingHighlight.style.display = 'block'; // Make it visible
+        // Smooth scroll to the element if it's off-screen
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        console.log(`UI: Highlighting element: ${elementId}`);
     } else {
-        highlightDiv.style.display = 'none'; // Hide if no target or target invisible
-        if(elementId) console.log(`Cannot highlight hidden/missing element: ${elementId}`);
+        onboardingHighlight.style.display = 'none'; // Hide if no target or target invisible
+        if(elementId) console.log(`UI: Cannot highlight hidden/missing element: ${elementId}`);
+    }
+}
+
+
+// --- Update Note Save Status ---
+export function updateNoteSaveStatus(message, isError = false) {
+    if (noteSaveStatusSpan) {
+        noteSaveStatusSpan.textContent = message;
+        noteSaveStatusSpan.classList.toggle('error', isError);
+        // Optionally clear after a delay
+        setTimeout(() => { if(noteSaveStatusSpan) noteSaveStatusSpan.textContent = ""; }, 2500);
     }
 }
 
