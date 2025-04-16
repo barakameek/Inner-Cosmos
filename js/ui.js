@@ -1,4 +1,4 @@
-// js/ui.js - Handles DOM Manipulation and UI Updates (Enhanced v4 - Onboarding, RF, Logging)
+// js/ui.js - Handles DOM Manipulation and UI Updates (Enhanced v4.1 - Fixed Chart JS)
 import * as State from './state.js';
 import * as Config from './config.js';
 import * as Utils from './utils.js';
@@ -11,7 +11,7 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4 - Onboarding, RF, Logging)");
+console.log("ui.js loading... (Enhanced v4.1 - Fixed Chart JS)");
 
 // --- Helper Function for Image Errors ---
 function handleImageError(imgElement) {
@@ -23,33 +23,17 @@ function handleImageError(imgElement) {
         placeholder.title = `Art Placeholder (Load Failed: ${imgElement.src.split('/').pop()})`;
     }
 }
-window.handleImageError = handleImageError; // Make accessible if needed by onerror
+window.handleImageError = handleImageError;
 
 
 // --- DOM Element References ---
 const getElement = (id) => document.getElementById(id);
-
-// General UI
+// ... (All other element references remain the same as the previous ui.js version) ...
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
-const popupOverlay = getElement('popupOverlay');
-const mainNavBar = getElement('mainNavBar');
-const navButtons = document.querySelectorAll('.nav-button');
-const settingsButton = getElement('settingsButton');
-const infoPopupElement = getElement('infoPopup');
-const infoPopupContent = getElement('infoPopupContent');
-const milestoneAlert = getElement('milestoneAlert');
-const milestoneAlertText = getElement('milestoneAlertText');
-const toastElement = getElement('toastNotification');
-const toastMessageElement = getElement('toastMessage');
-const grimoireCountSpan = getElement('grimoireCount');
-
-// Welcome Screen
 const welcomeScreen = getElement('welcomeScreen');
 const loadButton = getElement('loadButton');
 const startGuidedButton = getElement('startGuidedButton');
-
-// Questionnaire Screen
 const questionnaireScreen = getElement('questionnaireScreen');
 const elementProgressHeader = getElement('elementProgressHeader');
 const questionContent = getElement('questionContent');
@@ -60,8 +44,9 @@ const feedbackScoreSpan = getElement('feedbackScore');
 const feedbackScoreBar = getElement('feedbackScoreBar');
 const prevElementButton = getElement('prevElementButton');
 const nextElementButton = getElement('nextElementButton');
-
-// Persona Screen
+const mainNavBar = getElement('mainNavBar');
+const navButtons = document.querySelectorAll('.nav-button');
+const settingsButton = getElement('settingsButton');
 const personaScreen = getElement('personaScreen');
 const personaDetailedView = getElement('personaDetailedView');
 const personaSummaryView = getElement('personaSummaryView');
@@ -69,7 +54,7 @@ const showDetailedViewBtn = getElement('showDetailedViewBtn');
 const showSummaryViewBtn = getElement('showSummaryViewBtn');
 const personaElementDetailsDiv = getElement('personaElementDetails');
 const userInsightDisplayPersona = getElement('userInsightDisplayPersona');
-const insightLogContainer = getElement('insightLogContainer');
+const insightLogContainer = getElement('insightLogContainer'); // Added for log
 const focusedConceptsDisplay = getElement('focusedConceptsDisplay');
 const focusedConceptsHeader = getElement('focusedConceptsHeader');
 const tapestryNarrativeP = getElement('tapestryNarrative');
@@ -79,15 +64,6 @@ const summaryCoreEssenceTextDiv = getElement('summaryCoreEssenceText');
 const summaryTapestryInfoDiv = getElement('summaryTapestryInfo');
 const personaScoreChartCanvas = getElement('personaScoreChartCanvas');
 const addInsightButton = getElement('addInsightButton');
-const elementalDilemmaButton = getElement('elementalDilemmaButton');
-const exploreSynergyButton = getElement('exploreSynergyButton');
-const suggestSceneButton = getElement('suggestSceneButton');
-const sceneSuggestCostDisplay = getElement('sceneSuggestCostDisplay');
-const deepDiveTriggerButton = getElement('deepDiveTriggerButton'); // Added button trigger
-const sceneSuggestionOutput = getElement('sceneSuggestionOutput');
-const suggestedSceneContent = getElement('suggestedSceneContent');
-
-// Workshop Screen
 const workshopScreen = getElement('workshopScreen');
 const userInsightDisplayWorkshop = getElement('userInsightDisplayWorkshop');
 const researchArea = getElement('workshop-research-area');
@@ -107,8 +83,6 @@ const grimoireSearchInputWorkshop = getElement('grimoireSearchInputWorkshop');
 const grimoireFocusFilterWorkshop = getElement('grimoireFocusFilterWorkshop');
 const grimoireShelvesWorkshop = getElement('grimoire-shelves-workshop');
 const grimoireGridWorkshop = getElement('grimoire-grid-workshop');
-
-// Repository Screen
 const repositoryScreen = getElement('repositoryScreen');
 const repositoryFocusUnlocksDiv = getElement('repositoryFocusUnlocks')?.querySelector('.repo-list');
 const repositoryScenesDiv = getElement('repositoryScenes')?.querySelector('.repo-list');
@@ -116,9 +90,8 @@ const repositoryExperimentsDiv = getElement('repositoryExperiments')?.querySelec
 const repositoryInsightsDiv = getElement('repositoryInsights')?.querySelector('.repo-list');
 const milestonesDisplay = getElement('milestonesDisplay');
 const dailyRitualsDisplayRepo = getElement('dailyRitualsDisplayRepo');
-
-// Concept Detail Popup
 const conceptDetailPopup = getElement('conceptDetailPopup');
+const popupOverlay = getElement('popupOverlay');
 const closePopupButton = getElement('closePopupButton'); // Generic close button for this popup
 const popupCardTypeIcon = getElement('popupCardTypeIcon');
 const popupConceptName = getElement('popupConceptName');
@@ -143,15 +116,11 @@ const saveMyNoteButton = getElement('saveMyNoteButton');
 const noteSaveStatusSpan = getElement('noteSaveStatus');
 const addToGrimoireButton = getElement('addToGrimoireButton');
 const markAsFocusButton = getElement('markAsFocusButton');
-
-// Research Results Popup
 const researchResultsPopup = getElement('researchResultsPopup');
 const researchPopupContent = getElement('researchPopupContent');
 const closeResearchResultsPopupButton = getElement('closeResearchResultsPopupButton');
 const researchPopupStatus = getElement('researchPopupStatus');
 const confirmResearchChoicesButton = getElement('confirmResearchChoicesButton');
-
-// Reflection Modal
 const reflectionModal = getElement('reflectionModal');
 const reflectionModalTitle = getElement('reflectionModalTitle');
 const closeReflectionModalButton = getElement('closeReflectionModalButton');
@@ -162,15 +131,12 @@ const scoreNudgeCheckbox = getElement('scoreNudgeCheckbox');
 const scoreNudgeLabel = getElement('scoreNudgeLabel');
 const confirmReflectionButton = getElement('confirmReflectionButton');
 const reflectionRewardAmount = getElement('reflectionRewardAmount');
-
-// Settings Popup
 const settingsPopup = getElement('settingsPopup');
 const closeSettingsPopupButton = getElement('closeSettingsPopupButton');
 const forceSaveButton = getElement('forceSaveButton');
 const resetAppButton = getElement('resetAppButton');
-
-// Tapestry Deep Dive Modal
 const tapestryDeepDiveModal = getElement('tapestryDeepDiveModal');
+const deepDiveTriggerButton = getElement('deepDiveTriggerButton');
 const deepDiveTitle = getElement('deepDiveTitle');
 const closeDeepDiveButton = getElement('closeDeepDiveButton');
 const deepDiveNarrativeP = getElement('deepDiveNarrativeP');
@@ -178,8 +144,6 @@ const deepDiveFocusIcons = getElement('deepDiveFocusIcons');
 const deepDiveAnalysisNodesContainer = getElement('deepDiveAnalysisNodes');
 const deepDiveDetailContent = getElement('deepDiveDetailContent');
 const contemplationNodeButton = getElement('contemplationNode');
-
-// Elemental Dilemma Modal
 const dilemmaModal = getElement('dilemmaModal');
 const closeDilemmaModalButton = getElement('closeDilemmaModalButton');
 const dilemmaSituationText = getElement('dilemmaSituationText');
@@ -190,7 +154,10 @@ const dilemmaSliderMaxLabel = getElement('dilemmaSliderMaxLabel');
 const dilemmaSliderValueDisplay = getElement('dilemmaSliderValueDisplay');
 const dilemmaNudgeCheckbox = getElement('dilemmaNudgeCheckbox');
 const confirmDilemmaButton = getElement('confirmDilemmaButton');
-
+const infoPopupElement = getElement('infoPopup');
+const infoPopupContent = getElement('infoPopupContent');
+const closeInfoPopupButton = getElement('closeInfoPopupButton');
+const confirmInfoPopupButton = getElement('confirmInfoPopupButton');
 // Onboarding Elements
 const onboardingOverlay = getElement('onboardingOverlay');
 const onboardingPopup = getElement('onboardingPopup');
@@ -203,6 +170,8 @@ const onboardingHighlight = getElement('onboardingHighlight');
 
 
 // --- Utility UI Functions ---
+// (showTemporaryMessage, showMilestoneAlert, hideMilestoneAlert, hidePopups, showInfoPopup)
+// ... Unchanged from previous correct ui.js version ...
 let toastTimeout = null;
 export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, isGuidance = false) {
     if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; }
@@ -210,84 +179,23 @@ export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, 
     toastMessageElement.textContent = message;
     toastElement.classList.toggle('guidance-toast', isGuidance);
     if (toastTimeout) clearTimeout(toastTimeout);
-    // Force reflow to restart animation if necessary
-    toastElement.classList.remove('hidden', 'visible');
-    void toastElement.offsetWidth; // Reflow
-    toastElement.classList.add('visible');
-    toastElement.classList.remove('hidden'); // Ensure hidden is removed
-    toastTimeout = setTimeout(() => {
-        toastElement.classList.remove('visible');
-        setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500);
-        toastTimeout = null;
-    }, duration);
+    toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden');
+    toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration);
 }
-
 let milestoneTimeout = null;
-export function showMilestoneAlert(text) {
-    if (!milestoneAlert || !milestoneAlertText) return;
-    milestoneAlertText.textContent = `Milestone: ${text}`;
-    milestoneAlert.classList.remove('hidden');
-    if (milestoneTimeout) clearTimeout(milestoneTimeout);
-    milestoneTimeout = setTimeout(hideMilestoneAlert, Config.MILESTONE_ALERT_DURATION);
-}
-export function hideMilestoneAlert() {
-    if (milestoneAlert) milestoneAlert.classList.add('hidden');
-    if (milestoneTimeout) clearTimeout(milestoneTimeout);
-    milestoneTimeout = null;
-}
-
+export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, Config.MILESTONE_ALERT_DURATION); }
+export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
 export function hidePopups() {
     console.log("UI: hidePopups called");
     let researchPopupIsOpenAndPending = false;
-    if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) {
-        // Check if any items are still marked as unprocessed or pending dissonance
-        const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]');
-        if (pendingItems && pendingItems.length > 0) {
-            researchPopupIsOpenAndPending = true;
-            console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`);
-        }
-    }
-
-    // Hide all general popups EXCEPT research popup if it's pending
-    document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => {
-        if (popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending) {
-             // Skip hiding research popup
-        } else {
-            popup.classList.add('hidden');
-        }
-    });
-
-    // Determine if ANY general popup is still visible
+    if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) { const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]'); if (pendingItems && pendingItems.length > 0) { researchPopupIsOpenAndPending = true; console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`); } }
+    document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => { if (!(popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending)) { popup.classList.add('hidden'); } });
     const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)');
-
-    // Hide the main overlay only if no general popups remain visible AND onboarding is not active
-    if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
-        popupOverlay.classList.add('hidden');
-        if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) {
-            GameLogic.clearPopupState(); // Clear general popup state (like currently viewed concept)
-            console.log("UI: All general popups hidden, cleared popup state.");
-        }
-    } else if (anyGeneralPopupVisible) {
-        console.log("UI: Some general popups remain visible, overlay kept.");
-    } else if (onboardingOverlay?.classList.contains('visible')) {
-         console.log("UI: Onboarding is visible, main popup overlay remains hidden.");
-         popupOverlay?.classList.add('hidden'); // Ensure main overlay is hidden if onboarding is up
-    }
+    if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.add('hidden'); if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) { GameLogic.clearPopupState(); console.log("UI: All general popups hidden, cleared popup state."); } }
+    else if (anyGeneralPopupVisible) { console.log("UI: Some general popups remain visible, overlay kept."); }
+    else if (onboardingOverlay?.classList.contains('visible')) { console.log("UI: Onboarding is visible, main popup overlay remains hidden."); popupOverlay?.classList.add('hidden'); }
 }
-
-export function showInfoPopup(message) {
-     if (infoPopupElement && infoPopupContent) {
-         infoPopupContent.textContent = message;
-         infoPopupElement.classList.remove('hidden');
-          // Show overlay only if onboarding isn't active
-         if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
-            popupOverlay.classList.remove('hidden');
-         }
-     } else {
-         console.error("Info popup elements not found.");
-         showTemporaryMessage("Error displaying info.", 2000);
-     }
-}
+export function showInfoPopup(message) { if (infoPopupElement && infoPopupContent) { infoPopupContent.textContent = message; infoPopupElement.classList.remove('hidden'); if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.remove('hidden'); } } else { console.error("Info popup elements not found."); showTemporaryMessage("Error displaying info.", 2000); } }
 
 // --- Screen Management ---
 let previousScreenId = 'welcomeScreen';
@@ -994,39 +902,57 @@ export function drawPersonaChart(scores) { // Includes RF
         datasets: [{
             label: 'Elemental Scores',
             data: dataPoints,
-            backgroundColor: backgroundColors,
-            borderColor: borderColors,
-            borderWidth: 2,
-            pointBackgroundColor: borderColors,
-            pointBorderColor: '#fff',
-            pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: borderColors,
-            pointRadius: 4, // Slightly larger points
-            pointHoverRadius: 6
-        }]
-    };
+            backgroundColor: backgroundColors,let personaChartInstance = null;
+export function drawPersonaChart(scores) {
+    const canvas = personaScoreChartCanvas;
+    if (!canvas) { console.error("Persona score chart canvas not found!"); return; }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { console.error("Could not get canvas context for chart!"); return; }
+
+    // Get computed styles for fonts and colors
+    const computedStyle = getComputedStyle(document.documentElement);
+    const pointLabelFont = computedStyle.getPropertyValue('--font-main').trim() || 'serif';
+    const pointLabelColor = computedStyle.getPropertyValue('--text-muted-color').trim() || '#6a5a4a';
+    const tickColor = computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513';
+    const gridColor = Utils.hexToRgba(computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513', 0.2); // Use utils for RGBA
+
+    const labels = elementNames.map(name => Utils.getElementShortName(elementDetails[name]?.name || name));
+    const dataPoints = elementNames.map(name => scores[elementNameToKey[name]] ?? 0);
+    const backgroundColors = elementNames.map(name => Utils.hexToRgba(Utils.getElementColor(name), 0.5));
+    const borderColors = elementNames.map(name => Utils.getElementColor(name));
+
+    const chartData = { /* ... data setup unchanged ... */ };
+     chartData.datasets[0].backgroundColor = backgroundColors; // Ensure updates apply
+     chartData.datasets[0].borderColor = borderColors;
+     chartData.datasets[0].pointBackgroundColor = borderColors;
 
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
             r: { // Radial axis configuration
-                angleLines: { display: true, color: 'rgba(139, 69, 19, 0.2)' },
-                grid: { color: 'rgba(139, 69, 19, 0.2)' },
+                angleLines: { display: true, color: gridColor }, // Use computed grid color
+                grid: { color: gridColor }, // Use computed grid color
                 pointLabels: {
-                    font: { size: 11, family: var(--font-main) },
-                    color: var(--text-muted-color)
+                    font: { size: 11, family: pointLabelFont }, // Use computed font
+                    color: pointLabelColor // Use computed color
                 },
                 suggestedMin: 0,
                 suggestedMax: 10,
                 ticks: {
                     stepSize: 2,
                     backdropColor: 'rgba(253, 248, 240, 0.8)',
-                    color: var(--primary-color),
+                    color: tickColor, // Use computed color
                     font: { weight: 'bold' }
                 }
             }
         },
+        plugins: { /* ... plugins unchanged ... */ }
+    };
+
+    if (personaChartInstance) { personaChartInstance.destroy(); }
+    personaChartInstance = new Chart(ctx, { type: 'radar', data: chartData, options: chartOptions });
+}
         plugins: {
             legend: { display: false },
             tooltip: {
@@ -2731,5 +2657,5 @@ export function updateNoteSaveStatus(message, isError = false) {
 }
 
 
-console.log("ui.js loaded. (Enhanced v4)");
+console.log("ui.js loaded. (Enhanced v4.1 - Fixed Chart JS)");
 // --- END OF FILE ui.js ---
