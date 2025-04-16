@@ -1,3 +1,4 @@
+// --- START OF CORRECTED ui.js (Focusing on Key/Name Lookup v4.5) ---
 
 // js/ui.js - User Interface Logic (Enhanced v4)
 
@@ -9,11 +10,11 @@ import {
     elementDetails, elementKeyToFullName, elementNameToKey, concepts, questionnaireGuided,
     reflectionPrompts, elementDeepDive, dailyRituals, milestones, focusRituals,
     sceneBlueprints, alchemicalExperiments, elementalInsights, focusDrivenUnlocks,
-    cardTypeKeys, elementNames, // Now includes RoleFocus
+    cardTypeKeys, elementNames, // Now includes RoleFocus ("Attraction", "Interaction", etc.)
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.4 - Fixing Key Lookups)");
+console.log("ui.js loading... (Enhanced v4.5 - Refining Key Lookups)");
 
 // --- Helper Function for Image Errors ---
 function handleImageError(imgElement) {
@@ -33,7 +34,7 @@ window.handleImageError = handleImageError;
 
 // --- DOM Element References ---
 const getElement = (id) => document.getElementById(id);
-// ... (All other element references unchanged) ...
+// (All other element references assumed correct from previous versions)
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
 const welcomeScreen = getElement('welcomeScreen');
@@ -177,7 +178,6 @@ const onboardingNextButton = getElement('onboardingNextButton');
 const onboardingSkipButton = getElement('onboardingSkipButton');
 const onboardingHighlight = getElement('onboardingHighlight');
 
-
 // --- Module-level Variables ---
 let personaChartInstance = null; // Declare only ONCE at module level
 let toastTimeout = null;
@@ -276,9 +276,10 @@ export function updateElementProgressHeader(activeIndex) {
     elementNames.forEach((name, index) => {
         const tab = document.createElement('div');
         tab.classList.add('element-tab');
-        const elementData = elementDetails[name] || {};
-        tab.textContent = Utils.getElementShortName(elementData.name || name); // Use short name
-        tab.title = elementData.name || name; // Full name on hover
+        const elementData = elementDetails[name] || {}; // Use name as key
+        const fullName = elementData.name || name; // Get full name
+        tab.textContent = Utils.getElementShortName(fullName); // Use full name for short name util
+        tab.title = fullName; // Full name on hover
         tab.classList.toggle('completed', index < activeIndex);
         tab.classList.toggle('active', index === activeIndex);
         elementProgressHeader.appendChild(tab);
@@ -295,9 +296,10 @@ export function displayElementQuestions(index) {
         return;
     }
 
-    const elementName = elementNames[displayIndex]; // Use the full name from elementNames
-    const elementData = elementDetails[elementName] || {};
-    const questions = questionnaireGuided[elementName] || []; // Use the full name as key
+    const elementName = elementNames[displayIndex]; // Use the name from elementNames array ("Attraction", etc.)
+    const elementData = elementDetails[elementName] || {}; // Get data using the name as key
+    const fullName = elementData.name || elementName; // Get the full descriptive name
+    const questions = questionnaireGuided[elementName] || []; // Use the name as key
 
     if (!questionContent) { console.error("questionContent element missing!"); return; }
 
@@ -308,7 +310,7 @@ export function displayElementQuestions(index) {
     questionContent.innerHTML = ''; // Clear previous questions
     let introHTML = `
         <div class="element-intro">
-            <h2>${elementData.name || elementName}</h2>
+            <h2>${fullName}</h2>
             <p><em>${elementData.coreQuestion || ''}</em></p>
             <p>${elementData.coreConcept || 'Loading...'}</p>
             <p><small><strong>Persona Connection:</strong> ${elementData.personaConnection || ''}</small></p>
@@ -371,13 +373,13 @@ export function displayElementQuestions(index) {
     });
     // Update slider feedback text for all sliders on display
     questionContent.querySelectorAll('.slider.q-input').forEach(slider => {
-        updateSliderFeedbackText(slider, elementName); // Pass full element name
+        updateSliderFeedbackText(slider, elementName); // Pass the name ("Attraction") used as key
     });
 
     // Update dynamic score feedback and header/footer
-    updateDynamicFeedback(elementName, elementAnswers); // Update feedback bar/text
+    updateDynamicFeedback(elementName, elementAnswers); // Update feedback bar/text using the name ("Attraction")
     updateElementProgressHeader(displayIndex);
-    if (progressText) progressText.textContent = `Element ${displayIndex + 1} / ${elementNames.length}: ${elementData.name || elementName}`;
+    if (progressText) progressText.textContent = `Element ${displayIndex + 1} / ${elementNames.length}: ${fullName}`; // Use full name
     if (prevElementButton) prevElementButton.style.visibility = (displayIndex > 0) ? 'visible' : 'hidden';
     if (nextElementButton) nextElementButton.textContent = (displayIndex === elementNames.length - 1) ? "View Initial Discoveries" : "Next Element";
 
@@ -394,7 +396,7 @@ export function updateSliderFeedbackText(sliderElement, elementName) {
     const display = getElement(`display_${qId}`);
     if(display) display.textContent = currentValue.toFixed(1);
 
-    // *** BUG FIX: Ensure elementName matches keys in elementDetails ***
+    // Use elementName ("Attraction") directly as key for elementDetails
     if (!elementName || !elementDetails[elementName]) {
         console.warn(`updateSliderFeedbackText called without valid elementName: ${elementName}`);
         feedbackElement.textContent = `(Score: ${currentValue.toFixed(1)})`;
@@ -413,17 +415,18 @@ export function updateSliderFeedbackText(sliderElement, elementName) {
 }
 
 export function updateDynamicFeedback(elementName, currentAnswers) {
-    // *** BUG FIX: Ensure elementName matches keys in elementDetails ***
+    // Use elementName ("Attraction") directly as key for elementDetails
     const elementData = elementDetails?.[elementName];
     if (!elementData || !dynamicScoreFeedback || !feedbackElementSpan || !feedbackScoreSpan || !feedbackScoreBar) {
         if(dynamicScoreFeedback) dynamicScoreFeedback.style.display = 'none';
         return;
     }
 
-    const tempScore = GameLogic.calculateElementScore(elementName, currentAnswers);
+    const tempScore = GameLogic.calculateElementScore(elementName, currentAnswers); // Pass name ("Attraction")
     const scoreLabel = Utils.getScoreLabel(tempScore);
+    const fullName = elementData.name || elementName; // Get full descriptive name
 
-    feedbackElementSpan.textContent = Utils.getElementShortName(elementData.name || elementName);
+    feedbackElementSpan.textContent = Utils.getElementShortName(fullName); // Use full name for short name util
     feedbackScoreSpan.textContent = tempScore.toFixed(1);
 
     // Update or create the score label span
@@ -501,7 +504,6 @@ export function togglePersonaView(showDetailed) {
     }
 }
 
-// ... (displayPersonaScreen unchanged - includes previous fix) ...
 export function displayPersonaScreen() {
     if (!personaElementDetailsDiv) { console.error("Persona element details div not found!"); return; }
     console.log("UI: Displaying Persona Screen (7 Elements)");
@@ -510,28 +512,29 @@ export function displayPersonaScreen() {
     const showDeepDiveContainer = State.getState().questionnaireCompleted;
 
     // Iterate through all 7 elements
-    elementNames.forEach(elementName => { // elementName is the *full name* here
-        // *** BUG FIX: Use the correct lookup to get the key ***
-        const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elementName);
-        //const key = elementNameToKey[elementName]; // This was likely the source of error
+    elementNames.forEach(elementName => { // elementName is "Attraction", "Interaction", etc.
+        // *** BUG FIX V4.5: Correct key lookup ***
+        const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elementName); // Find key ('A') from short name ("Attraction")
+        const elementData = elementDetails[elementName]; // Get data using short name key
+        const fullName = elementData?.name || elementName; // Get full descriptive name
 
-        if (!key) {
-            console.warn(`UI displayPersonaScreen: Could not find key for element name: ${elementName}`);
-            return;
+        if (!key || !elementData) {
+            console.warn(`UI displayPersonaScreen: Could not find key or data for element name: ${elementName}`);
+            return; // Skip if lookup fails
         }
 
-        const score = (typeof scores[key] === 'number' && !isNaN(scores[key])) ? scores[key] : 5.0;
+        const score = (scores[key] && typeof scores[key] === 'number' && !isNaN(scores[key])) ? scores[key] : 5.0; // Use the correct key 'A', 'I' etc.
         const scoreLabel = Utils.getScoreLabel(score);
-        const elementData = elementDetails[elementName] || {}; // Get details using NAME
         const interpretation = elementData.scoreInterpretations?.[scoreLabel] || "Interpretation not available.";
         const barWidth = score ? (score / 10) * 100 : 0;
-        const color = Utils.getElementColor(elementName); // Use NAME
-        const iconClass = Utils.getElementIcon(elementName); // Use NAME
+        const color = Utils.getElementColor(fullName); // Use full name for utils
+        const iconClass = Utils.getElementIcon(fullName); // Use full name for utils
+        const elementNameShort = Utils.getElementShortName(fullName); // Use full name for utils
 
         // Create details container
         const details = document.createElement('details');
         details.classList.add('element-detail-entry');
-        details.dataset.elementKey = key; // Store the KEY here
+        details.dataset.elementKey = key; // Store the KEY ('A', 'I', etc.)
         details.style.setProperty('--element-color', color);
 
         // Create description div
@@ -548,19 +551,19 @@ export function displayPersonaScreen() {
 
         const attunementPlaceholder = document.createElement('div');
         attunementPlaceholder.className = 'attunement-placeholder';
-        descriptionDiv.appendChild(attunementPlaceholder); // Add placeholder for attunement display
+        descriptionDiv.appendChild(attunementPlaceholder);
 
         const deepDiveContainer = document.createElement('div');
-        deepDiveContainer.classList.add('element-deep-dive-container', 'hidden'); // Start hidden
+        deepDiveContainer.classList.add('element-deep-dive-container', 'hidden');
         deepDiveContainer.dataset.elementKey = key; // Store KEY
-        descriptionDiv.appendChild(deepDiveContainer); // Add deep dive container
+        descriptionDiv.appendChild(deepDiveContainer);
 
-        // Create summary header
+        // Create summary header using short name
         details.innerHTML = `
             <summary class="element-detail-header">
                 <div>
-                    <i class="${iconClass} element-icon-indicator" style="color: ${color};" title="${elementData.name || elementName}"></i>
-                    <strong>${Utils.getElementShortName(elementData.name || elementName)}:</strong>
+                    <i class="${iconClass} element-icon-indicator" style="color: ${color};" title="${fullName}"></i>
+                    <strong>${elementNameShort}:</strong>
                     <span>${score?.toFixed(1) ?? '?'}</span>
                     <span class="score-label">(${scoreLabel})</span>
                 </div>
@@ -569,10 +572,9 @@ export function displayPersonaScreen() {
                 </div>
             </summary>
         `;
-        details.appendChild(descriptionDiv); // Append description after summary
+        details.appendChild(descriptionDiv);
         personaElementDetailsDiv.appendChild(details);
 
-        // Populate deep dive content if questionnaire is complete
         if (showDeepDiveContainer) {
             displayElementDeepDive(key, deepDiveContainer); // Pass KEY
             deepDiveContainer.classList.remove('hidden');
@@ -580,17 +582,17 @@ export function displayPersonaScreen() {
     });
 
     // Update other persona elements
-    displayElementAttunement();
-    updateInsightDisplays(); // Includes log update if visible
+    displayElementAttunement(); // This should now find the correct elements via data-element-key
+    updateInsightDisplays();
     displayFocusedConceptsPersona();
     generateTapestryNarrative();
     synthesizeAndDisplayThemesPersona();
     updateElementalDilemmaButtonState();
     updateSuggestSceneButtonState();
-    GameLogic.checkSynergyTensionStatus(); // Includes updating synergy button state
+    GameLogic.checkSynergyTensionStatus();
 }
 
-// ... (displayElementAttunement unchanged - includes previous fix) ...
+// ... (displayElementAttunement unchanged) ...
 export function displayElementAttunement() {
     if (!personaElementDetailsDiv) return;
     const attunement = State.getAttunement();
@@ -598,7 +600,7 @@ export function displayElementAttunement() {
     Object.keys(attunement).forEach(key => {
         const attunementValue = attunement[key] || 0;
         const percentage = (attunementValue / Config.MAX_ATTUNEMENT) * 100;
-        // *** BUG FIX: Use key to get full name ***
+        // *** Use key to get full name ***
         const fullName = elementKeyToFullName[key];
         if (!fullName) {
             console.warn(`UI displayElementAttunement: Full name not found for key: ${key}`);
@@ -642,7 +644,7 @@ export function displayElementAttunement() {
     });
 }
 
-// ... (updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary functions unchanged - include previous fixes) ...
+// ... (updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona functions unchanged) ...
 export function updateFocusSlotsDisplay() {
     const focused = State.getFocusedConcepts();
     const totalSlots = State.getFocusSlots();
@@ -751,6 +753,7 @@ export function synthesizeAndDisplayThemesPersona() {
     });
 }
 
+// ... (drawPersonaChart function unchanged - includes previous fix) ...
 export function drawPersonaChart(scores) {
     const canvas = personaScoreChartCanvas;
     if (!canvas) { console.error("Persona score chart canvas not found!"); return; }
@@ -763,14 +766,15 @@ export function drawPersonaChart(scores) {
     const tickColor = computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513';
     const gridColor = Utils.hexToRgba(computedStyle.getPropertyValue('--primary-color').trim() || '#8b4513', 0.2);
 
-    // *** BUG FIX: Use the correct lookup method for labels and data points ***
+    // *** Use the correct lookup method for labels and data points ***
     const labels = elementNames.map(name => Utils.getElementShortName(elementDetails[name]?.name || name));
     const dataPoints = elementNames.map(name => {
-        const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === name);
+        // Find key ('A') based on short name ("Attraction")
+        const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === name);
         return scores[key] ?? 0;
     });
-    const backgroundColors = elementNames.map(name => Utils.hexToRgba(Utils.getElementColor(name), 0.5));
-    const borderColors = elementNames.map(name => Utils.getElementColor(name));
+    const backgroundColors = elementNames.map(name => Utils.hexToRgba(Utils.getElementColor(elementDetails[name]?.name || name), 0.5)); // Use full name for color
+    const borderColors = elementNames.map(name => Utils.getElementColor(elementDetails[name]?.name || name)); // Use full name for color
 
     const chartData = {
         labels: labels,
@@ -805,6 +809,7 @@ export function drawPersonaChart(scores) {
     personaChartInstance = new Chart(ctx, { type: 'radar', data: chartData, options: chartOptions });
 }
 
+// ... (displayPersonaSummary unchanged - includes previous fix) ...
 export function displayPersonaSummary() {
     if (!summaryContentDiv || !summaryCoreEssenceTextDiv || !summaryTapestryInfoDiv) {
         console.error("Summary view content divs not found!");
@@ -824,23 +829,25 @@ export function displayPersonaSummary() {
     // Core Essence (Scores and Interpretations)
     let coreEssenceHTML = '';
     if (elementDetails && elementNameToKey && elementKeyToFullName) {
-        elementNames.forEach(elName => { // Use elementNames (includes RF)
+        elementNames.forEach(elName => { // Use elementNames ("Attraction", etc.)
             // *** BUG FIX: Correct key lookup ***
-            const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elName);
+            const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elName);
             if (!key) {
                 console.warn(`UI displayPersonaSummary: Could not find key for element name: ${elName}`);
                 coreEssenceHTML += `<p><strong>${Utils.getElementShortName(elementDetails[elName]?.name || elName)}:</strong> Score lookup error.</p>`;
                 return; // Skip this element if key lookup fails
             }
 
-            const score = scores[key];
+            const score = scores[key]; // Use key 'A', 'I', etc.
             if (typeof score === 'number') {
                 const label = Utils.getScoreLabel(score);
-                const elementData = elementDetails[elName] || {};
+                const elementData = elementDetails[elName] || {}; // Use short name "Attraction" as key
+                const fullName = elementData.name || elName; // Get full name
                 const interpretation = elementData.scoreInterpretations?.[label] || "N/A";
-                coreEssenceHTML += `<p><strong>${Utils.getElementShortName(elementData.name || elName)} (${score.toFixed(1)} - ${label}):</strong> ${interpretation}</p>`;
+                coreEssenceHTML += `<p><strong>${Utils.getElementShortName(fullName)} (${score.toFixed(1)} - ${label}):</strong> ${interpretation}</p>`;
             } else {
-                coreEssenceHTML += `<p><strong>${Utils.getElementShortName(elementDetails[elName]?.name || elName)}:</strong> Score not available.</p>`;
+                const fullName = elementDetails[elName]?.name || elName;
+                coreEssenceHTML += `<p><strong>${Utils.getElementShortName(fullName)}:</strong> Score not available.</p>`;
             }
         });
     } else {
@@ -897,23 +904,24 @@ export function displayWorkshopScreenContent() {
         const freeResearchLeft = State.getInitialFreeResearchRemaining();
         const insight = State.getInsight();
 
-        elementNames.forEach(elementName => { // Includes RF
+        elementNames.forEach(elementName => { // Includes RF ("Attraction", etc.)
             // *** BUG FIX: Use correct key lookup ***
-            const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elementName);
+            const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elementName);
             if (!key) {
                  console.warn(`UI displayWorkshopScreenContent: Could not find key for element name: ${elementName}`);
                  return; // Skip if key lookup fails
             }
 
-            const score = scores[key] ?? 5.0; // Default score if missing (shouldn't happen often)
+            const score = scores[key] ?? 5.0;
             const scoreLabel = Utils.getScoreLabel(score);
-            const elementData = elementDetails[elementName] || {};
-            const color = Utils.getElementColor(elementName); // Use Name
-            const iconClass = Utils.getElementIcon(elementName); // Use Name
+            const elementData = elementDetails[elementName] || {}; // Use "Attraction" as key
+            const fullName = elementData.name || elementName; // Get full descriptive name
+            const color = Utils.getElementColor(fullName); // Use full name
+            const iconClass = Utils.getElementIcon(fullName); // Use full name
             const elementDiv = document.createElement('div');
             elementDiv.classList.add('initial-discovery-element');
-            elementDiv.style.borderLeft = `4px solid ${color}`; // Use border for emphasis
-            elementDiv.dataset.elementKey = key; // Store the KEY
+            elementDiv.style.borderLeft = `4px solid ${color}`;
+            elementDiv.dataset.elementKey = key; // Store the KEY ('A', 'I', etc.)
 
             let costText = "";
             let isDisabled = false;
@@ -924,7 +932,7 @@ export function displayWorkshopScreenContent() {
             // Determine cost/availability text and button state
             if (freeResearchLeft > 0) {
                 costText = `Use 1 FREE`;
-                titleText = `Conduct FREE research on ${Utils.getElementShortName(elementData.name || elementName)}. (${freeResearchLeft} left total)`;
+                titleText = `Conduct FREE research on ${Utils.getElementShortName(fullName)}. (${freeResearchLeft} left total)`;
                 isFreeClick = true;
                 isDisabled = false;
                  elementDiv.innerHTML += `<span style="position: absolute; top: 5px; right: 5px; color: var(--accent-color); font-size: 1.3em; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);" title="Free Research Available!">★</span>`;
@@ -932,10 +940,10 @@ export function displayWorkshopScreenContent() {
                 costText = `${researchCost} <i class="fas fa-brain insight-icon"></i>`;
                 if (insight < researchCost) {
                     isDisabled = true;
-                    titleText = `Research ${Utils.getElementShortName(elementData.name || elementName)} (Requires ${researchCost} Insight)`;
+                    titleText = `Research ${Utils.getElementShortName(fullName)} (Requires ${researchCost} Insight)`;
                 } else {
                     isDisabled = false;
-                    titleText = `Research ${Utils.getElementShortName(elementData.name || elementName)} (Cost: ${researchCost} Insight)`;
+                    titleText = `Research ${Utils.getElementShortName(fullName)} (Cost: ${researchCost} Insight)`;
                 }
                 isFreeClick = false;
             }
@@ -947,7 +955,7 @@ export function displayWorkshopScreenContent() {
             try {
                 const rarityCounts = GameLogic.countUndiscoveredByRarity(key); // Use KEY
                 rarityCountsHTML = `
-                    <div class="rarity-counts-display" title="Undiscovered Concepts (Primary Element: ${Utils.getElementShortName(elementName)})">
+                    <div class="rarity-counts-display" title="Undiscovered Concepts (Primary Element: ${Utils.getElementShortName(fullName)})">
                         <span class="rarity-count common" title="${rarityCounts.common} Common"><i class="fas fa-circle"></i> ${rarityCounts.common}</span>
                         <span class="rarity-count uncommon" title="${rarityCounts.uncommon} Uncommon"><i class="fas fa-square"></i> ${rarityCounts.uncommon}</span>
                         <span class="rarity-count rare" title="${rarityCounts.rare} Rare"><i class="fas fa-star"></i> ${rarityCounts.rare}</span>
@@ -960,7 +968,7 @@ export function displayWorkshopScreenContent() {
             elementDiv.innerHTML += `
                 <div class="element-header">
                     <i class="${iconClass}" style="color: ${color};"></i>
-                    <span class="element-name">${Utils.getElementShortName(elementData.name || elementName)}</span>
+                    <span class="element-name">${Utils.getElementShortName(fullName)}</span>
                 </div>
                 <div class="element-score-display">
                     ${score.toFixed(1)} (${scoreLabel})
@@ -1000,8 +1008,9 @@ export function displayWorkshopScreenContent() {
     }
 }
 
+
 // --- Grimoire UI ---
-// ... (updateGrimoireCounter, populateGrimoireFilters, updateShelfCounts, displayGrimoire, refreshGrimoireDisplay, handleFirstGrimoireVisit functions unchanged) ...
+// ... (updateGrimoireCounter unchanged) ...
 export function updateGrimoireCounter() {
     if (grimoireCountSpan) {
         grimoireCountSpan.textContent = State.getDiscoveredConcepts().size;
@@ -1019,17 +1028,21 @@ export function populateGrimoireFilters() {
     }
     if (grimoireElementFilterWorkshop) {
         grimoireElementFilterWorkshop.innerHTML = '<option value="All">All Elements</option>';
-        elementNames.forEach(fullName => { // Includes RF
-            const name = Utils.getElementShortName(elementDetails[fullName]?.name || fullName);
+        elementNames.forEach(shortNameKey => { // Iterate "Attraction", etc.
+            const elementData = elementDetails[shortNameKey] || {};
+            const fullName = elementData.name || shortNameKey; // Get full descriptive name
+            const shortName = Utils.getElementShortName(fullName); // Get short name for display
             const option = document.createElement('option');
-            option.value = fullName; // Use full name as value for lookup
-            option.textContent = name; // Show short name
+            option.value = shortNameKey; // Store the key ("Attraction") as value
+            option.textContent = shortName; // Display short name
+            option.title = fullName; // Show full name on hover
             grimoireElementFilterWorkshop.appendChild(option);
         });
     }
      // Rarity and Focus filters are static HTML, no population needed unless dynamic
 }
 
+// ... (updateShelfCounts unchanged) ...
 function updateShelfCounts() {
     if (!grimoireShelvesWorkshop) return;
     const conceptData = Array.from(State.getDiscoveredConcepts().values());
@@ -1100,10 +1113,10 @@ export function displayGrimoire(filterParams = {}) {
         const userCategory = data.userCategory || 'uncategorized';
 
         const typeMatch = (filterType === "All") || (concept.cardType === filterType);
-        // Element matching needs to handle the full name from the filter dropdown
+        // *** BUG FIX: Element filtering uses the short name key now ("Attraction") ***
         let elementMatch = (filterElement === "All");
         if (!elementMatch) {
-             const selectedElementKey = elementNameToKey[filterElement]; // Get key from selected full name
+             const selectedElementKey = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === filterElement); // Get key ('A') from short name ("Attraction")
              if(selectedElementKey) {
                  elementMatch = (concept.primaryElement === selectedElementKey);
              } else {
@@ -1123,6 +1136,7 @@ export function displayGrimoire(filterParams = {}) {
     });
 
     // --- Sorting ---
+    // ... (Sorting logic unchanged) ...
     const rarityOrder = { 'common': 1, 'uncommon': 2, 'rare': 3 };
     conceptsToDisplay.sort((a, b) => {
         if (!a.concept || !b.concept) return 0;
@@ -1162,12 +1176,13 @@ export function displayGrimoire(filterParams = {}) {
     updateShelfCounts(); // Update counts after filtering/rendering
 }
 
+// ... (refreshGrimoireDisplay, handleFirstGrimoireVisit functions unchanged) ...
 export function refreshGrimoireDisplay(overrideFilters = {}) {
     if (workshopScreen && !workshopScreen.classList.contains('hidden')) {
         // Get current filter values from UI elements
         const currentFilters = {
             filterType: grimoireTypeFilterWorkshop?.value || "All",
-            filterElement: grimoireElementFilterWorkshop?.value || "All", // Value is full name
+            filterElement: grimoireElementFilterWorkshop?.value || "All", // Value is short name key ("Attraction")
             sortBy: grimoireSortOrderWorkshop?.value || "discovered",
             filterRarity: grimoireRarityFilterWorkshop?.value || "All",
             searchTerm: grimoireSearchInputWorkshop?.value || "",
@@ -1194,8 +1209,9 @@ function handleFirstGrimoireVisit() {
     // }
 }
 
+
 // --- Card Rendering ---
-// ... (renderCard function unchanged) ...
+// ... (renderCard unchanged) ...
 export function renderCard(concept, context = 'grimoire') {
     if (!concept || typeof concept.id === 'undefined') {
         console.warn("renderCard called with invalid concept:", concept);
@@ -1252,12 +1268,13 @@ export function renderCard(concept, context = 'grimoire') {
     let primaryElementHTML = '<small style="color:#888; font-style: italic;">No Primary Element</small>';
     if (concept.primaryElement && elementKeyToFullName?.[concept.primaryElement]) {
         const primaryKey = concept.primaryElement;
-        const primaryFullName = elementKeyToFullName[primaryKey];
-        const primaryColor = Utils.getElementColor(primaryFullName);
-        const primaryIcon = Utils.getElementIcon(primaryFullName);
-        const primaryNameShort = Utils.getElementShortName(elementDetails[primaryFullName]?.name || primaryFullName);
-        const primaryNameFull = elementDetails[primaryFullName]?.name || primaryFullName;
-        primaryElementHTML = `<span class="primary-element-display" style="color: ${primaryColor}; border-color: ${Utils.hexToRgba(primaryColor, 0.5)}; background-color: ${Utils.hexToRgba(primaryColor, 0.1)};" title="Primary Element: ${primaryNameFull}"><i class="${primaryIcon}"></i> ${primaryNameShort}</span>`;
+        const primaryFullName = elementKeyToFullName[primaryKey]; // Short name like "Attraction"
+        const elementData = elementDetails[primaryFullName] || {}; // Get data using short name key
+        const descriptiveName = elementData.name || primaryFullName; // Get full descriptive name
+        const color = Utils.getElementColor(descriptiveName); // Use full name for color
+        const icon = Utils.getElementIcon(descriptiveName); // Use full name for icon
+        const nameShort = Utils.getElementShortName(descriptiveName); // Use full name for short name
+        primaryElementHTML = `<span class="primary-element-display" style="color: ${color}; border-color: ${Utils.hexToRgba(color, 0.5)}; background-color: ${Utils.hexToRgba(color, 0.1)};" title="Primary Element: ${descriptiveName}"><i class="${icon}"></i> ${nameShort}</span>`;
     }
 
     // Action Buttons (Only for Grimoire context)
@@ -1322,6 +1339,7 @@ export function renderCard(concept, context = 'grimoire') {
 }
 
 // --- Concept Detail Popup UI ---
+// ... (Most functions unchanged, except the key/name lookups inside) ...
 export function showConceptDetailPopup(conceptId) {
      console.log(`--- UI: Opening Popup for Concept ID: ${conceptId} ---`);
      const conceptData = concepts.find(c => c.id === conceptId);
@@ -1337,13 +1355,15 @@ export function showConceptDetailPopup(conceptId) {
      let subHeaderText = conceptData.cardType || "Unknown Type";
      let primaryElementIconHTML = '';
      if (conceptData.primaryElement && elementKeyToFullName?.[conceptData.primaryElement]) {
-         const primaryKey = conceptData.primaryElement;
-         const primaryFullName = elementKeyToFullName[primaryKey];
-         const primaryColor = Utils.getElementColor(primaryFullName);
-         const primaryIcon = Utils.getElementIcon(primaryFullName);
-         const primaryNameShort = Utils.getElementShortName(elementDetails[primaryFullName]?.name || primaryFullName);
-         subHeaderText += ` | Element: ${primaryNameShort}`;
-         primaryElementIconHTML = `<i class="${primaryIcon} popup-element-icon" style="color: ${primaryColor}; margin-left: 8px;" title="Primary Element: ${elementDetails[primaryFullName]?.name || primaryFullName}"></i>`;
+         const primaryKey = conceptData.primaryElement; // 'A', 'I', etc.
+         const primaryShortName = elementKeyToFullName[primaryKey]; // "Attraction", etc.
+         const elementData = elementDetails[primaryShortName] || {}; // Get data using short name key
+         const fullName = elementData.name || primaryShortName; // Get full descriptive name
+         const primaryColor = Utils.getElementColor(fullName); // Use full name
+         const primaryIcon = Utils.getElementIcon(fullName); // Use full name
+         const primaryNameDisplay = Utils.getElementShortName(fullName); // Use short name for display
+         subHeaderText += ` | Element: ${primaryNameDisplay}`;
+         primaryElementIconHTML = `<i class="${primaryIcon} popup-element-icon" style="color: ${primaryColor}; margin-left: 8px;" title="Primary Element: ${fullName}"></i>`;
      }
      if (popupConceptType) popupConceptType.innerHTML = subHeaderText + primaryElementIconHTML;
      if (popupCardTypeIcon) popupCardTypeIcon.className = `${Utils.getCardTypeIcon(conceptData.cardType)} card-type-icon`;
@@ -1477,7 +1497,7 @@ export function showConceptDetailPopup(conceptId) {
      console.log(`--- UI: Finished Opening Popup for Concept ID: ${conceptId} ---`);
 } // End showConceptDetailPopup
 
-// ... (displayPopupResonanceGauge, displayPopupRelatedConceptsTags, displayPopupRecipeComparison, updateGrimoireButtonStatus, updateFocusButtonStatus, updatePopupSellButton functions unchanged) ...
+// ... (displayPopupResonanceGauge, displayPopupRelatedConceptsTags unchanged) ...
 function displayPopupResonanceGauge(distance) {
     const gaugeBar = getElement('popupResonanceGaugeBar');
     const gaugeLabel = getElement('popupResonanceGaugeLabel');
@@ -1575,13 +1595,14 @@ export function displayPopupRecipeComparison(conceptData, userCompScores) {
 
     const conceptScores = conceptData.elementScores || {};
 
-    // Use elementNames from data.js to ensure all 7 are iterated
+    // Use elementNames ("Attraction", etc.) from data.js to ensure all 7 are iterated
     elementNames.forEach(elName => {
-        const key = elementNameToKey[elName];
+        // *** BUG FIX: Correct key lookup ***
+        const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elName);
         if (!key) return; // Skip if key mapping fails
 
-        const fullName = elementKeyToFullName[key]; // Get full name for color/icon lookup
-        if (!fullName) return;
+        const elementData = elementDetails[elName] || {}; // Get data using short name key
+        const fullName = elementData.name || elName; // Get full descriptive name
 
         const conceptScore = conceptScores[key];
         const userScore = userCompScores[key];
@@ -1596,7 +1617,7 @@ export function displayPopupRecipeComparison(conceptData, userCompScores) {
         const conceptBarWidth = conceptScoreValid ? (conceptScore / 10) * 100 : 0;
         const userBarWidth = userScoreValid ? (userScore / 10) * 100 : 0;
         const color = Utils.getElementColor(fullName); // Use full name for color
-        const elementNameShort = Utils.getElementShortName(elementDetails[fullName]?.name || elName); // Use short name
+        const elementNameShort = Utils.getElementShortName(fullName); // Use full name for short name
 
         conceptProfileContainer.innerHTML += `<div><strong>${elementNameShort}:</strong> <span>${conceptDisplay}</span> <div class="score-bar-container" title="${conceptLabel}"><div style="width: ${conceptBarWidth}%; background-color: ${color};"></div></div></div>`;
         userProfileContainer.innerHTML += `<div><strong>${elementNameShort}:</strong> <span>${userDisplay}</span> <div class="score-bar-container" title="${userLabel}"><div style="width: ${userBarWidth}%; background-color: ${color};"></div></div></div>`;
@@ -1604,7 +1625,6 @@ export function displayPopupRecipeComparison(conceptData, userCompScores) {
         // Highlight logic
         if (conceptScoreValid && userScoreValid) {
             const diff = Math.abs(conceptScore - userScore);
-            const elementNameDisplay = elementDetails[fullName]?.name || elName; // Use full name for highlight text
             if (conceptScore >= 7 && userScore >= 7) {
                 highlightsHTML += `<p>• <strong class="match">Strong Alignment</strong> in ${elementNameShort} (Both ${conceptLabel}/${userLabel})</p>`;
                 hasHighlights = true;
@@ -1629,6 +1649,7 @@ export function displayPopupRecipeComparison(conceptData, userCompScores) {
     if(nestedDetails) nestedDetails.open = false;
 }
 
+// ... (updateGrimoireButtonStatus, updateFocusButtonStatus, updatePopupSellButton functions unchanged) ...
 export function updateGrimoireButtonStatus(conceptId) {
     if (!addToGrimoireButton) return;
     const isDiscovered = State.getDiscoveredConcepts().has(conceptId);
@@ -1695,8 +1716,8 @@ export function updatePopupSellButton(conceptId, conceptData, inGrimoire) {
     }
 }
 
-
 // --- Research Popup ---
+// ... (unchanged) ...
 export function displayResearchResults({ concepts = [], duplicateInsightGain = 0 }) {
     if (!researchResultsPopup || !researchPopupContent || !confirmResearchChoicesButton) {
         console.error("Research results popup elements missing!"); return;
@@ -1777,6 +1798,7 @@ export function handleResearchPopupAction(conceptId, action) {
             case 'pending_dissonance': feedbackSpan.textContent = 'Awaiting Reflection...'; feedbackSpan.style.color = 'blue'; break;
             case 'error_adding': feedbackSpan.textContent = 'Error Adding!'; feedbackSpan.style.color = 'red'; break;
             case 'error_unknown': feedbackSpan.textContent = 'Error!'; feedbackSpan.style.color = 'red'; break;
+             case 'kept_after_dissonance_fail': feedbackSpan.textContent = 'Added (Reflection Error)'; feedbackSpan.style.color = 'green'; break; // Added case
             default: feedbackSpan.textContent = ''; break;
         }
     }
@@ -1793,9 +1815,8 @@ export function handleResearchPopupAction(conceptId, action) {
     if (researchPopupStatus) researchPopupStatus.textContent = allProcessed ? 'All choices confirmed.' : 'Choose an action for each finding.';
 }
 
-
 // --- Reflection Modal UI ---
-// ... (displayReflectionPrompt function unchanged) ...
+// ... (unchanged) ...
 export function displayReflectionPrompt(promptData, context) {
     if (!reflectionModal || !promptData || !promptData.prompt) {
         console.error("Reflection modal or prompt data/text missing.", promptData);
@@ -1849,20 +1870,29 @@ export function displayReflectionPrompt(promptData, context) {
 }
 
 // --- Integrated Element Deep Dive UI ---
-// ... (displayElementDeepDive function unchanged) ...
+// ... (unchanged) ...
 export function displayElementDeepDive(elementKey, targetContainerElement) {
     if (!targetContainerElement) {
         targetContainerElement = personaElementDetailsDiv?.querySelector(`.element-deep-dive-container[data-element-key="${elementKey}"]`);
         if (!targetContainerElement) { console.error(`UI: Still could not find target container for element ${elementKey}`); return; }
     }
 
-    const deepDiveData = elementDeepDive[elementKey] || [];
+    // *** BUG FIX: Use the correct key ('A') to look up the short name ("Attraction") for elementDeepDive ***
+    const shortNameKey = elementKeyToFullName[elementKey];
+    if (!shortNameKey) {
+        console.warn(`UI displayElementDeepDive: Could not find short name for key: ${elementKey}`);
+        targetContainerElement.innerHTML = '<p><i>Error loading deep dive data.</i></p>';
+        return;
+    }
+    const deepDiveData = elementDeepDive[shortNameKey] || []; // Use "Attraction" as key
+
     const unlockedLevels = State.getState().unlockedDeepDiveLevels;
-    const currentLevel = unlockedLevels[elementKey] || 0;
-    const elementName = elementKeyToFullName[elementKey] || elementKey;
+    const currentLevel = unlockedLevels[elementKey] || 0; // State uses 'A', 'I' etc.
+    const elementName = elementKeyToFullName[elementKey] || elementKey; // Get short name
+    const fullName = elementDetails[elementName]?.name || elementName; // Get full name for display title
     const insight = State.getInsight();
 
-    targetContainerElement.innerHTML = `<h5 class="deep-dive-section-title">${Utils.getElementShortName(elementDetails[elementName]?.name || elementName)} Insights</h5>`;
+    targetContainerElement.innerHTML = `<h5 class="deep-dive-section-title">${Utils.getElementShortName(fullName)} Insights</h5>`;
 
     if (deepDiveData.length === 0) {
         targetContainerElement.innerHTML += '<p><i>No deep dive content available for this element yet.</i></p>';
@@ -1919,8 +1949,9 @@ export function displayElementDeepDive(elementKey, targetContainerElement) {
     }
 }
 
+
 // --- Repository UI ---
-// ... (displayRepositoryContent, renderRepositoryItem functions unchanged) ...
+// ... (unchanged) ...
 export function displayRepositoryContent() {
     const showRepository = State.getState().questionnaireCompleted;
     if (repositoryScreen) repositoryScreen.classList.toggle('hidden', !showRepository);
@@ -2046,22 +2077,29 @@ export function displayRepositoryContent() {
     // Display Insights
     if (repoItems.insights.size > 0) {
         const insightsByElement = {};
-        elementNames.forEach(elName => insightsByElement[elementNameToKey[elName]] = []); // Initialize for all elements
+        elementNames.forEach(elName => {
+             // *** BUG FIX: Use correct key lookup ***
+             const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elName);
+             if(key) insightsByElement[key] = []; // Initialize using key 'A', 'I' etc.
+        });
 
         repoItems.insights.forEach(insightId => {
             const insightData = elementalInsights.find(i => i.id === insightId);
             if (insightData) {
+                // Use the element key ('A', 'I', etc.) directly from insightData
                 if (!insightsByElement[insightData.element]) insightsByElement[insightData.element] = [];
                 insightsByElement[insightData.element].push(insightData);
             } else { console.warn(`Insight ID ${insightId} not found in data.js.`); }
         });
 
         let insightsHTML = '';
-        elementNames.forEach(elName => { // Iterate through all elements for consistent order
-            const key = elementNameToKey[elName];
-            if (insightsByElement[key] && insightsByElement[key].length > 0) {
-                const elementData = elementDetails[elName] || {};
-                insightsHTML += `<h5>${Utils.getElementShortName(elementData.name || elName)} Insights:</h5><ul>`;
+        elementNames.forEach(elName => { // Iterate through elementNames ("Attraction", etc.)
+            // *** BUG FIX: Use correct key lookup ***
+            const key = Object.keys(elementKeyToFullName).find(k => elementKeyToFullName[k] === elName);
+            if (key && insightsByElement[key] && insightsByElement[key].length > 0) {
+                const elementData = elementDetails[elName] || {}; // Use short name key
+                const fullName = elementData.name || elName; // Get full name
+                insightsHTML += `<h5>${Utils.getElementShortName(fullName)} Insights:</h5><ul>`; // Display short name
                 // Sort insights within each element alphabetically by text for consistency
                 insightsByElement[key].sort((a, b) => a.text.localeCompare(b.text)).forEach(insight => {
                     insightsHTML += `<li>"${insight.text}"</li>`;
@@ -2079,6 +2117,7 @@ export function displayRepositoryContent() {
     GameLogic.updateMilestoneProgress('repositoryContents', null); // Check repo milestone
 }
 
+// ... (renderRepositoryItem unchanged) ...
 export function renderRepositoryItem(item, type, cost, canDoAction, completed = false, unmetReqs = []) {
     const div = document.createElement('div');
     div.classList.add('repository-item', `repo-item-${type}`);
@@ -2119,7 +2158,7 @@ export function renderRepositoryItem(item, type, cost, canDoAction, completed = 
 
 
 // --- Milestones UI ---
-// ... (displayMilestones function unchanged) ...
+// ... (unchanged) ...
 export function displayMilestones() {
     if (!milestonesDisplay) {
          if (document.getElementById('repositoryScreen')?.classList.contains('current')) {
@@ -2157,7 +2196,7 @@ export function displayMilestones() {
 }
 
 // --- Rituals Display (Targets Repository) ---
-// ... (displayDailyRituals function unchanged) ...
+// ... (unchanged) ...
 export function displayDailyRituals() {
      const targetDisplay = dailyRitualsDisplayRepo;
      if (!targetDisplay) {
@@ -2226,7 +2265,7 @@ export function displayDailyRituals() {
 }
 
 // --- Settings Popup UI ---
-// ... (showSettings function unchanged) ...
+// ... (unchanged) ...
 export function showSettings() {
     if (settingsPopup) settingsPopup.classList.remove('hidden');
      if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) {
@@ -2235,7 +2274,7 @@ export function showSettings() {
 }
 
 // --- Tapestry Deep Dive / Resonance Chamber UI ---
-// ... (displayTapestryDeepDive, displaySynergyTensionInfo, updateContemplationButtonState, updateDeepDiveContent, displayContemplationTask, clearContemplationTask functions unchanged) ...
+// ... (unchanged) ...
 export function displayTapestryDeepDive(analysisData) {
      if (!tapestryDeepDiveModal || !popupOverlay || !deepDiveNarrativeP || !deepDiveFocusIcons || !deepDiveAnalysisNodesContainer || !deepDiveDetailContent || !deepDiveTitle) {
          console.error("Resonance Chamber Modal elements missing!");
@@ -2378,9 +2417,8 @@ export function clearContemplationTask() {
     updateContemplationButtonState(); // Update button state (e.g., show cooldown)
 }
 
-
 // --- Elemental Dilemma Modal Display ---
-// ... (displayElementalDilemma function unchanged) ...
+// ... (unchanged) ...
 export function displayElementalDilemma(dilemma) {
     const modal = getElement('dilemmaModal');
     const situationEl = getElement('dilemmaSituationText');
@@ -2426,7 +2464,7 @@ export function displayElementalDilemma(dilemma) {
 }
 
 // --- Persona Action Buttons State ---
-// ... (updateElementalDilemmaButtonState, updateExploreSynergyButtonStatus, updateSuggestSceneButtonState functions unchanged) ...
+// ... (unchanged) ...
 export function updateElementalDilemmaButtonState() {
      const btn = getElement('elementalDilemmaButton');
      if (btn) {
@@ -2480,13 +2518,14 @@ export function updateSuggestSceneButtonState() {
 }
 
 // --- Display Research Status ---
+// ... (unchanged) ...
 export function displayResearchStatus(message) {
     // Use the standard temporary message function
     showTemporaryMessage(message, 2000);
 }
 
 // --- Initial UI Setup Helper ---
-// ... (setupInitialUI function unchanged) ...
+// ... (unchanged) ...
 export function setupInitialUI() {
     console.log("UI: Setting up initial UI state (v4)");
     if(mainNavBar) mainNavBar.classList.add('hidden'); // Hide nav initially
@@ -2504,7 +2543,7 @@ export function setupInitialUI() {
 }
 
 // --- Onboarding UI ---
-// ... (showOnboarding, hideOnboarding, updateOnboardingHighlight functions unchanged) ...
+// ... (unchanged - includes previous fixes) ...
 export function showOnboarding(phase) {
     if (!onboardingOverlay || !onboardingPopup || !onboardingContent || !onboardingProgressSpan || !onboardingPrevButton || !onboardingNextButton || !onboardingSkipButton) {
         console.error("Onboarding UI elements missing!");
@@ -2526,7 +2565,7 @@ export function showOnboarding(phase) {
     }
 
     console.log(`UI: Showing onboarding phase ${phase}`);
-    // Use description or text from task data
+    // Populate content - using description if available, else text
     const taskText = task.description || task.text || 'Follow the instructions...';
     onboardingContent.innerHTML = `<p>${taskText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`; // Allow bold
     if (task.hint) {
@@ -2594,7 +2633,7 @@ function updateOnboardingHighlight(elementId) {
 }
 
 // --- Update Note Save Status ---
-// ... (updateNoteSaveStatus function unchanged) ...
+// ... (unchanged) ...
 export function updateNoteSaveStatus(message, isError = false) {
     if (noteSaveStatusSpan) {
         noteSaveStatusSpan.textContent = message;
@@ -2604,5 +2643,5 @@ export function updateNoteSaveStatus(message, isError = false) {
     }
 }
 
-console.log("ui.js loaded. (Enhanced v4.4 - Fixing Key Lookups)");
+console.log("ui.js loaded. (Enhanced v4.5 - Refining Key Lookups)");
 // --- END OF CORRECTED ui.js ---
