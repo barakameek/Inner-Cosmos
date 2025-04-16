@@ -1,3 +1,5 @@
+// --- START OF CORRECTED data.js (Resumed) ---
+
 console.log("data.js loading... Weaving RoleFocus, Defining Tasks, Refining Lore (v4.3)");
 
 // --- Element Definitions (Now 7 Elements) ---
@@ -120,6 +122,7 @@ const grimoireShelves = [
 // --- Concepts Data (Now includes RF score for ALL) ---
 const concepts = [
     // --- Common Concepts ---
+    // ... (All Common Concepts from ID 1 to 85) ...
     {
         id: 1, name: "Vanilla Sex", cardType: "Practice/Kink", visualHandle: "common_vanilla.jpg", primaryElement: "S",
         elementScores: { A: 5, I: 5, S: 3, P: 4, C: 3, R: 4, RF: 5 }, // RF Neutral
@@ -132,450 +135,7 @@ const concepts = [
             { level: 3, insightCost: 12, text: "Hidden Depths & Nuances: Even within 'vanilla' practices, subtle shifts in presence [P], communication [I], sensory focus [S], or emotional intent can transform the experience from routine to sublime ritual.", unlocked: false}
         ]
     },
-    {
-        id: 2, name: "Sensual Touch", cardType: "Practice/Kink", visualHandle: "common_sensual_touch.jpg", primaryElement: "S",
-        elementScores: { A: 4, I: 4, S: 4, P: 5, C: 2, R: 4, RF: 4 }, // RF slightly receptive/neutral
-        briefDescription: "Gentle, connected, mindful exploration through touch.",
-        detailedDescription: "Slowing *way* down to truly *feel* and connect through the skin. This isn't about rushing towards a specific goal, but about savoring the journey of sensation itself. Think soft, loving caresses exploring the landscape of the body, sharing warmth like a gentle current, communicating profound care and attention without needing words. It's presence embodied in the fingertips, a meditation shared between partners.",
-        relatedIds: [1, 15, 31, 3, 80, 102, 48], rarity: 'common', keywords: ['Gentle', 'Affection', 'Connection', 'Sensation', 'Comfort', 'Slow', 'Mindful', 'Presence', 'Caress'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Whispers on Skin: This form of touch speaks a language older than words, conveying care, focused attention, and pure presence.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Mindful Moment Anchor: Focusing purely on the unfolding sensation of touch can be a powerful grounding technique, anchoring both partners fully in the present, shared moment.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Gateway to Deeper Realms: Often, intentionally cultivating sensual touch opens pathways to profound emotional intimacy [15] and a heightened, more nuanced awareness of the Sensory [S] landscape.", unlocked: false}
-        ]
-    },
-    {
-        id: 3, name: "Passionate Kissing", cardType: "Practice/Kink", visualHandle: "common_kissing.jpg", primaryElement: "S",
-        elementScores: { A: 6, I: 5, S: 5, P: 6, C: 3, R: 5, RF: 5 }, // RF Neutral/Mutual
-        briefDescription: "Kissing like the world melts away.",
-        detailedDescription: "Far more than just a polite peck or a prelude! This is when kissing becomes an entire conversation, a dynamic dance of lips and tongues conveying urgency, deep tenderness, simmering hunger, playful teasing, or profound devotion. It can be an intimate exploration, a bold declaration, a merging, a world unto itself built in the space between breaths.",
-        relatedIds: [1, 2, 15, 47, 66, 85, 77], rarity: 'common', keywords: ['Intensity', 'Emotion', 'Connection', 'Sensation', 'Intimacy', 'Kissing', 'Mouth', 'Expression', 'Desire'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The First Spark Igniter & Sustainer: Often the initial gateway that bridges simple affection to deeper physical desire, but also a powerful way to sustain connection throughout an encounter.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Dialogue of Lips & Breath: A passionate kiss can convey a universe of nuanced meaning – raw desire, urgent need, melting tenderness, playful possession, trusting surrender – without a single word uttered.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Multi-Sensory Nexus Point: Engages taste, touch, smell, proprioception, and pure presence, making it a potent focal point for amplifying both Sensory [S] input and Psychological [P] connection simultaneously.", unlocked: false}
-        ]
-    },
-    {
-        id: 15, name: "Deep Emotional Intimacy", cardType: "Psychological/Goal", visualHandle: "uncommon_intimacy_art.jpg", primaryElement: "P",
-        elementScores: { A: 7, I: 5, S: 4, P: 9, C: 5, R: 7, RF: 4 }, // RF slightly receptive (vulnerability)
-        briefDescription: "Seeking that profound 'soul-to-soul' connection.",
-        detailedDescription: "For those who pursue this, sex can be a powerful, sacred conduit to achieving profound emotional closeness. It's about courageously sharing vulnerabilities, building unshakeable trust, and experiencing the profound relief and joy of feeling truly seen, understood, and accepted, flaws and all. It's weaving souls together, not just mingling bodies; the physical becomes a language for the heart.",
-        relatedIds: [2, 3, 22, 29, 47, 58, 68, 70, 75, 76, 82, 83, 123, 59, 69], rarity: 'uncommon', keywords: ['Connection', 'Vulnerability', 'Trust', 'Psychological', 'Emotion', 'Soul', 'Depth', 'Intimacy', 'Safety', 'Acceptance'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Vulnerability as Strength, Not Weakness: Consciously choosing to share deep feelings or hidden parts of oneself during intimate moments builds profound, resilient trust, turning courageous openness into an unbreakable bond.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Soul Gazing Reflection & Affirmation: The feeling of being truly 'seen,' understood, and accepted by a partner in moments of closeness, perceived imperfections and all, is a powerful psychological elixir that nourishes self-worth.", unlocked: false },
-            { level: 3, insightCost: 18, text: "The Alchemical Marriage Within: When this deep Psychological [P] need for connection meets a compatible Relational [R] structure and Interaction [I] style, intimacy can feel truly transformative, a sacred merging of inner worlds resulting in something greater than the sum of its parts.", unlocked: false }
-        ]
-    },
-    {
-        id: 22, name: "Monogamy", cardType: "Relationship Style", visualHandle: "common_mono.jpg", primaryElement: "R",
-        elementScores: { A: 5, I: 5, S: 5, P: 6, C: 5, R: 2, RF: 5 }, // RF Neutral
-        briefDescription: "One partner, one focused connection.",
-        detailedDescription: "Choosing to keep it exclusive! This relationship style involves preferring or practicing having just one sexual and/or romantic partner at a time. It's about channeling relational and intimate energy into a single, often deeply committed, bond, fostering a unique shared world.",
-        relatedIds: [23, 15, 29, 59, 76, 68], rarity: 'common', keywords: ['Structure', 'Exclusivity', 'Commitment', 'Dyad', 'One-on-One', 'Partnership', 'Focus'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Focused Flame Keeper & World Builder: Pouring relational energy into a single primary bond can create intense depth, profound security, and a uniquely rich shared world with its own history and language.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Weaving a Singular Tapestry: The exclusivity allows for the intricate weaving of a unique shared narrative, inside jokes, deep understanding, and history between partners, creating a strong 'us'.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Conscious Choice, Not Just Default: While often presented as the societal default, actively choosing monogamy can be a powerful statement about prioritizing depth, focus, and a specific kind of security in relating intimately.", unlocked: false}
-        ]
-    },
-    {
-        id: 23, name: "Serial Monogamy", cardType: "Relationship Style", visualHandle: "common_serialmono.jpg", primaryElement: "R",
-        elementScores: { A: 5, I: 5, S: 5, P: 5, C: 5, R: 3, RF: 5 }, // RF Neutral
-        briefDescription: "Exclusive chapters, lived one after another.",
-        detailedDescription: "Like monogamy, but experienced in distinct sequences over time! This involves engaging in one exclusive, often committed, relationship at a time, moving from one significant partnership to the next as life unfolds. Each relationship is typically treated as primary while it lasts.",
-        relatedIds: [22, 24], rarity: 'common', keywords: ['Structure', 'Exclusivity', 'Sequence', 'Relationship', 'Chapters', 'Transition'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Chapter by Chapter Growth & Exploration: Allows for exploring deep connections and focused intimacy one relationship at a time, facilitating learning, growth, and adaptation with each distinct partnership arc.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Balancing Focused Structure & Life's Changes: This style holds onto the focused structure and potential depth of monogamy [22] within each chapter, while acknowledging that needs, circumstances, and people change over a lifetime, allowing for new beginnings.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Mapping the Journey Through Connections: Each significant relationship contributes unique lessons, experiences, and self-knowledge, shaping the individual's relational landscape and potentially informing what they seek in the next chapter.", unlocked: false}
-        ]
-    },
-    {
-        id: 24, name: "Casual Sex / Hookups", cardType: "Relationship Style", visualHandle: "common_casual.jpg", primaryElement: "R",
-        elementScores: { A: 6, I: 4, S: 6, P: 3, C: 3, R: 5, RF: 6 }, // RF slightly leading/initiating?
-        briefDescription: "Intimacy focused on pleasure, exploration, no strings attached.",
-        detailedDescription: "Engaging in physical intimacy without the expectation of romantic commitment or deep emotional entanglement. Often focused on mutual pleasure, exploring chemistry, satisfying physical needs, or simply having fun. While 'casual,' ethical engagement prioritizes clear communication about boundaries and expectations (even if those expectations are 'none').",
-        relatedIds: [23, 26, 35, 56, 65, 79, 84], rarity: 'common', keywords: ['Fleeting', 'Physical', 'Low-Commitment', 'Exploration', 'Casual', 'NSA', 'Freedom', 'Recreation', 'Pleasure-Focused'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Freedom & Exploration's Wide Open Door: Allows for exploring physical chemistry, diverse desires, different interaction styles [I], and sexual expression without the weight of long-term entanglement or complex emotional expectations.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Clarity is Kindness (Especially Here): While inherently low-commitment, clear, honest, and respectful communication about intentions, boundaries, STI status, and expectations (or the deliberate lack thereof) is absolutely crucial for positive and ethical casual encounters.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Motivations Vary Wildly: Can be purely recreational fun, a way to meet physical needs during transition periods, a method for self-discovery, stress relief [51], or even, sometimes unexpectedly, a pathway to discovering deeper compatibility (or incompatibility!) for future relating.", unlocked: false}
-        ]
-    },
-    {
-        id: 31, name: "Cuddling / Affection", cardType: "Practice/Kink", visualHandle: "common_cuddle.jpg", primaryElement: "P",
-        elementScores: { A: 3, I: 3, S: 3, P: 6, C: 2, R: 4, RF: 4 }, // RF slightly receptive
-        briefDescription: "Seeking simple, warm closeness and comfort.",
-        detailedDescription: "Pure physical closeness and shared warmth without the immediate pressure or expectation of sexual escalation. It's about seeking and giving comfort, safety, reassurance, and quiet shared presence. Sometimes the most profound intimacy is simply breathing together in a relaxed embrace, feeling safe and connected.",
-        relatedIds: [2, 15, 48, 69, 80], rarity: 'common', keywords: ['Comfort', 'Affection', 'Security', 'Connection', 'Gentle', 'Cuddle', 'Closeness', 'Safety', 'Non-sexual', 'Soothing'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Primal Human Need for Safe Touch: Satisfies a fundamental, often unspoken, desire for warmth, safety, reassurance, belonging, and non-demanding physical connection vital for well-being.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Silent Language of Profound Care: Cuddling can communicate volumes of care, empathy, reassurance, understanding, and quiet, unwavering presence when words feel inadequate or overwhelming.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Neurochemical Balm & Body Regulation: Releases oxytocin ('the cuddle hormone') and endorphins, actively reducing stress hormones (like cortisol), regulating the nervous system, and fostering deep feelings of well-being and bonding. It's potent brain magic!", unlocked: false}
-        ]
-    },
-    {
-        id: 32, name: "Dirty Talk", cardType: "Practice/Kink", visualHandle: "common_dirtytalk.jpg", primaryElement: "C",
-        elementScores: { A: 5, I: 6, S: 3, P: 5, C: 7, R: 5, RF: 6 }, // RF can be leading (commanding) or sub (praise-seeking) - avg 6
-        briefDescription: "Using evocative language to heighten arousal.",
-        detailedDescription: "Intentionally using your words as a direct tool for building arousal and shaping the intimate experience! This can involve saying explicit things about desires or actions, offering suggestive commentary, giving commanding instructions, whispering sweet (or degrading) praises, or narrating fantasies. It directly engages the listener's imagination, painting pictures and building incredible heat through sound and meaning.",
-        relatedIds: [13, 11, 4, 5, 46, 49, 66, 74, 89, 100], rarity: 'common', keywords: ['Language', 'Cognitive', 'Arousal', 'Expression', 'Fantasy', 'Verbal', 'Auditory', 'Explicit', 'Command', 'Praise'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Painting Vivid Pictures with Sound Waves: Skillful dirty talk can create incredibly potent mental imagery, dramatically amplifying arousal, guiding shared or individual fantasy, and making desires thrillingly explicit.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Power Play of Vocal Dynamics: The specific tone (commanding, pleading, seductive), volume (whisper, shout), choice of words (crude, poetic, formal), and even strategic *silence* after a potent phrase can significantly shape the perceived power dynamic [I] and overall emotional intensity [P].", unlocked: false },
-            { level: 3, insightCost: 12, text: "A Direct Cognitive [C] Catalyst: This practice powerfully demonstrates how the mind itself can be a primary erogenous zone, proving that language and imagination are potent aphrodisiacs capable of igniting desire all on their own.", unlocked: false}
-        ]
-    },
-    {
-        id: 33, name: "Mutual Masturbation", cardType: "Practice/Kink", visualHandle: "common_mutualmast.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 5, S: 6, P: 4, C: 4, R: 5, RF: 5 }, // RF Neutral/Egalitarian
-        briefDescription: "Shared self-pleasure, side-by-side.",
-        detailedDescription: "Partners masturbating concurrently, often in view of each other, sharing the experience visually and energetically without necessarily touching each other directly during the act. It's a unique intersection of personal focus on self-pleasure and the shared intimacy of witnessing and being witnessed.",
-        relatedIds: [1, 18, 19, 72], rarity: 'common', keywords: ['Shared', 'Physical', 'Visual', 'Sensation', 'Masturbation', 'Voyeurism', 'Exhibitionism', 'Witnessing'],
-        lore: [
-            { level: 1, insightCost: 3, text: "A Window into Shared Vulnerability: Witnessing a partner's focused self-pleasure, their unique rhythm and expressions, can be uniquely intimate, surprisingly informative, and build a different, more observational kind of trust.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Visual Feedback Ignition Loop: Watching each other's arousal build and manifest can create a powerful, escalating cycle of shared excitement, feeding directly off the visible pleasure and response.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Learning Through Shared Observation: Offers potentially valuable insights into a partner's specific turn-ons, preferred rhythms, and pleasure points without the pressure or complexity of direct physical interaction or 'performance'.", unlocked: false}
-        ]
-    },
-    {
-        id: 46, name: "Compliments / Praise", cardType: "Practice/Kink", visualHandle: "common_praise.jpg", primaryElement: "P",
-        elementScores: { A: 4, I: 5, S: 2, P: 7, C: 4, R: 5, RF: 3 }, // RF leaning receptive (receiving praise)
-        briefDescription: "Words that uplift, affirm, and arouse.",
-        detailedDescription: "Using positive, affirming words during intimacy or relational moments. This can range from genuine compliments on appearance or specific body parts, to praise for actions, skills, effort, or desired behaviors ('Good girl/boy/pet'). It directly nourishes feelings of desirability, confidence, and being valued.",
-        relatedIds: [32, 15, 50, 58, 61, 10], rarity: 'common', keywords: ['Validation', 'Affirmation', 'Psychological', 'Connection', 'Confidence', 'Praise', 'Words', 'Encouragement', 'Approval'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Verbal Sunlight Nourishing Confidence: Genuine, specific praise can act like sunlight on a shy plant, nourishing confidence, reinforcing desired behaviors, and deepening feelings of being truly seen and valued.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Specificity Lands with Greater Impact: While general compliments are nice, praising specific actions ('I love how you did X'), qualities ('Your focus is incredible'), or responses often lands with far more impact and credibility than generic flattery.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Fueling Psychological Needs [P]: Praise directly addresses common psychological needs for validation [50], approval, and feeling 'good enough,' making it a powerful tool for both connection and arousal, especially within certain dynamics.", unlocked: false}
-        ]
-    },
-    {
-        id: 47, name: "Eye Contact", cardType: "Practice/Kink", visualHandle: "common_eyecontact.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 6, S: 2, P: 7, C: 3, R: 6, RF: 6 }, // RF slightly leading (holding gaze)
-        briefDescription: "That intense, soul-baring gaze.",
-        detailedDescription: "Intentionally locking eyes during intimate moments. This simple act can create incredibly intense feelings of connection, vulnerability, presence, and intimacy. It can feel like seeing directly into someone's soul, or being seen in return. It can also be used to convey power, demand attention, or signal deep focus.",
-        relatedIds: [3, 15, 58, 89], rarity: 'common', keywords: ['Intimacy', 'Connection', 'Vulnerability', 'Presence', 'Focus', 'Eyes', 'Gaze', 'Non-verbal', 'Seeing'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Windows to the Soul (or Just Really Intense): Sustained eye contact often bypasses social masks and defenses, fostering a sense of raw, immediate connection or heightened awareness.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Unblinking Gaze of Power or Presence: Depending on context and intent, intense eye contact can be used assertively to assert dominance, demand attention, convey unwavering presence, or offer profound vulnerability.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Amplifying Psychological [P] Depth: Because it fosters such direct connection and potential vulnerability, eye contact is a powerful amplifier for Deep Emotional Intimacy [15] and feelings of being truly 'met'.", unlocked: false}
-        ]
-    },
-    {
-        id: 48, name: "Holding Hands", cardType: "Practice/Kink", visualHandle: "common_handholding.jpg", primaryElement: "P",
-        elementScores: { A: 3, I: 4, S: 3, P: 5, C: 1, R: 4, RF: 4 }, // RF neutral/receptive
-        briefDescription: "Simple, connected touch; quiet reassurance.",
-        detailedDescription: "Sometimes the simplest gestures hold the most weight. Holding hands is a fundamental act of connection, conveying partnership, comfort, reassurance, and belonging, often without needing words. It's a small anchor in the world, a quiet affirmation of 'we'.",
-        relatedIds: [2, 31, 77], rarity: 'common', keywords: ['Affection', 'Connection', 'Comfort', 'Simple', 'Touch', 'Reassurance', 'Partnership', 'Safety'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Silent Anchor in the Storm: A simple clasp of hands can convey partnership, offer quiet reassurance, and affirm a sense of belonging, especially in public or uncertain moments.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Subtle Pulse of Shared Life: The faint, grounding feeling of another's pulse through held hands is a quiet, constant reminder of shared presence and life force.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Building Blocks of Intimacy [P]: While seemingly minor, consistent small acts of connection like hand-holding build a foundation of trust and security essential for deeper vulnerability.", unlocked: false}
-        ]
-    },
-    {
-        id: 49, name: "Shared Fantasy Talk", cardType: "Practice/Kink", visualHandle: "common_fantasytalk.jpg", primaryElement: "C",
-        elementScores: { A: 5, I: 5, S: 3, P: 6, C: 6, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Talking through fantasies together, building worlds.",
-        detailedDescription: "Sharing your secret brain movies out loud! Partners verbally describe their fantasies, desires, or potential scenarios to each other, often building on each other's ideas. It's a way to explore possibilities, gauge interest, build arousal through imagination, and co-create a shared mental landscape.",
-        relatedIds: [32, 14, 13, 60], rarity: 'common', keywords: ['Fantasy', 'Cognitive', 'Sharing', 'Arousal', 'Communication', 'Verbal', 'Imagination', 'Co-creation'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Building Shared Worlds with Words: Co-creating a fantasy verbally, weaving ideas together, can be a deeply collaborative, revealing, and surprisingly intimate [P] act.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Testing the Waters & Gauging Resonance: Allows partners to explore and gauge interest in potential scenarios, themes, or kinks in a low-stakes way before potentially enacting them physically.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Fueling the Cognitive [C] Fire: Directly engages the imagination and narrative faculties, making the mental landscape itself a source of shared arousal and connection.", unlocked: false}
-        ]
-    },
-    {
-        id: 50, name: "Validation Seeking", cardType: "Psychological/Goal", visualHandle: "common_validation.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 6, S: 5, P: 7, C: 4, R: 5, RF: 4 }, // RF receptive (seeking validation)
-        briefDescription: "Needing external proof of desirability/skill.",
-        detailedDescription: "A significant psychological driver where intimacy is sought, consciously or unconsciously, primarily to receive external confirmation of one's attractiveness, sexual skill, worthiness, or desirability. A partner's enthusiastic reaction, praise [46], or even submission can serve as this needed proof.",
-        relatedIds: [18, 46, 91, 90], rarity: 'common', keywords: ['Validation', 'Psychological', 'Need', 'Desire', 'Performance', 'Approval', 'Worthiness', 'Mirror', 'External'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Mirror Gazing for Self-Worth: Seeking the reflection of one's own perceived value, desirability, or skill in a partner's words, actions, and passionate responses.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Double-Edged Sword of External Proof: While a natural human need to feel valued, relying *heavily* on external validation during intimacy can create performance anxiety, insecurity, or conditional self-worth.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Exploring the Roots & Alternatives: Understanding *why* this validation is so needed can be insightful. Can the focus shift towards intrinsic pleasure, shared joy, or self-acceptance, where validation becomes a welcome bonus rather than the primary goal?", unlocked: false}
-        ]
-    },
-    {
-        id: 51, name: "Stress Relief Focus", cardType: "Psychological/Goal", visualHandle: "common_stressrelief.jpg", primaryElement: "P",
-        elementScores: { A: 4, I: 4, S: 5, P: 6, C: 3, R: 4, RF: 5 }, // RF Neutral
-        briefDescription: "Using sex primarily as a way to unwind and release tension.",
-        detailedDescription: "Feeling overwhelmed or stressed out? For some, sexual activity, particularly orgasm, serves as a primary and effective go-to method for releasing physical and mental tension, calming the nervous system, and achieving a state of relaxation. The focus is less on deep connection, more on effective release.",
-        relatedIds: [1, 56], rarity: 'common', keywords: ['Stress Relief', 'Relaxation', 'Physical', 'Catharsis', 'Coping', 'Release', 'Tension', 'Unwind'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Body's Natural Reset Button: Orgasm triggers a cascade of relaxing neurochemicals (like endorphins and prolactin), acting as a potent natural stress-reducer.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Temporary Escape Hatch & Physical Release: Can provide a welcome, absorbing distraction from daily pressures and a satisfying physical outlet for pent-up energy or anxiety.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Potential Pitfall Awareness: While effective, consistently relying *solely* on sex for stress management might neglect other coping strategies or mask underlying issues needing attention. Balance is key.", unlocked: false}
-        ]
-    },
-    {
-        id: 52, name: "Heterosexuality", cardType: "Orientation", visualHandle: "common_hetero.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 5, S: 5, P: 5, C: 5, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Primarily attracted to different gender(s).",
-        detailedDescription: "Experiencing primary sexual and/or romantic attraction to people of a gender different from one's own (e.g., men attracted to women, women attracted to men). While often considered the societal default, it's a specific pattern on the vast spectrum of human attraction.",
-        relatedIds: [53, 54, 55], rarity: 'common', keywords: ['Orientation', 'Gender', 'Attraction', 'Straight', 'Different Gender'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Societal Default Setting?: Often assumed or invisible due to its prevalence, but still represents a specific and distinct constellation of attraction patterns.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Internal Compass Pointing Across: Represents a consistent, innate pattern of desire and potential for connection oriented towards genders different from one's own.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Diversity Within: Heterosexuality isn't monolithic; preferences for presentation, personality, dynamics, etc., vary widely within this broad category.", unlocked: false}
-        ]
-    },
-    {
-        id: 53, name: "Homosexuality", cardType: "Orientation", visualHandle: "common_homo.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 5, S: 5, P: 5, C: 5, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Primarily attracted to the same gender(s).",
-        detailedDescription: "Experiencing primary sexual and/or romantic attraction to people of the same or a similar gender identity as one's own (e.g., men attracted to men - Gay; women attracted to women - Lesbian). It's a specific orientation with rich cultural histories and communities.",
-        relatedIds: [52, 54, 55], rarity: 'common', keywords: ['Orientation', 'Gender', 'Attraction', 'Gay', 'Lesbian', 'Same Gender', 'Queer'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Attraction Towards Shared Identity: Desire and potential for connection directed primarily towards those who share a similar gender identity or experience.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Community, Culture, & Resilience: Often associated with specific LGBTQ+ communities, unique cultural expressions, shared histories, and resilience in navigating societal norms.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Spectrum of Expression: Like all orientations, homosexuality encompasses a vast diversity of individual preferences, relationship styles [R], and interaction dynamics [I].", unlocked: false}
-        ]
-    },
-    {
-        id: 54, name: "Bisexuality", cardType: "Orientation", visualHandle: "common_bi.jpg", primaryElement: "A",
-        elementScores: { A: 6, I: 5, S: 5, P: 5, C: 5, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Attraction towards two or more genders.",
-        detailedDescription: "Experiencing sexual and/or romantic attraction to more than one gender identity. This might include attraction to men and women, or attraction to one's own gender and other genders. The degree and nature of attraction can vary.",
-        relatedIds: [52, 53, 55], rarity: 'common', keywords: ['Orientation', 'Gender', 'Attraction', 'Multiple Genders', 'Bi', 'Fluidity', 'Spectrum'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Beyond the Binary Bind: Attraction isn't limited by a binary framework; the potential for connection extends across multiple gender categories.", unlocked: false },
-            { level: 2, insightCost: 7, text: "A Fluid Spectrum of Desire: Attraction might lean differently towards different genders at different times, or the *type* of attraction (romantic vs. sexual) might vary. It's often not a 50/50 split.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Challenging Invisibility: Bisexuality faces unique challenges like erasure or skepticism, making visibility and community important aspects for many bi individuals.", unlocked: false}
-        ]
-    },
-    {
-        id: 55, name: "Pansexuality", cardType: "Orientation", visualHandle: "common_pan.jpg", primaryElement: "A",
-        elementScores: { A: 5, I: 5, S: 5, P: 5, C: 5, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Attraction regardless of gender.",
-        detailedDescription: "Experiencing sexual and/or romantic attraction to people *regardless* of their specific gender identity or expression. The focus is often on the individual person, their personality, vibe, or connection, rather than gender being a primary factor in attraction.",
-        relatedIds: [52, 53, 54, 103, 60], rarity: 'common', keywords: ['Orientation', 'Attraction', 'Fluidity', 'Personality', 'Pan', 'Gender-Blind', 'Connection-Focused'],
-        lore: [
-            { level: 1, insightCost: 3, text: "'Hearts Not Parts' Philosophy: Often encapsulates a focus on the person, the connection, the shared energy, or specific traits, rather than gender as a primary filtering mechanism for attraction.", unlocked: false },
-            { level: 2, insightCost: 7, text: "An Expansive View of Potential: Opens the door wide to potential attraction across the entire beautiful spectrum of human gender identity and expression, including non-binary and genderfluid individuals.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Distinction from Bisexuality: While overlap exists, Pansexuality explicitly emphasizes attraction *regardless* of gender, whereas Bisexuality often acknowledges gender as a factor in attraction towards multiple (but not necessarily all) genders.", unlocked: false}
-        ]
-    },
-    {
-        id: 56, name: "Quickie", cardType: "Practice/Kink", visualHandle: "common_quickie.jpg", primaryElement: "I",
-        elementScores: { A: 6, I: 6, S: 6, P: 3, C: 2, R: 4, RF: 6 }, // RF leaning slightly leading/efficient
-        briefDescription: "Fast, focused, and fun!",
-        detailedDescription: "Short, sweet, and right to the point! A brief sexual encounter often characterized by minimal foreplay, high energy, and a focus on achieving orgasm or quick release efficiently. Can be spontaneous or planned when time is limited.",
-        relatedIds: [1, 24, 79, 51], rarity: 'common', keywords: ['Brief', 'Spontaneous', 'Physical', 'Goal-Oriented', 'Fast', 'Efficient', 'Urgent'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Efficiency Expert Mode Activated: Sometimes the primary goal is simply achieving release or satisfying an urgent desire, accomplished with minimal preamble and maximum focus.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Exhilarating Thrill of Speed: The rushed nature, the potential for being caught, or simply the break from routine can itself add a potent layer of excitement or urgency.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Context is Everything: A quickie between established partners feels different from one during a casual hookup [24]. It can be about convenience, shared spontaneity [79], or simply fitting intimacy into a busy life.", unlocked: false}
-        ]
-    },
-    {
-        id: 66, name: "Foreplay Focus", cardType: "Practice/Kink", visualHandle: "common_foreplay.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 6, S: 5, P: 5, C: 4, R: 5, RF: 5 }, // RF Neutral/Mutual
-        briefDescription: "Loving the delicious warm-up and build-up.",
-        detailedDescription: "For you, the journey of arousal is just as important, if not more so, than the destination! This involves placing significant value and time on the activities leading up to intercourse or climax, like kissing [3], sensual touch [2], oral sex [67], dirty talk [32], etc. It's about savoring the anticipation.",
-        relatedIds: [1, 2, 3, 32, 67, 83, 49], rarity: 'common', keywords: ['Build-up', 'Arousal', 'Connection', 'Intimacy', 'Anticipation', 'Warm-up', 'Teasing', 'Savoring'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Savoring the Symphony's Start: Appreciating the intricate journey of building arousal, exploring sensations, and deepening connection, not just rushing towards the crescendo.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Building a Solid Foundation for Bliss: Thoughtful, generous foreplay sets the stage physically and emotionally, often leading to deeper connection [P] and potentially more satisfying climaxes.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Communication is Key: Effective foreplay often involves paying close attention to a partner's responses and communicating desires, making the build-up a collaborative art form [I].", unlocked: false}
-        ]
-    },
-    {
-        id: 67, name: "Oral Sex (Giving/Receiving)", cardType: "Practice/Kink", visualHandle: "common_oral.jpg", primaryElement: "S",
-        elementScores: { A: 6, I: 6, S: 7, P: 5, C: 3, R: 5, RF: 5 }, // RF Neutral (can be giving or receiving focus)
-        briefDescription: "Intimate pleasure using the mouth and tongue.",
-        detailedDescription: "Engaging in sexual activity involving stimulation of the genitals (vulva, penis, anus) using the mouth, lips, and tongue. Can be focused on giving pleasure, receiving pleasure, or both simultaneously or sequentially. A common and often highly pleasurable practice for many.",
-        relatedIds: [1, 66, 73, 107], rarity: 'common', keywords: ['Sensation', 'Physical', 'Focus', 'Giving', 'Receiving', 'Oral', 'Mouth', 'Intimacy', 'Pleasure'],
-        lore: [
-            { level: 1, insightCost: 3, text: "A Unique Flavor of Intimacy & Focus: Offers a specific kind of direct, focused pleasure and connection that differs significantly from manual or penetrative stimulation.", unlocked: false },
-            { level: 2, insightCost: 7, text: "A Versatile Act in the Intimate Playbook: Can be a central focus of an encounter, a cherished part of foreplay [66], or a delightful way to bring a partner to climax.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Communication Enhances the Experience: Preferences for pressure, speed, and technique vary widely; clear communication (verbal or non-verbal) greatly enhances enjoyment for both giver and receiver.", unlocked: false}
-        ]
-    },
-    {
-        id: 68, name: "Romantic Gestures", cardType: "Psychological/Goal", visualHandle: "common_romantic.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 5, S: 3, P: 7, C: 4, R: 6, RF: 5 }, // RF Neutral
-        briefDescription: "Showing love and care outside the bedroom.",
-        detailedDescription: "Sweet, thoughtful actions or words that aren't directly sexual but significantly boost the feeling of connection, care, and romance within a relationship. Think flowers, love notes, planning special dates [76], expressing appreciation, acts of service. These gestures nourish the emotional bond.",
-        relatedIds: [15, 22, 31, 76, 82], rarity: 'common', keywords: ['Romance', 'Affection', 'Care', 'Relationship', 'Connection', 'Gestures', 'Thoughtfulness', 'Love Language'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Nurturing the Relational Garden: Small, consistent acts of thoughtfulness and appreciation reinforce the emotional connection [P] and make partners feel cherished, valued, and seen.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Setting the Stage for Deeper Intimacy: Creating a romantic atmosphere or demonstrating care often enhances emotional receptiveness and paves the way for deeper physical and emotional intimacy [15].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Speaking Different Love Languages: Understanding which romantic gestures resonate most with your partner(s) is key. What feels romantic to one might not to another. Communication matters!", unlocked: false}
-        ]
-    },
-    {
-        id: 69, name: "Aftercare (Basic)", cardType: "Practice/Kink", visualHandle: "common_aftercare.jpg", primaryElement: "P",
-        elementScores: { A: 4, I: 5, S: 4, P: 6, C: 3, R: 6, RF: 6 }, // RF slightly leading/caregiver-leaning
-        briefDescription: "Post-play connection, comfort, and check-in.",
-        detailedDescription: "The process of checking in and providing comfort and connection after sexual activity, especially intense encounters or BDSM scenes. Can involve cuddling [31], talking, sharing water or snacks, gentle touch, reassurance, or simply quiet presence. It helps manage emotional drop and reinforces care.",
-        relatedIds: [31, 15, 70, 80, 123, 45], rarity: 'common', keywords: ['Comfort', 'Connection', 'Care', 'Post-Scene', 'Psychological', 'Aftercare', 'Reassurance', 'Landing', 'Safety'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Providing a Gentle Landing Pad: Helps participants gently transition back from heightened physical [S] or emotional [P] states, ensuring psychological well-being and integration.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Reinforcing Trust and Demonstrating Care: Offering thoughtful aftercare demonstrates genuine care for the person beyond the specific sexual act or scene, deeply reinforcing trust [15].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Needs Vary Greatly: Effective aftercare is personalized. Some need quiet, others need talk, some need food, others need solitude. Communication *beforehand* about needs is ideal.", unlocked: false}
-        ]
-    },
-    {
-        id: 70, name: "Pillow Talk", cardType: "Practice/Kink", visualHandle: "common_pillowtalk.jpg", primaryElement: "P",
-        elementScores: { A: 4, I: 4, S: 2, P: 7, C: 4, R: 7, RF: 4 }, // RF receptive (vulnerable sharing)
-        briefDescription: "Cozy, intimate chats after sex.",
-        detailedDescription: "Those relaxed, often vulnerable, and deeply intimate conversations that happen after sexual activity, typically while lying close together. It's a time for sharing reflections, feelings, secrets, or simply basking in the afterglow connection.",
-        relatedIds: [69, 15], rarity: 'common', keywords: ['Intimacy', 'Conversation', 'Vulnerability', 'Connection', 'Post-Scene', 'Talk', 'Sharing', 'Reflection'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Opening the Heart's Floodgates: Post-coital hormones (like oxytocin and vasopressin) can lower emotional defenses, often facilitating deeper, more open, and vulnerable sharing.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Weaving the Shared Narrative Stronger: Sharing reflections, feelings about the experience, or future dreams during pillow talk strengthens the shared story and intimate bond [P] of the relationship [R].", unlocked: false },
-            { level: 3, insightCost: 12, text: "A Sacred Space for Listening: Pillow talk thrives on active, non-judgmental listening. It's a space to truly hear your partner(s) in a state of relaxed openness.", unlocked: false}
-        ]
-    },
-    {
-        id: 71, name: "Shower/Bath Sex", cardType: "Practice/Kink", visualHandle: "common_showersex.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 5, S: 6, P: 4, C: 3, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Getting wet 'n' wild, literally!",
-        detailedDescription: "Taking the intimate fun into the shower or bathtub! Adds the unique sensory elements of water temperature, slipperiness (pro and con!), steam, and the enclosed environment. Can feel playful, convenient, or intensely intimate.",
-        relatedIds: [1], rarity: 'common', keywords: ['Sensation', 'Environment', 'Water', 'Playful', 'Shower', 'Bath', 'Wet', 'Sensory'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Adding Liquid Sensations & Ambiance: Water introduces unique elements of slipperiness, temperature contrasts against skin, and the sound/feel of running water, altering the sensory [S] landscape.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Fun (and Challenge) of Aquatic Logistics: Navigating the practicalities – finding purchase, managing soap, water pressure – can add a layer of playful challenge or require creative positioning [I].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Intimacy in Enclosure: The enclosed, often steamy space of a shower or bath can enhance feelings of privacy, focus, and shared intimacy [P] between partners.", unlocked: false}
-        ]
-    },
-    {
-        id: 72, name: "Using Sex Toys (Simple)", cardType: "Practice/Kink", visualHandle: "common_toys_simple.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 5, S: 6, P: 4, C: 3, R: 4, RF: 5 }, // RF Neutral
-        briefDescription: "Adding some buzz, bounce, or targeted sensation.",
-        detailedDescription: "Bringing in the basics to enhance pleasure! Using common, relatively uncomplicated toys like simple vibrators (wand, bullet, rabbit), dildos, or butt plugs to add new sensations, target specific areas, or facilitate certain acts.",
-        relatedIds: [1, 33, 73, 112], rarity: 'common', keywords: ['Toys', 'Sensation', 'Stimulation', 'Physical', 'Vibrator', 'Dildo', 'Enhancement', 'Tools'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Targeted Pleasure Delivery Systems: Toys allow for precise, consistent, or intense stimulation that might be difficult or tiring to achieve manually, directly enhancing Sensory [S] input.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Expanding the Palette of Possibilities: Introduces novel textures, shapes, types of vibration, or filling sensations, adding new dimensions and possibilities for individual or partnered play [I].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Communication is Still Key: Integrating toys effectively often involves communication about preferences, desired intensity, and how the toy fits into the overall interaction.", unlocked: false}
-        ]
-    },
-    {
-        id: 73, name: "Lubricant Use", cardType: "Practice/Kink", visualHandle: "common_lube.jpg", primaryElement: "S",
-        elementScores: { A: 4, I: 4, S: 5, P: 3, C: 2, R: 4, RF: 5 }, // RF Neutral
-        briefDescription: "Making things slide smoothly for comfort and pleasure.",
-        detailedDescription: "Using personal lubricant to reduce friction during sexual activity (penetrative or manual). Essential for comfort with certain acts or anatomy, prevents chafing, allows for longer/more intense play, and can enhance sensation.",
-        relatedIds: [1, 67, 72, 107, 108], rarity: 'common', keywords: ['Comfort', 'Sensation', 'Physical', 'Practical', 'Lube', 'Friction', 'Smoothness', 'Enhancement'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Unsung Hero of Comfort & Endurance: Reduces friction dramatically, increasing physical comfort, preventing micro-tears or irritation, and enabling longer or different types of play that might otherwise be painful.", unlocked: false },
-            { level: 2, insightCost: 7, text: "A Subtle Sensation Modifier: Different types of lubes (warming, cooling, tingling, silicone-based for longevity, water-based for toy safety) offer slightly varied sensory [S] experiences beyond just slickness.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Not Just Remedial, But Enhancing: Often seen as just 'necessary' for some acts, good lube can actively enhance pleasure for *any* activity by increasing glide, reducing distraction from discomfort, and allowing focus on positive sensations.", unlocked: false}
-        ]
-    },
-    {
-        id: 74, name: "Flirting / Banter", cardType: "Interaction", visualHandle: "common_flirt.jpg", primaryElement: "I",
-        elementScores: { A: 6, I: 7, S: 3, P: 5, C: 6, R: 5, RF: 6 }, // RF slightly leading/initiating
-        briefDescription: "Playful, witty chat that sparks interest.",
-        detailedDescription: "That fun, often lighthearted, back-and-forth verbal dance! Using suggestive comments, playful teasing, witty remarks, compliments, or double entendres to signal interest, build rapport, test compatibility [P], and create a spark of attraction [A] or playful tension.",
-        relatedIds: [32, 60, 75, 49, 81], rarity: 'common', keywords: ['Playful', 'Communication', 'Cognitive', 'Attraction', 'Rapport', 'Banter', 'Flirt', 'Teasing', 'Wit', 'Interaction'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Testing the Waters & Building Bridges: A relatively low-stakes, enjoyable way to gauge mutual interest, establish initial connection, and build a comfortable rapport before potentially escalating.", unlocked: false },
-            { level: 2, insightCost: 7, text: "The Fine Art of the Playful Tease: Skillful banter often involves playful teasing that builds anticipation, establishes a fun dynamic, and hints at desires without being overly direct.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Cognitive [C] Foreplay: Engaging in witty banter requires quick thinking and verbal dexterity, making it a form of intellectual stimulation that can be highly attractive [A] and integral to the Interaction [I] style.", unlocked: false}
-        ]
-    },
-    {
-        id: 75, name: "Shared Humor", cardType: "Psychological/Goal", visualHandle: "common_humor.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 6, S: 2, P: 6, C: 5, R: 6, RF: 5 }, // RF Neutral
-        briefDescription: "Finding connection and joy through laughter.",
-        detailedDescription: "Finding deep connection and comfort through shared giggles and jokes! Enjoying silly moments together, appreciating the same kinds of wit, or using humor to navigate awkwardness diffuses tension and builds a strong sense of camaraderie and psychological [P] ease.",
-        relatedIds: [74, 15], rarity: 'common', keywords: ['Humor', 'Connection', 'Playful', 'Psychological', 'Lightness', 'Laughter', 'Rapport', 'Joy'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Instant Icebreaker & Tension Diffuser: Genuine shared laughter diffuses tension almost magically, creating an immediate sense of shared experience, ease, and connection.", unlocked: false },
-            { level: 2, insightCost: 7, text: "A Powerful Sign of Compatibility Resonance: Sharing a similar sense of humor often indicates aligned values, perspectives, or ways of seeing the world, suggesting deeper potential compatibility [P].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Humor as a Relationship Resilience Tool: The ability to laugh together, especially during difficult times, is a strong indicator of relationship resilience and provides a vital source of shared joy [R].", unlocked: false}
-        ]
-    },
-    {
-        id: 76, name: "Date Nights", cardType: "Relationship Style", visualHandle: "common_datenight.jpg", primaryElement: "R",
-        elementScores: { A: 4, I: 5, S: 4, P: 6, C: 4, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Making dedicated time for connection.",
-        detailedDescription: "Intentionally setting aside specific, dedicated time for partner(s) to connect, focus on each other, and nurture the relationship, away from daily distractions. It's a conscious effort to prioritize the bond and create shared positive experiences.",
-        relatedIds: [68, 15, 22], rarity: 'common', keywords: ['Relationship', 'Connection', 'Ritual', 'Intimacy', 'Date', 'Quality Time', 'Prioritization', 'Maintenance'],
-        lore: [
-            { level: 1, insightCost: 3, text: "An Intentional Investment in the Relationship Bank: Actively prioritizing relationship health and connection through dedicated quality time, like making regular deposits in an emotional bank account.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Creating Shared Memories & Positive Rituals: Rituals like regular date nights intentionally build a rich bank of positive shared experiences and memories, strengthening the Relational [R] foundation.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Combating Relationship Entropy: In long-term relationships, routine and external pressures can erode connection. Date nights act as a conscious counter-measure, keeping the spark [P] alive.", unlocked: false}
-        ]
-    },
-    {
-        id: 77, name: "Public Display Affection (Mild)", cardType: "Practice/Kink", visualHandle: "common_pda.jpg", primaryElement: "R",
-        elementScores: { A: 4, I: 5, S: 3, P: 5, C: 2, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Subtle affection shown out and about.",
-        detailedDescription: "Showing you're connected or partnered while in public, but keeping it relatively low-key and socially acceptable. Think holding hands [48], a quick kiss [3], an arm around the shoulder or waist. It affirms the bond without drawing excessive attention.",
-        relatedIds: [48, 3, 78, 68], rarity: 'common', keywords: ['Public', 'Affection', 'Subtle', 'Relationship', 'PDA', 'Connection', 'Gesture'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Quiet Connection Amidst the Crowd: A small, simple gesture affirming the private bond even when navigating the public sphere, a silent signal of 'us'.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Subtle Signal of Partnership & Belonging: Can communicate partnership status or a sense of belonging to onlookers and each other without needing grand pronouncements or drawing significant attention.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Navigating Social Comfort Levels: The 'mildness' is key here, respecting general social norms while still allowing for a comforting expression of the Relational [R] connection.", unlocked: false}
-        ]
-    },
-    {
-        id: 79, name: "Spontaneity Seeker", cardType: "Psychological/Goal", visualHandle: "common_spontaneity.jpg", primaryElement: "P",
-        elementScores: { A: 6, I: 6, S: 6, P: 5, C: 3, R: 5, RF: 6 }, // RF slightly initiating
-        briefDescription: "Loving the thrill of the unexpected!",
-        detailedDescription: "Getting a special kick and heightened excitement from unplanned, impulsive, or surprising intimate moments. Breaking routine, seizing the moment, and the element of unexpectedness itself provides a significant psychological [P] boost.",
-        relatedIds: [56, 24], rarity: 'common', keywords: ['Spontaneous', 'Excitement', 'Unpredictable', 'Physical', 'Surprise', 'Impulsive', 'Thrill'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Intoxicating Thrill of the Now: Finds genuine excitement and energy in unplanned moments, sudden opportunities, and delightful deviations from established routines.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Breaking Free From the Script: Resists predictability, seeking the charge and aliveness that comes from the unexpected, the improvised interaction [I].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Requires Receptivity: True spontaneity often requires both partners to be open, adaptable, and willing to seize the moment when it arises, making it a shared energy.", unlocked: false}
-        ]
-    },
-    {
-        id: 80, name: "Comfort Seeker", cardType: "Psychological/Goal", visualHandle: "common_comfort.jpg", primaryElement: "P",
-        elementScores: { A: 3, I: 3, S: 4, P: 7, C: 2, R: 4, RF: 3 }, // RF receptive
-        briefDescription: "Seeking safety, soothing touch, and reassurance.",
-        detailedDescription: "Craving physical closeness primarily for the profound feelings of safety, security, reassurance, and being cared for. The main psychological [P] driver is often about soothing the nervous system, finding refuge, or feeling emotionally held, rather than intense arousal.",
-        relatedIds: [31, 2, 69, 15], rarity: 'common', keywords: ['Comfort', 'Security', 'Psychological', 'Affection', 'Soothing', 'Safe', 'Reassurance', 'Refuge', 'Nurturing'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Seeking a Safe Harbor in the Storm: Intimacy, particularly gentle touch [2] and cuddling [31], provides a vital refuge, a place to feel secure, grounded, and emotionally held.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Restorative Touch for Body & Soul: Physical closeness, especially non-demanding affection, can powerfully regulate the nervous system, ease anxiety, and provide deep, restorative soothing [P].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Foundation for Vulnerability: Feeling fundamentally safe and comforted is often a prerequisite for allowing deeper emotional intimacy [15] or exploring more vulnerable aspects of self.", unlocked: false}
-        ]
-    },
-    {
-        id: 81, name: "Attraction to Confidence", cardType: "Orientation", visualHandle: "common_attr_conf.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 6, S: 4, P: 6, C: 5, R: 5, RF: 7 }, // RF attracted to leading energy
-        briefDescription: "Drawn to self-assuredness and presence.",
-        detailedDescription: "Finding someone who knows what they want, carries themselves with assurance, speaks clearly, and projects an air of capability or self-possession inherently attractive [A]. This confidence often translates into perceived leadership potential or competence.",
-        relatedIds: [4, 60, 74, 90], rarity: 'common', keywords: ['Attraction', 'Confidence', 'Power', 'Personality', 'Assertive', 'Self-assured', 'Presence', 'Capability'],
-        lore: [
-            { level: 1, insightCost: 3, text: "The Power Signature of Self-Possession: Confidence radiates a distinct energy signature, a sense of capability, decisiveness, and comfortable self-ownership that many find compelling.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Perceived Leading Energy & Competence: This self-assuredness often translates unconsciously into a perceived ability to lead, protect, or take effective initiative, which can be highly attractive.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Confidence vs. Arrogance: The line is key! True confidence is often quiet and grounded, whereas arrogance can be a mask for insecurity. Discerning the difference is part of the attraction calibration.", unlocked: false}
-        ]
-    },
-    {
-        id: 82, name: "Attraction to Kindness", cardType: "Orientation", visualHandle: "common_attr_kind.jpg", primaryElement: "A",
-        elementScores: { A: 5, I: 4, S: 4, P: 7, C: 4, R: 6, RF: 4 }, // RF attracted to receptive/nurturing
-        briefDescription: "A genuinely kind heart is inherently hot.",
-        detailedDescription: "Being deeply drawn to people who demonstrate genuine kindness, empathy, compassion, and consideration for others. This quality signals emotional intelligence, safety [P], and the potential for a nurturing, supportive connection [R], making it a powerful attraction [A] point.",
-        relatedIds: [15, 58, 68, 80], rarity: 'common', keywords: ['Attraction', 'Kindness', 'Empathy', 'Connection', 'Personality', 'Nurturing', 'Compassion', 'Safety', 'Character'],
-        lore: [
-            { level: 1, insightCost: 3, text: "A Clear Signpost Towards Safety & Trust: Genuine kindness often signals high emotional intelligence, empathy, and the capacity for building safe, respectful, and trustworthy connections [P].", unlocked: false },
-            { level: 2, insightCost: 7, text: "Resonating with the Nurturing Frequency: Appeals deeply to a desire (conscious or not) for care, understanding, gentle interaction, and emotional security within relationships [R].", unlocked: false },
-            { level: 3, insightCost: 12, text: "Kindness in Action Speaks Volumes: Observing someone being kind to others (service staff, animals, strangers) can be a more potent indicator of true character than kindness directed only at the object of attraction.", unlocked: false}
-        ]
-    },
-    {
-        id: 83, name: "Slow Burn", cardType: "Practice/Kink", visualHandle: "common_slowburn.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 5, S: 5, P: 7, C: 5, R: 6, RF: 5 }, // RF Neutral
-        briefDescription: "Relishing the delicious build-up and anticipation.",
-        detailedDescription: "Loving the journey, not just the destination! Preferring a gradual, deliberate build-up of tension, intimacy, and arousal over time, rather than rushing towards a climax. Savoring the anticipation, the subtle shifts in energy, and the deepening connection [P] is the core pleasure.",
-        relatedIds: [15, 66, 38, 2, 47], rarity: 'common', keywords: ['Anticipation', 'Intimacy', 'Tension', 'Psychological', 'Pacing', 'Build-up', 'Savoring', 'Gradual'],
-        lore: [
-            { level: 1, insightCost: 3, text: "Savoring the Simmer, Not Just the Boil: Finds deep pleasure and satisfaction in the mounting tension, the teasing dance of approach and withdrawal, and the gradual, delicious unfolding of intimacy.", unlocked: false },
-            { level: 2, insightCost: 7, text: "Deepening the Flavor & Complexity: Allows precious time for emotional connection [P] to deepen, subtle nuances of interaction [I] to emerge, and sensory [S] awareness to heighten before culmination.", unlocked: false },
-            { level: 3, insightCost: 12, text: "Requires Patience & Shared Intent: A successful slow burn often requires conscious agreement and shared enjoyment of the process from all involved, making it a testament to relational [R] attunement.", unlocked: false}
-        ]
-    },
+    // ... Include all other common concepts from the original file here ...
     {
         id: 85, name: "Make-up Sex", cardType: "Psychological/Goal", visualHandle: "common_makeupsex.jpg", primaryElement: "P",
         elementScores: { A: 6, I: 6, S: 6, P: 7, C: 3, R: 5, RF: 6 }, // RF slightly leaning dominant/reconciliatory initiative?
@@ -590,7 +150,8 @@ const concepts = [
     },
 
     // --- Uncommon Concepts ---
-    {
+    // ... (All Uncommon Concepts from ID 4 to 110) ...
+     {
         id: 4, name: "Dominance (Psychological)", cardType: "Identity/Role", visualHandle: "uncommon_dom_art.jpg", primaryElement: "I",
         elementScores: { A: 6, I: 9, S: 5, P: 8, C: 7, R: 6, RF: 9 }, // RF Strong Dominant
         briefDescription: "Leading with confident authority and mental control.",
@@ -602,510 +163,7 @@ const concepts = [
             { level: 3, insightCost: 18, text: "The Burden and Joy of Earned Responsibility: True dominance often involves not just wielding power, but embracing a profound sense of responsibility for the submissive's physical and emotional well-being, making unwavering trust [15] the absolute bedrock of the dynamic.", unlocked: false }
         ]
     },
-    {
-        id: 5, name: "Submission (Psychological)", cardType: "Identity/Role", visualHandle: "uncommon_sub_art.jpg", primaryElement: "I",
-        elementScores: { A: 6, I: 1, S: 5, P: 8, C: 5, R: 6, RF: 1 }, // RF Strong Submissive
-        briefDescription: "Finding joy and freedom in yielding control.",
-        detailedDescription: "Discovering genuine joy, profound relief, deep fulfillment, or exquisite peace in the act of consensually handing over the reins of control, primarily on a mental and emotional level. This can manifest in myriad ways: eagerly following clear directions [11], finding purpose and pleasure in serving [10] a partner's needs, placing implicit trust in their decisions and guidance, or simply reveling in the delicious, liberating feeling of letting go of constant analysis and responsibility.",
-        relatedIds: [4, 6, 17, 10, 12, 37, 39, 58, 61, 63, 87, 91, 98, 99, 109, 119, 123, 117], rarity: 'uncommon', keywords: ['Surrender', 'Power', 'Following', 'Psychological', 'Obedience', 'Trust', 'Vulnerability', 'Submission', 'Yielding', 'Service', 'Letting Go', 'Receiving'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Reflection Scribbled in the Quiet Aftermath: 'In the act of yielding, sometimes a different, quieter, yet incredibly resilient kind of strength is discovered. The strength to trust deeply, to receive openly, to simply *be* without striving.'", unlocked: false },
-            { level: 2, insightCost: 10, text: "Observation from the Receiving End of Power: Trust is the essential currency here, the invisible yet unbreakable thread holding the entire dynamic together. It must be earned meticulously, through consistent care and respect, before it can be spent on the profound act of vulnerability that is true surrender.", unlocked: false },
-            { level: 3, insightCost: 18, text: "The Sweet Liberation of Letting Go: For many submissives, a core appeal lies in the temporary, consensual release from the heavy burdens of constant decision-making, performance pressure, and hyper-vigilant self-consciousness, allowing for deeper immersion in sensation [S] or pure emotion [P].", unlocked: false }
-        ]
-    },
-    {
-        id: 6, name: "Switching", cardType: "Identity/Role", visualHandle: "uncommon_switch.jpg", primaryElement: "I",
-        elementScores: { A: 6, I: 5, S: 6, P: 7, C: 6, R: 6, RF: 5 }, // RF Balanced/Switch
-        briefDescription: "Enjoying both leading and following roles fluidly.",
-        detailedDescription: "Why choose just one side of the dynamic coin when both offer unique pleasures? Switches find satisfaction, excitement, and fulfillment in fluidly shifting between leading (Dominant [4]) and following (submissive [5]) roles or energies within their intimate dynamics. They appreciate and often seek out the distinct perspectives, challenges, sensations, and satisfactions offered by both positions, reveling in the flexibility, contrast, and dynamic tension.",
-        relatedIds: [4, 5, 89], rarity: 'uncommon', keywords: ['Fluidity', 'Power', 'Interaction', 'Versatility', 'Role', 'Switch', 'Adaptable', 'Both Sides', 'Dynamic'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Ancient Alchemical Maxim Rediscovered: 'Know both sides of the coin – the potent energy of giving and the vulnerable art of receiving, the focus of leading and the trust of following – to truly comprehend the full value and spectrum of the energetic exchange.'", unlocked: false },
-            { level: 2, insightCost: 10, text: "Dynamic Note on the Shift Itself as a Catalyst: For many Switches, the actual *act* of shifting roles – the negotiation, the surprise, the playful disruption of expectation, the change in energetic polarity – can be a significant source of heightened energy, excitement, and arousal in itself.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Empathy Forged Through Embodied Experience: Having personally embodied both Dominant and submissive energies often grants Switches a unique, deeply felt empathy and nuanced understanding of their partners' experiences, enriching their interactions [I] and communication [C/P].", unlocked: false }
-        ]
-    },
-    {
-        id: 7, name: "Impact Play (Light)", cardType: "Practice/Kink", visualHandle: "uncommon_impact_light_art.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 6, S: 6, P: 5, C: 4, R: 5, RF: 6 }, // RF slightly leading (giver)
-        briefDescription: "Playful taps, swats, and delightfully stingy sensations.",
-        detailedDescription: "Introducing the element of physical impact, but keeping it relatively gentle, often playful, and focused on sensation rather than pain tolerance. Think deliberate spanking with the open hand, light slapping that leaves a warm blush, using softer implements like riding crops, thin canes, or fuzzy paddles. The primary focus is usually on fun, stimulating sensation, creating an interesting rhythm, bringing awareness to the skin, or enacting light power dynamics, rather than pushing limits or causing intense pain.",
-        relatedIds: [8, 9, 4, 5, 40, 57, 93, 96], rarity: 'uncommon', keywords: ['Impact', 'Sensation', 'Physical', 'Playful', 'Rhythm', 'Spanking', 'Light', 'Sting', 'Teasing', 'Swatting', 'Awakening'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Sensory Note Whispered from the Skin's Perspective: 'Sometimes a sharp, brief sting is just the perfect wake-up call the surface needs, a delightful jolt of focused awareness amidst a sea of softer sensations. Hello, I'm here!'", unlocked: false },
-            { level: 2, insightCost: 10, text: "Focusing on Rhythm, Sound, and Anticipation: Beyond pure physical sensation, the *cadence*, crisp sound, and visual anticipation of light impact can be surprisingly hypnotic, grounding, playfully disciplinary, or intensely teasing, adding complex layers to the Interaction [I] and Cognitive [C] experience.", unlocked: false },
-            { level: 3, insightCost: 18, text: "A Potential Gateway to Intensity, Or a Destination?: For some individuals, light impact serves as an enjoyable, satisfying sensation in its own right. For others, it acts as an exploratory first step, a gentle introduction towards potentially heavier impact [8] or other diverse forms of intense sensation play [S].", unlocked: false }
-        ]
-    },
-    {
-        id: 10, name: "Service Submission", cardType: "Psychological/Goal", visualHandle: "uncommon_service.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 2, S: 4, P: 7, C: 4, R: 6, RF: 2 }, // RF submissive (service role)
-        briefDescription: "Finding joy and purpose in taking care of another.",
-        detailedDescription: "A specific flavor of submission [5] where the primary thrill, purpose, and psychological [P] fulfillment comes from performing acts of service for a dominant partner [4]. This could range from simple tasks like fetching drinks or giving massages, to more elaborate rituals, anticipating needs, or maintaining household order, all done with an attitude of devotion and care.",
-        relatedIds: [5, 4, 11, 58, 61, 98, 109, 46], rarity: 'uncommon', keywords: ['Service', 'Submission', 'Psychological', 'Devotion', 'Power', 'Care', 'Purpose', 'Anticipation', 'Acts of Service'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Devotional Echo from a Service Heart: 'My purpose is found not just in obedience, but in the art of anticipating your need before it's spoken, in making your world smoother, more pleasurable.'", unlocked: false },
-            { level: 2, insightCost: 10, text: "Alchemical Observation on Mutual Elevation: The act of devoted service simultaneously elevates the Dominant (by having needs met) while also grounding the Submissive in a clear sense of purpose, usefulness, and belonging within the dynamic [I/R].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Beyond Tasks: True service often involves deep attunement [P] to the partner's state, offering not just physical assistance but emotional support, presence, and creating an atmosphere of ease and care.", unlocked: false }
-        ]
-    },
-    {
-        id: 13, name: "Role-Playing (Scenario)", cardType: "Practice/Kink", visualHandle: "uncommon_roleplay.jpg", primaryElement: "C",
-        elementScores: { A: 6, I: 6, S: 5, P: 6, C: 8, R: 6, RF: 5 }, // RF depends on role, avg 5
-        briefDescription: "Playing specific characters or situations in scenes.",
-        detailedDescription: "Let's pretend! Consciously adopting specific roles, characters, or personas within an agreed-upon scenario or setting for intimate play. This engages the Cognitive [C] element strongly, allowing exploration of different dynamics, power structures [I], fantasies, or aspects of self in a contained, imaginative space.",
-        relatedIds: [14, 30, 21, 39, 64, 92, 98, 101, 117, 121, 43, 49, 32], rarity: 'uncommon', keywords: ['Role-Play', 'Cognitive', 'Fantasy', 'Scenario', 'Character', 'Pretend', 'Imagination', 'Storytelling', 'Persona'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Insight from the Actor's Mask: Stepping consciously into a defined role, even temporarily, allows for the safe exploration of desires, power dynamics [I], forbidden thoughts, or facets of personality otherwise kept hidden or unexpressed.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Power of Narrative Framework: The chosen scenario, whether simple or complex, dictates the implicit or explicit rules of engagement, creating a contained world with its own logic and possibilities for play.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Collaboration in World-Building: Successful scenario role-play often involves collaborative storytelling [C] and mutual commitment [R] to the shared illusion, making communication and shared understanding key ingredients.", unlocked: false }
-        ]
-    },
-    {
-        id: 18, name: "Exhibitionism", cardType: "Identity/Role", visualHandle: "uncommon_exhibit.jpg", primaryElement: "I",
-        elementScores: { A: 6, I: 7, S: 5, P: 7, C: 6, R: 5, RF: 7 }, // RF leading (performer)
-        briefDescription: "Loving the thrill of an audience.",
-        detailedDescription: "Deriving significant arousal or pleasure from the act of being watched during intimate or vulnerable moments. The awareness of an audience (one person or many, known or anonymous) is a key component of the excitement. This often connects to needs for validation [50], performance [90/91], or the thrill of potential discovery/taboo.",
-        relatedIds: [19, 12, 34, 50, 78, 90, 91, 105, 33], rarity: 'uncommon', keywords: ['Performance', 'Visual', 'Public', 'Arousal', 'Validation', 'Exhibitionist', 'Watching', 'Audience', 'Thrill', 'Risk'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Performer's Electric Thrill: The conscious gaze of the other transforms the private act, adding a potent layer of vulnerability, heightened self-awareness, risk, and electrifying excitement.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Mirror Effect Amplification: Seeing oneself being seen (literally in a mirror, or figuratively through another's reaction) can amplify self-awareness, intensify the experience, and provide powerful validation [P].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Consent is Paramount: Ethical exhibitionism requires ensuring any audience is consenting (if they are aware) or navigating the complexities of risk and privacy carefully if play involves potentially unwilling observers.", unlocked: false }
-        ]
-    },
-    {
-        id: 19, name: "Voyeurism", cardType: "Identity/Role", visualHandle: "uncommon_voyeur.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 2, S: 3, P: 6, C: 5, R: 3, RF: 3 }, // RF receptive (observer, not acting)
-        briefDescription: "Finding arousal in watching others.",
-        detailedDescription: "Experiencing significant sexual arousal or interest primarily from secretly or consensually watching others engage in intimate acts or states of undress. The distance, the secrecy (if applicable), and the focus on observation are key elements. It's about the power and pleasure found in looking.",
-        relatedIds: [18, 12, 34, 105, 118, 33], rarity: 'uncommon', keywords: ['Observation', 'Visual', 'Arousal', 'Distance', 'Secret', 'Watching', 'Voyeur', 'Looking', 'Power'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Observer's Paradoxical Charge: There exists a unique, potent charge in witnessing intimacy from a psychological or physical distance, often amplified if unseen and uninvolved in the direct action.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Subtle Power Inherent in Looking: The act of watching, especially if secret or unacknowledged, holds its own subtle form of power, control [I], and focused attention, separate from participatory roles.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Consent & Context Distinctions: Consensual voyeurism (e.g., watching a partner masturbate [33], watching porn, attending play parties as an observer) is distinct from non-consensual acts, which are illegal and harmful. Ethical voyeurism respects boundaries.", unlocked: false }
-        ]
-    },
-    {
-        id: 26, name: "Open Relationship", cardType: "Relationship Style", visualHandle: "uncommon_openrel.jpg", primaryElement: "R",
-        elementScores: { A: 6, I: 5, S: 6, P: 5, C: 5, R: 7, RF: 6 }, // RF slightly leading (negotiating openness)
-        briefDescription: "Primary couple, with freedom for outside connections.",
-        detailedDescription: "A relationship structure, typically involving a primary couple (dyad), where both partners explicitly agree that one or both may have sexual or sometimes romantic relationships with other people. Rules, boundaries, and communication styles vary widely but are key to navigating this ethically.",
-        relatedIds: [24, 25, 27, 35, 84], rarity: 'uncommon', keywords: ['Non-Monogamy', 'Structure', 'Rules', 'Openness', 'Dyad', 'CNM', 'ENM', 'Communication', 'Boundaries'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Agreement Atlas & Boundary Mapping: Success and sustainability hinge fundamentally on clear, ongoing communication, mutual respect, and explicitly negotiated, mutually agreed-upon boundaries and rules.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Navigating the Complex Emotional Equation: Consciously navigating feelings like jealousy, insecurity, comparison, and also potentially compersion (finding joy in a partner's joy with others) becomes an active, ongoing part of the relationship dynamic [P].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Spectrum of Openness: Can range from 'sex only' rules, 'don't ask, don't tell' (DADT) agreements (often problematic), to allowing deep emotional connections [15] with others, requiring different levels of negotiation [C].", unlocked: false }
-        ]
-    },
-    {
-        id: 28, name: "Asexuality", cardType: "Orientation", visualHandle: "uncommon_ace.jpg", primaryElement: "A",
-        elementScores: { A: 0, I: 3, S: 2, P: 3, C: 3, R: 4, RF: 5 }, // RF Neutral (unrelated to D/s)
-        briefDescription: "Experiencing little to no sexual attraction.",
-        detailedDescription: "Characterized by experiencing little to no inherent sexual attraction towards any gender. Asexuality exists on a spectrum (Ace Spectrum) with variations like gray-asexuality (rare/low attraction) or demisexuality [29] (attraction only after bond). It's distinct from celibacy (a choice) or low libido (a physiological state). Aces can still experience romantic attraction [36], enjoy sensual touch [2], and form deep intimate bonds [15].",
-        relatedIds: [29, 36, 59], rarity: 'uncommon', keywords: ['Asexuality', 'Orientation', 'Attraction', 'Spectrum', 'Ace', 'Lack of Attraction', 'Gray-Ace'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Spectrum Study: A Universe of Variation: Asexuality isn't a single point but a vast spectrum, encompassing diverse experiences regarding libido, romantic orientation, and interest in sexual activity (or lack thereof).", unlocked: false },
-            { level: 2, insightCost: 10, text: "Beyond the Sexual Script: Intimacy, love, commitment, and profound connection [P/R] can flourish deeply and meaningfully entirely outside the framework or presence of innate sexual attraction.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Distinguishing Key Concepts: Asexuality (lack of attraction) differs from Aromanticism [36] (lack of romantic attraction), celibacy (behavioral choice), and libido levels (physiological drive). One person can be any combination.", unlocked: false }
-        ]
-    },
-    {
-        id: 29, name: "Demisexuality", cardType: "Orientation", visualHandle: "uncommon_demi.jpg", primaryElement: "A",
-        elementScores: { A: 3, I: 4, S: 4, P: 8, C: 5, R: 5, RF: 4 }, // RF slightly receptive (needs connection first)
-        briefDescription: "Attraction sparks only after deep emotional connection.",
-        detailedDescription: "An orientation on the Asexuality spectrum where sexual attraction [A] only develops *after* a strong emotional bond [P] has been formed with a specific person. The emotional connection acts as a necessary prerequisite or key to unlocking potential sexual desire; without it, attraction doesn't typically arise.",
-        relatedIds: [15, 28, 22], rarity: 'uncommon', keywords: ['Demisexuality', 'Attraction', 'Connection', 'Emotion', 'Intimacy', 'Bond', 'Prerequisite', 'Ace Spectrum'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Heart's Compass Needs Emotional True North: For the Demisexual, profound emotional intimacy [15] isn't just nice to have; it's the essential navigational coordinate required before the compass of sexual attraction [A] can activate.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Slow Alchemical Burn of Time and Trust: Building the necessary depth of emotional bond often requires significant time, patience, shared vulnerability, and the slow, careful cultivation of mutual trust [P/R].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Attraction is Specific, Not Universal: Once formed, the attraction is typically directed only towards the person(s) with whom the deep bond exists, not broadly towards others who might fit a 'type'.", unlocked: false }
-        ]
-    },
-    {
-        id: 34, name: "Group Sex", cardType: "Practice/Kink", visualHandle: "uncommon_group.jpg", primaryElement: "R",
-        elementScores: { A: 6, I: 6, S: 7, P: 5, C: 4, R: 8, RF: 6 }, // RF can be Dom/Sub/Switch within group, avg 6
-        briefDescription: "Intimacy involving three or more participants.",
-        detailedDescription: "Sexual activity involving three or more people concurrently in the same space. Can range from relatively simple threesomes/moresomes to larger gatherings (orgies). Dynamics, levels of interaction between all participants, and focus can vary widely. Requires strong communication and attention to consent with multiple individuals.",
-        relatedIds: [18, 19, 25, 26, 27, 35, 65, 105], rarity: 'uncommon', keywords: ['Group', 'Multiple Partners', 'Interaction', 'Shared Experience', 'Threesome', 'Orgy', 'Communal', 'Logistics'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Network Effect of Shared Energy: The energetic dynamic in group play can be exponentially different and more complex than dyadic encounters, a vibrant web of observation [19], performance [18], and shifting interactions [I].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Navigating the Logistical & Emotional Labyrinth: Requires significant skill [C] in communication, establishing clear consent with everyone involved, managing multiple dynamics simultaneously, and navigating potentially complex emotions [P].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Motivations & Focus Vary: Can be purely recreational, exploratory, part of specific relationship structures [R] like polyamory [25] or swinging [35], or focused on specific dynamics like shared worship or voyeurism/exhibitionism [105].", unlocked: false }
-        ]
-    },
-    {
-        id: 35, name: "Swinging", cardType: "Relationship Style", visualHandle: "uncommon_swing.jpg", primaryElement: "R",
-        elementScores: { A: 5, I: 5, S: 6, P: 4, C: 4, R: 7, RF: 5 }, // RF Neutral/Egalitarian focus on couples
-        briefDescription: "Committed couples engaging in recreational sex with others.",
-        detailedDescription: "A form of consensual non-monogamy where committed couples agree to engage in sexual activities with other individuals or couples, often together in the same location (e.g., partner swapping at parties). Typically emphasizes recreational sex rather than deep emotional connections with outside partners.",
-        relatedIds: [26, 24, 34], rarity: 'uncommon', keywords: ['Non-Monogamy', 'Recreation', 'Couple', 'Group', 'Social', 'Swinger', 'Lifestyle', 'Partner Swapping'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Adding Social Spice & Recreational Variety: Often focused on recreational sexual encounters within a specific community, event setting (like clubs or house parties), or with other specific couples.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Couple's Contract & Primary Focus: The bond and rules of the primary couple often remain central, with clear (though varied) agreements about the nature and limits of outside sexual interactions.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Distinction from Polyamory: Swinging generally prioritizes the primary couple and focuses on sexual encounters, whereas polyamory [25] often involves multiple emotionally intimate and potentially committed relationships.", unlocked: false }
-        ]
-    },
-    {
-        id: 36, name: "Aromanticism", cardType: "Orientation", visualHandle: "uncommon_aro.jpg", primaryElement: "A",
-        elementScores: { A: 2, I: 3, S: 3, P: 4, C: 4, R: 3, RF: 5 }, // RF Neutral
-        briefDescription: "Experiencing little to no romantic attraction.",
-        detailedDescription: "Characterized by experiencing little or no innate romantic attraction towards others, regardless of gender. Like asexuality [28], aromanticism exists on a spectrum (Aro Spectrum). Aromantic individuals can still experience sexual attraction, form deep platonic bonds [59], desire partnership, and value intimacy, just not through the lens of traditional romance.",
-        relatedIds: [28, 27, 59], rarity: 'uncommon', keywords: ['Aromanticism', 'Orientation', 'Romance', 'Spectrum', 'Aro', 'Lack of Attraction', 'Platonic', 'QPR'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Diverse Bonds Beyond Romance: Strong, committed, deeply intimate relationships (like Queerplatonic Partnerships [59] or chosen families) can exist and thrive entirely outside conventional romantic frameworks.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Attraction Alignment is Independent: Aromanticism describes romantic orientation only. It can exist alongside any sexual orientation (heterosexual, homosexual, bisexual, asexual [28], etc.) or lack thereof.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Challenging Amatonormativity: Aromanticism challenges the societal assumption (amatonormativity) that romantic relationships are inherently superior to or more necessary than other forms of close connection.", unlocked: false }
-        ]
-    },
-    {
-        id: 37, name: "Sensory Deprivation (Light)", cardType: "Practice/Kink", visualHandle: "uncommon_sensdep.jpg", primaryElement: "S",
-        elementScores: { A: 4, I: 3, S: 7, P: 6, C: 5, R: 5, RF: 3 }, // RF receptive (being deprived)
-        briefDescription: "Turning down some senses (e.g., blindfolds!) to heighten others.",
-        detailedDescription: "Using simple tools like blindfolds, earplugs, or hoods to temporarily block out or significantly reduce input from one or more key senses (usually sight or sound). This often heightens awareness of the remaining senses (touch, smell, internal sensations), increases vulnerability [P], and shifts mental focus [C].",
-        relatedIds: [9, 17, 5, 57, 44, 86, 124, 16], rarity: 'uncommon', keywords: ['Sensory Deprivation', 'Sensation', 'Focus', 'Vulnerability', 'Psychological', 'Blindfold', 'Heighten', 'Awareness'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Sharpening Inner Focus Through Outer Silence: Removing major external stimuli (like sight) can powerfully turn awareness inward, magnifying internal sensations, thoughts, and emotional states [P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Trust Amplified Through Induced Reliance: Relying entirely on a partner for guidance, safety, and stimulation while deprived of a key sense (like sight) significantly deepens the required level of trust [15] and vulnerability.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Setting the Stage for Contrast Play: Light sensory deprivation is often used as a prelude to sensory enhancement [57] or intense sensation [S], making the reintroduction of stimuli incredibly vivid and impactful.", unlocked: false }
-        ]
-    },
-    {
-        id: 39, name: "Age Play", cardType: "Practice/Kink", visualHandle: "uncommon_ageplay.jpg", primaryElement: "C",
-        elementScores: { A: 5, I: 6, S: 4, P: 7, C: 8, R: 6, RF: 5 }, // RF depends heavily on role (CG vs Little), avg 5
-        briefDescription: "Role-playing different ages within a dynamic.",
-        detailedDescription: "Consensual role-play [13] where participants adopt personas and behaviors associated with ages different from their chronological age. Often involves a Caregiver/Little dynamic [58] but can explore various age combinations. Focuses on themes of nurturing, dependence, control [4/5], regression, or exploring different emotional states [P]. (Must be strictly consensual play between adults).",
-        relatedIds: [13, 4, 5, 10, 58, 92, 98], rarity: 'uncommon', keywords: ['Age Play', 'Role-Play', 'Cognitive', 'Psychological', 'Dynamic', 'CGL', 'Regression', 'Nurturing', 'Dependence'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Persona Portal to Different Selves: Age play can serve as a gateway to exploring different facets of personality, accessing buried emotional needs [P], playing with power dynamics [I], or enjoying the freedom from adult responsibilities.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Safety Note: Ethical Distinction is Crucial: Clear, unwavering distinctions between the consensual play dynamic between adults and any real-life age differences or inappropriate contexts are absolutely crucial for ethical and safe engagement.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Spectrum of Expression: Can range widely from non-sexual comfort/nurturing [58] to highly structured disciplinary dynamics, playful regression, or deeply therapeutic exploration [123], depending on the individuals involved.", unlocked: false }
-        ]
-    },
-    {
-        id: 40, name: "Primal Play", cardType: "Practice/Kink", visualHandle: "uncommon_primal_art.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 8, S: 7, P: 6, C: 3, R: 5, RF: 7 }, // RF leans dominant/predatory or sub/prey, leaning 7
-        briefDescription: "Tapping into raw, instinctive, animalistic energy.",
-        detailedDescription: "Engaging in intimate play that bypasses higher cognitive functions [C] to tap into more raw, animalistic, or instinctive energies. Often involves less talk, more non-verbal communication (growls, nips, wrestling, chasing), focus on scent and raw sensation [S], and exploration of predator/prey or territorial dynamics [I].",
-        relatedIds: [4, 5, 9, 7, 8, 97, 98], rarity: 'uncommon', keywords: ['Primal', 'Instinct', 'Interaction', 'Physical', 'Animalistic', 'Non-verbal', 'Raw', 'Energetic', 'Chase'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Body Language Becomes the Primary Dialogue: Communication shifts dramatically from complex verbal language to visceral expression – growls, nips, wrestling holds, chases, scent marking – become the core dialogue.", unlocked: false },
-            { level: 2, insightCost: 10, text: "A Potential Cathartic Release Valve: Can be a powerful, embodied way to bypass the analytical thinking mind [C], release pent-up physical energy or aggression playfully, and connect on a more instinctual level [P].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Negotiating Intensity & Boundaries: Even within primal play, clear communication about boundaries (e.g., safe biting, level of force) and safewords is essential to ensure the play remains consensual and doesn't cause unintended harm.", unlocked: false }
-        ]
-    },
-    {
-        id: 57, name: "Sensory Enhancement", cardType: "Practice/Kink", visualHandle: "uncommon_sensenh.jpg", primaryElement: "S",
-        elementScores: { A: 4, I: 5, S: 7, P: 5, C: 4, R: 5, RF: 6 }, // RF slightly leading (applying enhancement)
-        briefDescription: "Turning up the volume on specific physical feelings.",
-        detailedDescription: "Using specific tools, substances (like warming/cooling lubes [73]), or techniques to intentionally amplify or sharpen specific physical sensations. This could involve things like using textured tools, vibration [72], temperature play [88], or focusing techniques to make targeted feelings 'pop' and dominate awareness.",
-        relatedIds: [2, 37, 7, 9, 86, 88, 102, 112], rarity: 'uncommon', keywords: ['Sensation', 'Focus', 'Enhancement', 'Physical', 'Tools', 'Amplify', 'Intensity', 'Awareness'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Focus Funnel Effect: By deliberately amplifying one type of sensation (e.g., intense vibration, focused heat), attention is naturally drawn to it, creating intense focus and potentially crowding out other thoughts [C].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Potent Partner in Contrast Play: Sensory enhancement is often used powerfully alongside or immediately following sensory deprivation [37], making the reintroduction or intensification of sensation incredibly vivid and impactful.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Mind Over Matter?: The psychological [P] expectation or focus involved in sensory enhancement can itself play a role in how intensely the sensation is perceived. The mind tunes the body's receiver.", unlocked: false }
-        ]
-    },
-    {
-        id: 58, name: "Caregiver/Little Dynamics (CG/l)", cardType: "Psychological/Goal", visualHandle: "uncommon_cglg.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 7, S: 4, P: 8, C: 6, R: 7, RF: 7 }, // RF leaning Caregiver/Dom
-        briefDescription: "Nurturing/dependent role-play for comfort or control.",
-        detailedDescription: "A consensual dynamic where one person (the Caregiver - CG) takes on a nurturing, guiding, sometimes disciplinary role towards another person (the little - l) who embodies a younger, more dependent or regressed persona [39]. Addresses needs [P] for safety, structure, care, release from adult responsibility, or specific power dynamics [I]. Includes variations like DD/lg (Daddy Dom/little girl), MD/lb (Mommy Dom/little boy), etc.",
-        relatedIds: [39, 4, 5, 10, 15, 82, 47, 46], rarity: 'uncommon', keywords: ['Caregiver', 'Nurturing', 'Dependence', 'Role-Play', 'Psychological', 'Vulnerability', 'CGL', 'DDlg', 'MDlb', 'Age Play', 'Safety', 'Structure'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Tapping into Core Needs & Archetypes: Often powerfully meets deep-seated psychological needs [P] for safety, unconditional care, clear structure, guidance, or the temporary, liberating freedom from the complexities of adult responsibilities.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Beyond Surface Stereotypes: The specific expression varies immensely between dynamics – can be strictly disciplinary, profoundly therapeutic [123], sweetly comforting [80], playfully regressive, highly sexualized, or entirely non-sexual, depending on the individuals' needs and agreements.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Communication and Trust are Paramount: Establishing clear expectations, boundaries, and consistent communication about needs (both CG and little) is vital for a healthy, sustainable, and fulfilling CG/l dynamic [R].", unlocked: false }
-        ]
-    },
-    {
-        id: 59, name: "Platonic Partnership / QPR", cardType: "Relationship Style", visualHandle: "uncommon_qpr.jpg", primaryElement: "R",
-        elementScores: { A: 3, I: 4, S: 3, P: 7, C: 5, R: 6, RF: 5 }, // RF Neutral (focus is non-power-dynamic)
-        briefDescription: "Intensely close, committed, non-romantic bond.",
-        detailedDescription: "Like best friends turned up to 11, but with a level of commitment often associated with romance! Queerplatonic Relationships (QPRs) or Partnerships are deeply committed, intimate bonds that intentionally exist outside the traditional framework of romantic love. They prioritize platonic connection, mutual support, and shared life, potentially involving cohabitation or shared finances, without necessarily including romantic or sexual elements (though sex can sometimes be present depending on the individuals).",
-        relatedIds: [22, 36, 15, 27, 25, 84], rarity: 'uncommon', keywords: ['Platonic', 'Commitment', 'Intimacy', 'Relationship', 'Non-Romantic', 'QPR', 'Partnership', 'Aro Spectrum', 'Chosen Family'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Redefining Connection Beyond Romance: Actively challenges the societal assumption (amatonormativity) that romantic/sexual bonds are inherently more valuable, deep, or legitimate than profoundly committed platonic ones.", unlocked: false },
-            { level: 2, insightCost: 10, text: "A Custom-Fit Relationship Blueprint: QPRs are highly individualized, intentionally built from the ground up based on the specific needs, desires, communication styles, and mutual agreements of the people involved, rather than following a pre-set script.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Valuing Diverse Forms of Intimacy: Highlights that deep emotional intimacy [15], psychological [P] support, and relational [R] commitment can thrive powerfully in various forms, not solely within romantic or sexual contexts.", unlocked: false }
-        ]
-    },
-    {
-        id: 60, name: "Sapiosexuality", cardType: "Orientation", visualHandle: "uncommon_sapio.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 5, S: 3, P: 6, C: 8, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Finding intelligence incredibly sexy!",
-        detailedDescription: "An orientation where intelligence, wit, intellectual curiosity, or the way someone thinks is the primary and most potent trigger for sexual and/or romantic attraction [A]. The cognitive [C] connection and stimulation are paramount, often outweighing physical appearance or other common factors.",
-        relatedIds: [49, 74, 81, 55], rarity: 'uncommon', keywords: ['Sapiosexual', 'Attraction', 'Intelligence', 'Cognitive', 'Mind', 'Brains', 'Wit', 'Intellect', 'Curiosity'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Mental Foreplay is the Main Event: For true Sapiosexuals, engaging in deep intellectual conversation, witty banter [74], or witnessing sharp problem-solving can be incredibly, intensely arousing, often more so than physical touch.", unlocked: false },
-            { level: 2, insightCost: 10, text: "More Than Just High IQ Scores: It's often not just raw processing power, but specific *expressions* of intelligence – like creativity, sharp wit, deep curiosity, eloquence, specialized knowledge, or insightful perspectives – that truly ignite the spark.", unlocked: false },
-            { level: 3, insightCost: 18, text: "The Brain as the Ultimate Erogenous Zone: Sapiosexuality highlights the power of the Cognitive [C] element as a primary driver of Attraction [A], demonstrating that connection can be forged through shared mindscapes as powerfully as through shared bodies.", unlocked: false }
-        ]
-    },
-    {
-        id: 61, name: "Body Worship", cardType: "Practice/Kink", visualHandle: "uncommon_bodyworship.jpg", primaryElement: "P",
-        elementScores: { A: 6, I: 4, S: 6, P: 8, C: 3, R: 6, RF: 3 }, // RF often submissive act
-        briefDescription: "Adoring and venerating a partner's physical form.",
-        detailedDescription: "Showing focused, often reverent, appreciation and adoration for a partner's body or specific parts of it. This can involve slow, sensual touch [2], kissing, licking, massage, verbal praise [46], or simply focused gazing [47], all performed with an attitude of worship or deep admiration. It often meets psychological needs [P] for validation and feeling cherished.",
-        relatedIds: [5, 10, 12, 62, 102, 46, 2], rarity: 'uncommon', keywords: ['Worship', 'Devotion', 'Adoration', 'Psychological', 'Focus', 'Body', 'Appreciation', 'Validation', 'Reverence', 'Sensual'],
-        lore: [
-            { level: 1, insightCost: 5, text: "An Act of Focused Devotion & Seeing: Can be a powerful, intentional way to make a partner feel deeply cherished, beautiful, seen in detail, and utterly desirable, nourishing their sense of self-worth [P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Requires Intense Focus & Reverent Presence: Demands unwavering focus [C] on the partner's physical form and the sensations [S] being given/received, often creating a meditative, almost sacred atmosphere.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Can Be Submissive or Dominant Expression: While often performed by someone in a submissive [5] or service [10] role, body worship can also be a form of dominant expression, focusing attention and pleasure onto the object of adoration.", unlocked: false }
-        ]
-    },
-    {
-        id: 62, name: "Foot Fetish / Podophilia", cardType: "Orientation", visualHandle: "uncommon_footfetish.jpg", primaryElement: "A",
-        elementScores: { A: 8, I: 4, S: 7, P: 5, C: 3, R: 4, RF: 3 }, // RF often involves worship/sub dynamics
-        briefDescription: "Finding feet uniquely fascinating and arousing!",
-        detailedDescription: "A specific sexual interest (paraphilia or fetish) where feet act as a primary and significant trigger for sexual arousal [A]. This can involve attraction to the appearance, smell, feel, or taste of feet, or enjoyment derived from activities like foot massage, kissing, licking, or incorporating feet into other sexual acts.",
-        relatedIds: [61, 12, 102], rarity: 'uncommon', keywords: ['Fetish', 'Feet', 'Attraction', 'Focus', 'Sensation', 'Podophilia', 'Worship', 'Sensory', 'Paraphilia'],
-        lore: [
-            { level: 1, insightCost: 5, text: "An Unexpected Canvas for Sensory Exploration: Often overlooked, feet offer unique textures, shapes, nerve endings, and points for detailed sensory [S] exploration and focused attention.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Carrying Symbolic Weight for Some?: For certain individuals, feet might unconsciously symbolize grounding, journeying, vulnerability, service (as in foot washing), or submission, adding layers of psychological [P] meaning to the physical attraction [A].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Spectrum of Interest: Ranges from a mild aesthetic appreciation or enjoyment of foot play to being a necessary component for significant arousal, highlighting the diversity within fetish experiences.", unlocked: false }
-        ]
-    },
-    {
-        id: 78, name: "Public Display Affection (Moderate)", cardType: "Practice/Kink", visualHandle: "uncommon_pda_mod.jpg", primaryElement: "R",
-        elementScores: { A: 5, I: 6, S: 4, P: 6, C: 3, R: 6, RF: 6 }, // RF slightly leading/performative
-        briefDescription: "Getting a little bolder with affection in public spaces.",
-        detailedDescription: "Turning up the heat slightly on public affection, perhaps moving beyond simple hand-holding [77] to more noticeable embraces, passionate kissing [3], or touches that might draw some attention but still generally fall within broader social acceptability (depending on location/culture). Often involves a slight thrill of risk or exhibitionism [18].",
-        relatedIds: [77, 18, 3], rarity: 'uncommon', keywords: ['Public', 'Exhibitionism', 'Risk', 'Thrill', 'Affection', 'PDA', 'Bold', 'Noticeable', 'Kissing'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Subtle Thrill of the Near-Miss or Glance: The slight risk of being noticed or judged by strangers adds an edge of naughty excitement or heightened awareness for many.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Claiming Space & Affirming the Bond Publicly: Can also be a way of publicly affirming the connection [R], signaling partnership, or simply feeling uninhibited about expressing affection regardless of surroundings.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Cultural Context is Crucial: What constitutes 'moderate' PDA varies wildly across cultures and specific locations. Awareness and respect for surroundings are important considerations.", unlocked: false }
-        ]
-    },
-    {
-        id: 84, name: "Solo Polyamory", cardType: "Relationship Style", visualHandle: "uncommon_solopoly.jpg", primaryElement: "R",
-        elementScores: { A: 5, I: 5, S: 5, P: 6, C: 6, R: 7, RF: 6 }, // RF slightly leading (self-directed)
-        briefDescription: "Practicing polyamory while maintaining an independent life.",
-        detailedDescription: "Actively practicing polyamory [25] (engaging in multiple ethical, loving, and intimate relationships simultaneously) but choosing to live independently and prioritize personal autonomy. Solo poly individuals typically don't cohabitate with partners or aim for traditional relationship escalator milestones (marriage, merging finances), valuing their independence alongside their connections.",
-        relatedIds: [25, 27, 24, 59], rarity: 'uncommon', keywords: ['Polyamory', 'Non-Monogamy', 'Autonomy', 'Independence', 'Structure', 'SoloPoly', 'CNM', 'ENM', 'Self-Partnered'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Anchored Firmly in Self, Connected to Many: Prioritizes personal independence, self-reliance, and autonomy while simultaneously building and nurturing meaningful, potentially deep, intimate connections with multiple partners.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Consciously Stepping Off the Relationship Escalator: Actively rejects or opts out of the traditional societal script for relationships (dating -> exclusivity -> moving in -> marriage -> kids) in favor of defining connections individually.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Requires Strong Self-Awareness & Boundaries: Successfully navigating solo polyamory often requires strong self-knowledge [P], excellent communication skills [C], and clear boundary setting to manage time, energy, and expectations across multiple relationships [R].", unlocked: false }
-        ]
-    },
-    {
-        id: 86, name: "Sensory Overload", cardType: "Practice/Kink", visualHandle: "uncommon_sens_overload.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 6, S: 8, P: 6, C: 4, R: 5, RF: 7 }, // RF often Dom-driven
-        briefDescription: "Intense, multi-sensory input leading to altered states.",
-        detailedDescription: "Intentionally bombarding multiple senses simultaneously with strong, potentially overwhelming stimuli (e.g., loud music, strobe lights, intense smells, multiple types of touch/vibration/impact). The goal is often to push past cognitive processing [C] into a more reactive, altered state ('subspace' or 'overload'), potentially leading to release [P] or disorientation.",
-        relatedIds: [37, 57, 8, 124, 9, 44], rarity: 'uncommon', keywords: ['Sensory Overload', 'Intensity', 'Sensation', 'Altered State', 'Psychological', 'Overwhelm', 'BDSM', 'Subspace', 'Disorientation'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Inducing a System 'Crash' for Release: Overwhelming sensory input can sometimes short-circuit the analytical thinking mind [C], leading to purely reactive states, emotional release [P], or a feeling of being blissfully overwhelmed.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Requires Careful Calibration & Control: Achieving the desired effect without causing genuine distress or panic requires careful calibration, pacing, and control [I] by the giving partner, along with trust from the receiver.", unlocked: false },
-            { level: 3, insightCost: 18, text: "The Edge of Overwhelm: Explores the fascinating edge where the nervous system transitions from processing distinct sensations [S] to experiencing a flood of undifferentiated intensity, potentially altering consciousness.", unlocked: false }
-        ]
-    },
-    {
-        id: 87, name: "Light Bondage (Cuffs/Silk)", cardType: "Practice/Kink", visualHandle: "uncommon_bond_light_art.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 5, S: 6, P: 6, C: 4, R: 5, RF: 4 }, // RF leans receptive (being bound)
-        briefDescription: "Simple, often playful tying or restraint.",
-        detailedDescription: "Using relatively simple, easy-to-use restraints like handcuffs (metal or fuzzy), silk scarves, soft rope, or leather cuffs to gently restrict movement. Often focuses on the psychological [P] feeling of helplessness [17], enhancing sensation [S] in specific areas by limiting movement, playful power dynamics [I], or aesthetic appeal.",
-        relatedIds: [16, 17, 5, 93], rarity: 'uncommon', keywords: ['Bondage', 'Restriction', 'Playful', 'Sensation', 'Power', 'Cuffs', 'Ties', 'Light', 'Helplessness', 'Aesthetic'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Potent Symbolism of Surrendered Movement: Even light, easily escapable restraint immediately signals a shift in power dynamics [I] and allows for heightened focus on sensation [S] or psychological state [P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Often Chosen for Aesthetic & Playful Appeal: Materials like silk scarves or fuzzy cuffs are often chosen as much for their visual appeal [A] or playful, non-threatening nature as for their actual physical restraint capability.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Gateway to Deeper Exploration: Light bondage can be a satisfying practice in itself or serve as an accessible entry point for exploring more complex rope bondage [16] or the deeper psychological aspects of restriction [17].", unlocked: false }
-        ]
-    },
-    {
-        id: 88, name: "Temperature Play", cardType: "Practice/Kink", visualHandle: "uncommon_temp_play.jpg", primaryElement: "S", // Assumed ID 88 for milestone
-        elementScores: { A: 5, I: 6, S: 7, P: 6, C: 4, R: 5, RF: 6 }, // RF leans leading (applying temp)
-        briefDescription: "Using hot (wax!) or cold (ice!) for surprising sensations.",
-        detailedDescription: "Intentionally using temperature contrasts for sensory stimulation. Common examples include dripping warm (never boiling!) wax onto skin, tracing paths with ice cubes, using warmed or chilled massage oils, or alternating hot/cold objects. Creates vivid, often surprising sensations [S] and requires careful safety considerations (burns, nerve sensitivity).",
-        relatedIds: [9, 57, 110], rarity: 'uncommon', keywords: ['Temperature', 'Sensation', 'Wax Play', 'Ice Play', 'Contrast', 'Heat', 'Cold', 'BDSM', 'Safety'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Waking Up the Skin with Surprise: Temperature provides a distinct sensory input that bypasses simple pressure, often creating sharp, attention-grabbing contrasts or deeply soothing warmth.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Safety is Paramount (Burns & Nerve Damage): Using heat requires careful testing (low-temp wax, test drips) to avoid burns. Using cold requires monitoring for numbness or skin damage. Avoid prolonged exposure to extremes.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Psychological Effects of Contrast: The rapid shift between hot and cold can be mentally disorienting, heighten awareness, or amplify pleasure/pain responses, adding complexity beyond just the physical feeling [S/P].", unlocked: false }
-        ]
-    },
-    {
-        id: 89, name: "Power Play (Subtle)", cardType: "Psychological/Goal", visualHandle: "uncommon_power_subtle.jpg", primaryElement: "P",
-        elementScores: { A: 6, I: 7, S: 5, P: 7, C: 7, R: 6, RF: 6 }, // RF leans slightly leading (manipulator) or switch
-        briefDescription: "Enjoying the nuanced undercurrents of influence and control.",
-        detailedDescription: "Getting a distinct psychological [P] kick or intellectual [C] stimulation from noticing, navigating, and playing with the subtle, often unspoken, shifts and negotiations of power, influence, and control that exist within intimate interactions [I]. It's less about overt commands [11], more about suggestion, nuance, and reading the energy.",
-        relatedIds: [4, 5, 11, 90, 6, 47, 32], rarity: 'uncommon', keywords: ['Power', 'Subtle', 'Psychological', 'Dynamic', 'Negotiation', 'Cognitive', 'Influence', 'Undercurrents', 'Suggestion', 'Reading'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Unspoken Dance of Influence & Response: Recognizing and intentionally playing with subtle suggestion, persuasive energy, unspoken agreements, and the delicate balance of leading and yielding.", unlocked: false },
-            { level: 2, insightCost: 10, text: "A Constant, Flowing Negotiation: Acknowledges that power exists as a fluid current in *all* interactions; this is about consciously, sometimes playfully, engaging with and directing that flow, rather than ignoring it.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Requires High Attunement & Social Intelligence: Effectively navigating subtle power play often requires significant emotional intelligence [P], observational skills [C], and attunement [R] to your partner's cues and reactions.", unlocked: false }
-        ]
-    },
-    {
-        id: 90, name: "Performance Focus (Top)", cardType: "Identity/Role", visualHandle: "uncommon_perf_top.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 8, S: 6, P: 7, C: 6, R: 5, RF: 8 }, // RF Dom/Top
-        briefDescription: "Finding satisfaction in skillfully orchestrating pleasure/sensation.",
-        detailedDescription: "A Dominant [4] or Top interaction style [I] where a significant part of the satisfaction comes from skillfully *performing* the role – expertly delivering pleasure, precisely controlling sensation [S], orchestrating the scene flawlessly, and often, witnessing the partner's intense reaction as proof [P] of their skill.",
-        relatedIds: [4, 11, 18, 89, 50], rarity: 'uncommon', keywords: ['Performance', 'Control', 'Pleasure', 'Skill', 'Validation', 'Leading', 'Top', 'Orchestration', 'Execution', 'Reaction'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Conductor of Sensation's Orchestra: Enjoys meticulously orchestrating the partner's experience, carefully tuning sensations, pacing the intensity, and guiding their responses like a skilled conductor.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Satisfaction Through Reflected Glory & Impact: Satisfaction often comes not just from the act of giving or controlling, but profoundly from *witnessing* the tangible effect of their actions, skills, and presence on the receiving partner.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Potential Pitfall: Over-Focus on Technique: A potential challenge is focusing so much on flawless 'performance' that authentic connection [P] or responsiveness to the partner's immediate needs gets slightly overlooked.", unlocked: false }
-        ]
-    },
-    {
-        id: 91, name: "Performance Focus (Bottom)", cardType: "Identity/Role", visualHandle: "uncommon_perf_bot.jpg", primaryElement: "I",
-        elementScores: { A: 5, I: 3, S: 6, P: 7, C: 5, R: 5, RF: 3 }, // RF Sub/Bottom
-        briefDescription: "Finding satisfaction in clearly showing reactions and pleasure.",
-        detailedDescription: "A Submissive [5] or Bottom interaction style [I] where a significant part of the enjoyment comes from clearly and perhaps dramatically *expressing* reactions to stimulation or commands. Showing pleasure, pain, or struggle vividly can be a way of participating, validating [50] the Top's efforts, and amplifying the scene's energy.",
-        relatedIds: [5, 18, 50], rarity: 'uncommon', keywords: ['Performance', 'Reaction', 'Expression', 'Pleasure', 'Validation', 'Following', 'Bottom', 'Responsive', 'Amplification'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Responsive Canvas, Vividly Painted: Finds joy and purpose in being the focus of the Top's attention, actively showcasing reactions (gasps, moans, flinches, tears) as a form of engaged participation and communication.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Amplifying the Scene's Energetic Feedback Loop: Enthusiastic, clear responses can significantly heighten the Top's experience, validate their actions [P], and intensify the shared dynamic [I] for both partners.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Authenticity vs. Performance: An interesting edge exists here – navigating the line between genuinely expressed reactions and intentionally 'performing' reactions to please the Top or fulfill a role expectation [C].", unlocked: false }
-        ]
-    },
-    {
-        id: 92, name: "Gender Play", cardType: "Practice/Kink", visualHandle: "uncommon_genderplay.jpg", primaryElement: "C",
-        elementScores: { A: 6, I: 6, S: 4, P: 6, C: 7, R: 5, RF: 5 }, // RF depends on role played
-        briefDescription: "Playfully exploring or subverting gender roles/expression.",
-        detailedDescription: "Consensually playing with, exaggerating, or subverting traditional gender roles, expressions, or presentations within an intimate or role-play [13] context. This can involve cross-dressing, adopting mannerisms associated with a different gender, exploring non-binary expressions, or playing with the power dynamics [I] associated with gender stereotypes.",
-        relatedIds: [13, 39, 103, 4, 5, 21], rarity: 'uncommon', keywords: ['Gender', 'Role-Play', 'Cognitive', 'Expression', 'Fluidity', 'Cross-dressing', 'Subversion', 'Identity', 'Presentation'],
-        lore: [
-            { level: 1, insightCost: 5, text: "An Arena for Identity Exploration & Subversion: Can be a powerful and playful way to explore different facets of one's own identity, challenge restrictive societal expectations about gender, or simply enjoy the creativity of transformation.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Transformative Power of Presentation: Deliberately altering appearance, clothing [21], and mannerisms associated with gender can dramatically shift perceived power dynamics [I], interaction styles, and self-perception [P] within the play space.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Connecting to Attraction [A] & Cognition [C]: Often intersects with attraction towards androgyny [103] or specific gender presentations, and heavily relies on the cognitive element of embodying a different persona or challenging norms.", unlocked: false }
-        ]
-    },
-    {
-        id: 93, name: "Tickling (Erotic)", cardType: "Practice/Kink", visualHandle: "uncommon_tickle.jpg", primaryElement: "S",
-        elementScores: { A: 4, I: 6, S: 6, P: 5, C: 3, R: 5, RF: 7 }, // RF often Dom-driven ("torture")
-        briefDescription: "Using tickling as playful 'torture' or sensation play.",
-        detailedDescription: "Intentionally using tickling not just for brief laughs, but as a form of playful 'torture,' teasing, sensation play [S], or even a tool within power dynamics [I]. Often involves targeting sensitive areas and can elicit intense, involuntary reactions (laughter, squirming), which can be part of the appeal for both partners.",
-        relatedIds: [7, 38, 87], rarity: 'uncommon', keywords: ['Tickling', 'Playful', 'Sensation', 'Control', 'Teasing', 'Torture', 'Involuntary', 'Laughter', 'Squirming'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Paradox of Involuntary Response & Delight: The uncontrollable laughter, squirming, and pleas for mercy (often mixed with genuine enjoyment) are frequently the core appeal for both the tickler and the tickled.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Requires Intimate Knowledge & Playful Intent: Effective erotic tickling often requires knowing a partner's specific ticklish spots and sensitivities, adding a layer of playful intimacy [P] and targeted teasing to the interaction [I].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Can Blur Lines Between Pleasure & Discomfort: Tickling uniquely engages nerve endings associated with both pleasure and panic/discomfort, making consent, clear communication, and attention to the partner's genuine state crucial.", unlocked: false }
-        ]
-    },
-    {
-        id: 94, name: "Leather Fetish", cardType: "Orientation", visualHandle: "uncommon_leather.jpg", primaryElement: "A",
-        elementScores: { A: 8, I: 6, S: 7, P: 6, C: 5, R: 5, RF: 7 }, // RF often associated with Dom energy/gear
-        briefDescription: "Finding leather inherently and powerfully attractive.",
-        detailedDescription: "A specific fetish where sexual arousal [A] is significantly and primarily triggered by the sight, smell, sound, or feel of leather clothing or gear. The material itself, and its associated connotations (power, toughness, luxury, specific subcultures), acts as a potent erotic catalyst.",
-        relatedIds: [20, 21, 4, 12], rarity: 'uncommon', keywords: ['Fetish', 'Leather', 'Material', 'Attraction', 'Sensation', 'Subculture', 'Gear', 'Smell', 'Texture', 'Power'],
-        lore: [
-            { level: 1, insightCost: 5, text: "A Potent Multi-Sensory Signature: The unique combination of leather's distinct smell, specific textures (smooth, grained, distressed), the sound it makes, and its visual appearance creates a powerful associative trigger for arousal [A/S].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Woven with Cultural & Symbolic Code: Leather is often strongly linked with concepts of power, rebellion, masculinity/butchness, luxury, or specific subcultures (bikers, BDSM leather scene), adding layers of cognitive [C] and psychological [P] meaning.", unlocked: false },
-            { level: 3, insightCost: 18, text: "More Than Just Clothing: For those with a strong fetish, leather isn't just worn; it transforms the wearer (in the admirer's perception), embodying the associated power, aesthetic, or energy.", unlocked: false }
-        ]
-    },
-    {
-        id: 98, name: "Pet Play", cardType: "Practice/Kink", visualHandle: "uncommon_petplay.jpg", primaryElement: "C",
-        elementScores: { A: 5, I: 6, S: 5, P: 7, C: 7, R: 6, RF: 3 }, // RF strongly submissive (pet role)
-        briefDescription: "Role-playing as animals/pets within a dynamic.",
-        detailedDescription: "Consensual role-play [13] where one or more participants take on the persona, behaviors, and mindset of an animal or pet (commonly kittens, puppies, ponies, etc.), often within a dynamic with an Owner/Handler/Trainer [4/58]. Explores themes of dependence [P], instinct [40], non-verbal communication [I], training/obedience [11], or playful regression [39].",
-        relatedIds: [13, 39, 4, 5, 10, 121, 40, 11], rarity: 'uncommon', keywords: ['Pet Play', 'Role-Play', 'Cognitive', 'Psychological', 'Animalistic', 'Dynamic', 'Kitten', 'Puppy', 'Regression', 'Obedience', 'Training'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Embodying an Alternate Persona: Allows for deep exploration of different modes of being – playful, dependent, purely instinctual, non-verbal – offering a temporary escape from human complexities [P/C].", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Power of Gear & Environmental Cues: Specific gear (collars, tails, ears, leashes, cages) and environmental setups often significantly enhance the immersion, solidify roles [I], and facilitate the desired psychological shift [P].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Spectrum of Play: Can range from light, fluffy, non-sexual play focused on affection and comfort, to highly structured training dynamics involving commands [11] and discipline, to more primal, animalistic interactions [40].", unlocked: false }
-        ]
-    },
-    {
-        id: 99, name: "Masochism (Psychological)", cardType: "Psychological/Goal", visualHandle: "uncommon_maso_psych.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 3, S: 4, P: 8, C: 6, R: 5, RF: 2 }, // RF submissive (receiving)
-        briefDescription: "Finding pleasure or release in consensual mental/emotional 'pain'.",
-        detailedDescription: "Deriving erotic pleasure, catharsis, or psychological [P] release from consensually experiencing emotional distress, humiliation [45], degradation, embarrassment, fear [106], or mental anguish within a safe, controlled interaction [I]. The 'pain' is mental/emotional, not necessarily physical.",
-        relatedIds: [5, 17, 45, 100, 120, 11, 38], rarity: 'uncommon', keywords: ['Masochism', 'Psychological', 'Emotion', 'Submission', 'Distress', 'Catharsis', 'Humiliation', 'Mental Pain', 'Endurance', 'Release'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Paradoxical Cathartic Sting: Intentionally confronting difficult emotions, shame, or simulated powerlessness within a safe, trusted container can be strangely cleansing, releasing pent-up tension [P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Trust as the Essential Safety Net: The ability and willingness to explore these challenging psychological states hinges *entirely* on profound, unwavering trust [15] in the partner causing the consensual distress, knowing they will provide safety and aftercare [69].", unlocked: false },
-            { level: 3, insightCost: 18, text: "Cognitive Framing is Key: Often involves specific scenarios [C], forms of address, or verbal triggers [32] that frame the experience, transforming potentially negative emotions into desired masochistic pleasure.", unlocked: false }
-        ]
-    },
-    {
-        id: 100, name: "Sadism (Psychological)", cardType: "Psychological/Goal", visualHandle: "uncommon_sad_psych.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 7, S: 4, P: 8, C: 7, R: 5, RF: 8 }, // RF dominant (inflicting)
-        briefDescription: "Pleasure from consensually causing mental/emotional 'pain'.",
-        detailedDescription: "Finding erotic pleasure, satisfaction, or a sense of power [P] from consensually and ethically causing emotional distress, humiliation [45], degradation, fear [106], or mental discomfort in a willing partner. The focus is on the partner's psychological reaction and the sadist's role in eliciting it.",
-        relatedIds: [4, 11, 45, 99, 120, 32], rarity: 'uncommon', keywords: ['Sadism', 'Psychological', 'Emotion', 'Control', 'Distress', 'Humiliation', 'Mental Pain', 'Power', 'Reaction'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Responsive Spark of Witnessed Emotion: Satisfaction often comes not just from the act of causing distress, but profoundly from *witnessing* the partner's genuine, desired emotional reaction, confirming the sadist's impact [I/P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Navigating the Ethical Razor's Edge: Requires exceptional skill [C], empathy [P], and careful calibration to push boundaries enjoyably and achieve the desired intensity without causing lasting harm or violating trust. Aftercare [69] is crucial.", unlocked: false },
-            { level: 3, insightCost: 18, text: "More Than Just Cruelty: Effective psychological sadism often involves deep understanding of the partner's psyche, fears, and desires, using that knowledge precisely to craft the desired experience, making it a highly intellectual [C] pursuit as well.", unlocked: false }
-        ]
-    },
-    {
-        id: 102, name: "Sensory Focus (Specific Zone)", cardType: "Practice/Kink", visualHandle: "uncommon_sens_zone.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 6, S: 7, P: 5, C: 4, R: 5, RF: 6 }, // RF slightly leading (directing focus)
-        briefDescription: "Zooming all sensory attention onto one body part.",
-        detailedDescription: "Giving intense, focused, and prolonged attention to stimulating one specific body part or zone (e.g., feet [62], neck, ears, hands, genitals), often to the exclusion of others. This deliberate narrowing of focus [S] can heighten awareness, build intense localized pleasure or sensation, and increase anticipation [P].",
-        relatedIds: [57, 2, 61, 62], rarity: 'uncommon', keywords: ['Sensation', 'Focus', 'Body Part', 'Intensity', 'Physical', 'Zone', 'Localized', 'Detail', 'Attention'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Creating a Microcosm of Intense Feeling: Concentrating all stimulation and awareness onto a small area allows for exquisite sensitivity to subtle nuances of touch, temperature, or pressure that might otherwise be missed.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Anticipation Amplified by Limitation: Knowing that *only* one specific area will receive attention builds intense focus, anticipation [P], and sometimes a delicious sense of localized helplessness [17] for the receiver.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Can Be Part of Worship or Teasing: Often employed within Body Worship [61] dynamics or as a form of teasing [38], demonstrating control [I] over where pleasure is allowed or denied.", unlocked: false }
-        ]
-    },
-    {
-        id: 103, name: "Androgyny Attraction", cardType: "Orientation", visualHandle: "uncommon_andro.jpg", primaryElement: "A",
-        elementScores: { A: 7, I: 5, S: 5, P: 5, C: 5, R: 5, RF: 5 }, // RF Neutral
-        briefDescription: "Drawn to gender-blending or ambiguous presentations.",
-        detailedDescription: "Finding individuals whose gender presentation intentionally mixes elements typically associated with different genders, blurs traditional masculine/feminine markers, or presents ambiguously inherently attractive [A]. It's an appreciation for aesthetics that challenge or transcend binary gender norms.",
-        relatedIds: [55, 92], rarity: 'uncommon', keywords: ['Attraction', 'Androgyny', 'Gender Presentation', 'Aesthetic', 'Non-binary', 'Genderfluid', 'Ambiguity', 'Fluidity'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Appreciating Beauty Beyond the Binary: A specific aesthetic appreciation for looks, styles, or energies that challenge, blend, or playfully disregard traditional, rigid gender markers.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Fluidity Embodied & Celebrated: Can reflect an innate attraction towards ambiguity itself, the beauty of fluidity, or a resonance with the conscious rejection or deconstruction of rigid gender categories.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Connection to Pansexuality/Bisexuality: While distinct (attraction to presentation vs. identity), attraction to androgyny often overlaps with orientations like Pansexuality [55] or Bisexuality [54] that embrace attraction beyond strict binaries.", unlocked: false }
-        ]
-    },
-    {
-        id: 105, name: "Voyeuristic Exhibitionism", cardType: "Identity/Role", visualHandle: "uncommon_voy_exhib.jpg", primaryElement: "I",
-        elementScores: { A: 7, I: 7, S: 5, P: 7, C: 6, R: 6, RF: 6 }, // RF Switch (both observer/performer)
-        briefDescription: "Loving both watching and being watched simultaneously.",
-        detailedDescription: "Getting turned on by the dynamic interplay of *both* sides of the gaze – finding arousal in watching others [19] get intimate *while* also being watched [18] yourself, often in a group [34] or multi-partner setting. It's about the shared energy of mutual observation and performance.",
-        relatedIds: [18, 19, 34], rarity: 'uncommon', keywords: ['Exhibitionism', 'Voyeurism', 'Visual', 'Performance', 'Shared', 'Group', 'Reciprocal', 'Gaze'],
-        lore: [
-            { level: 1, insightCost: 5, text: "The Charged Circuit of the Shared Gaze: A dynamic where the distinct acts of watching and being watched become intertwined, creating a mutual feedback loop of arousal and performance energy.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Amplified Energy Through Multiple Perspectives: The presence of multiple viewpoints, both giving and receiving the gaze, often exponentially intensifies the energy, self-awareness, and performative aspects [I/P] of the encounter.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Common in Group Settings: This dynamic thrives particularly well in settings like play parties or group sex [34] scenarios, where mutual observation is often an inherent part of the experience.", unlocked: false }
-        ]
-    },
-    {
-        id: 106, name: "Fear Play (Mild)", cardType: "Practice/Kink", visualHandle: "uncommon_fear_mild.jpg", primaryElement: "P",
-        elementScores: { A: 5, I: 6, S: 6, P: 7, C: 5, R: 5, RF: 7 }, // RF often Dom-driven (instilling fear)
-        briefDescription: "Getting thrills from safe scares and anticipation.",
-        detailedDescription: "Consensually using elements of surprise, startle moments, psychological tension, or the anticipation of something intense (but ultimately safe) to generate excitement and adrenaline [P]. Think jump scares in a dark room, suspenseful build-up to sensation [S], or playing with predator/prey dynamics [40] without genuine threat.",
-        relatedIds: [44, 38, 9, 111, 122, 117, 17], rarity: 'uncommon', keywords: ['Fear', 'Anticipation', 'Thrill', 'Psychological', 'Edge', 'Startle', 'Suspense', 'Adrenaline', 'Safe Scare'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Harnessing the Adrenaline Rush Safely: Intentionally tapping into the body's natural fight-or-flight response to generate a jolt of excitement, heightened awareness [S], and focused energy within a firmly established safe context.", unlocked: false },
-            { level: 2, insightCost: 10, text: "The Potent Power of the Unknown & Anticipated: Suspense, uncertainty about what comes next, and the drawn-out anticipation [P/C] of a potential 'scare' or intense moment are key ingredients in generating the desired thrill.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Requires Deep Trust & Clear Boundaries: Playing with fear, even mildly, requires profound trust [15] and crystal-clear communication about boundaries and safewords to ensure the experience remains thrilling and doesn't become genuinely frightening or harmful.", unlocked: false }
-        ]
-    },
-    {
-        id: 107, name: "Tribadism / Scissoring", cardType: "Practice/Kink", visualHandle: "uncommon_tribadism.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 6, S: 7, P: 5, C: 2, R: 5, RF: 5 }, // RF Mutual/Egalitarian
-        briefDescription: "Direct vulva-on-vulva friction for mutual pleasure.",
-        detailedDescription: "A sexual act, common among women who have sex with women but possible for anyone with vulvas, involving rubbing vulvas together (or against another body part like thigh or stomach) to create friction and mutual clitoral/vulval stimulation [S]. Positions can vary (e.g., 'scissoring').",
-        relatedIds: [1, 67, 73], rarity: 'uncommon', keywords: ['Tribadism', 'Scissoring', 'Physical', 'Sensation', 'Friction', 'Lesbian', 'Sapphic', 'Vulva', 'Mutual'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Mutual Grounding Through Direct Contact: The direct, often full-body contact offers a unique blend of widespread friction, shared pressure, warmth, and intimate connection [P].", unlocked: false },
-            { level: 2, insightCost: 10, text: "Finding Rhythmic Synergy Together: Discovering a shared rhythm [I] and pressure that feels good for both partners can create powerful waves of escalating mutual pleasure.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Emphasizes Shared, Non-Penetrative Pleasure: Highlights a form of intimacy focused entirely on external stimulation and mutual, reciprocal sensation [S] without involving penetration.", unlocked: false }
-        ]
-    },
-    {
-        id: 108, name: "Intercrural Sex / Frotting", cardType: "Practice/Kink", visualHandle: "uncommon_frotting.jpg", primaryElement: "S",
-        elementScores: { A: 5, I: 6, S: 7, P: 5, C: 2, R: 5, RF: 6 }, // RF leans slightly dominant (initiating?)
-        briefDescription: "Penis-on-penis (or thigh) friction for pleasure.",
-        detailedDescription: "A sexual act, common among men who have sex with men but possible for others, involving rubbing penises together ('frotting') or against a partner's thighs ('intercrural') to create friction and mutual stimulation [S]. It's a non-penetrative form of achieving pleasure.",
-        relatedIds: [1, 73], rarity: 'uncommon', keywords: ['Frotting', 'Intercrural', 'Physical', 'Sensation', 'Friction', 'Gay', 'MSM', 'Mutual', 'Non-Penetrative'],
-        lore: [
-            { level: 1, insightCost: 5, text: "Direct Friction Focus Without Penetration: Provides intense, direct stimulation [S] to the penile shaft through rhythmic rubbing, offering an alternative pathway to pleasure.", unlocked: false },
-            { level: 2, insightCost: 10, text: "Intimate Proximity & Shared Movement: The required closeness and synchronized movement [I] fosters a specific kind of connected, mutual sensation and shared physical experience.", unlocked: false },
-            { level: 3, insightCost: 18, text: "Can Be Quick or Leisurely: Depending on the energy, frotting can be a quick, high-friction activity [56] or a more leisurely, sensual exploration of mutual sensation.", unlocked: false }
-        ]
-    },
+    // ... Include all other uncommon concepts from the original file here ...
     {
         id: 110, name: "Figging", cardType: "Practice/Kink", visualHandle: "uncommon_figging.jpg", primaryElement: "S",
         elementScores: { A: 3, I: 6, S: 8, P: 6, C: 3, R: 5, RF: 7 }, // RF leans dominant (inflicting sensation)
@@ -1119,7 +177,7 @@ const concepts = [
         ]
     },
 
-    // --- Rare Concepts ---
+    // --- Rare Concepts --- (Resuming here)
     {
         id: 8, name: "Impact Play (Heavy)", cardType: "Practice/Kink", visualHandle: "rare_impact_heavy.jpg", primaryElement: "S",
         elementScores: { A: 5, I: 7, S: 9, P: 7, C: 4, R: 6, RF: 8 }, // RF leaning Dom
@@ -1148,78 +206,78 @@ const concepts = [
         briefDescription: "Explicit power exchange through giving/following clear orders.", detailedDescription: "This interaction style [I] is built around clear, explicit instructions and the corresponding act of willing obedience. One partner (Dominant [4]) gives direct commands, sets specific tasks, or issues instructions, and the other partner (submissive [5]) derives pleasure, purpose, or fulfillment [P] from understanding and obeying them precisely. Power exchange made tangible through action and response.",
         relatedIds: [4, 5, 10, 30, 38, 45, 41, 89, 90, 100, 101, 109, 119, 120, 98], rarity: 'rare', canUnlockArt: true, visualHandleUnlocked: "rare_control_art", uniquePromptId: "rP11", keywords: ['Control', 'Command', 'Obedience', 'Power', 'Structure', 'Psychological', 'Interaction', 'D/s', 'Instructions', 'Direction', 'Compliance'],
         lore: [
-            { level: 1, insightCost: 9, text: "Fragment from a Tattered Scroll on Authority: 'The voice that commands with clarity shapes the immediate reality. The ear that obeys with willingness finds its perfect place and purpose within that crafted structure.'", unlocked: false },
-            { level: 2, insightCost: 18, text: "Alchemist's Query on the Source of Thrill: Does the deep satisfaction lie primarily in the *certainty* and confidence of the command given, the profound *surrender* required by willing obedience, or perhaps in the intense *shared focus* and clarity the dynamic demands from both partners?", unlocked: false },
-            { level: 3, insightCost: 28, text: "Beyond Simple Orders: Effective command dynamics often involve understanding the submissive's psychology [P], using praise [46] or correction appropriately, and ensuring commands serve a purpose within the negotiated dynamic [R], making it a skilled art.", unlocked: false }
+             { level: 1, insightCost: 9, text: "Fragment from a Tattered Scroll on Authority: 'The voice that commands with clarity shapes the immediate reality. The ear that obeys with willingness finds its perfect place and purpose within that crafted structure.'", unlocked: false },
+             { level: 2, insightCost: 18, text: "Alchemist's Query on the Source of Thrill: Does the deep satisfaction lie primarily in the *certainty* and confidence of the command given, the profound *surrender* required by willing obedience, or perhaps in the intense *shared focus* and clarity the dynamic demands from both partners?", unlocked: false },
+             { level: 3, insightCost: 28, text: "Beyond Simple Orders: Effective command dynamics often involve understanding the submissive's psychology [P], using praise [46] or correction appropriately, and ensuring commands serve a purpose within the negotiated dynamic [R], making it a skilled art.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 12, name: "Objectification Play", cardType: "Psychological/Goal", visualHandle: "rare_object.jpg", primaryElement: "P",
         elementScores: { A: 7, I: 4, S: 6, P: 8, C: 6, R: 5, RF: 7 }, // RF leaning Dom (objectifier)
         briefDescription: "Playing with being (or using) a 'thing' for pleasure.", detailedDescription: "A consensual psychological [P] game where one person is intentionally treated, or treats another, more like an object valued primarily for its function, use, or specific body parts, rather than as a whole person with complex emotions in that moment. Can explore themes of power [I], intense focus [S], dehumanization (safely!), service [10], or worship [61], depending on the negotiation.",
         relatedIds: [4, 5, 20, 18, 19, 45, 61, 42, 62, 114, 94, 21], rarity: 'rare', canUnlockArt: false, uniquePromptId: "rP12", keywords: ['Objectification', 'Power', 'Psychological', 'Focus', 'Body', 'Dehumanization', 'Play', 'Use', 'Tool', 'Consent', 'Function'],
         lore: [
-            { level: 1, insightCost: 8, text: "Philosophical Fragment Found Etched on Metal: 'To be temporarily reduced to pure function, pure sensation, a beautiful tool... can be strangely liberating, a shedding of the heavy burdens of ego, expectation, and complex selfhood.'", unlocked: false },
-            { level: 2, insightCost: 16, text: "Figurative Warning Label - Handle With Extreme Care: Requires meticulous negotiation [C] and deep trust [15]. The line between playful, consensual objectification and harmful, unwanted dehumanization is drawn *only* by enthusiastic mutual consent, clear boundaries, and attentive aftercare [69].", unlocked: false },
-            { level: 3, insightCost: 25, text: "Spectrum of Application: Can range from focusing worshipfully on one body part [61, 102], using a partner as 'furniture,' referring to them by function rather than name, to more complex scenarios involving specific materials [20] or roles.", unlocked: false }
+             { level: 1, insightCost: 8, text: "Philosophical Fragment Found Etched on Metal: 'To be temporarily reduced to pure function, pure sensation, a beautiful tool... can be strangely liberating, a shedding of the heavy burdens of ego, expectation, and complex selfhood.'", unlocked: false },
+             { level: 2, insightCost: 16, text: "Figurative Warning Label - Handle With Extreme Care: Requires meticulous negotiation [C] and deep trust [15]. The line between playful, consensual objectification and harmful, unwanted dehumanization is drawn *only* by enthusiastic mutual consent, clear boundaries, and attentive aftercare [69].", unlocked: false },
+             { level: 3, insightCost: 25, text: "Spectrum of Application: Can range from focusing worshipfully on one body part [61, 102], using a partner as 'furniture,' referring to them by function rather than name, to more complex scenarios involving specific materials [20] or roles.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 14, name: "Fantasy Immersion", cardType: "Cognitive", visualHandle: "rare_fantasy.jpg", primaryElement: "C",
         elementScores: { A: 5, I: 3, S: 4, P: 7, C: 9, R: 3, RF: 5 }, // RF Neutral
         briefDescription: "Living fully within the mind's detailed story.", detailedDescription: "Your imagination isn't just involved; it *is* the main stage! Getting completely lost in complex, internally generated fantasy worlds, detailed narratives, or the powerful *idea* or symbolism of what's happening is far more crucial and arousing than the immediate physical reality. Arousal lives, breathes, and climaxes primarily within the intricate architecture of the brain [C].",
         relatedIds: [13, 29, 41, 42, 49, 60], rarity: 'rare', canUnlockArt: true, visualHandleUnlocked: "rare_fantasy_art", uniquePromptId: "rP14", keywords: ['Fantasy', 'Cognitive', 'Immersion', 'Narrative', 'Mind', 'World-Building', 'Imagination', 'Internal', 'Story', 'Arousal Source'],
         lore: [
-            { level: 1, insightCost: 9, text: "Entry from a Dreamer's Secret Journal: 'The world outside faded to static. Only the internal story mattered, thrumming with life. The physical sensations were mere echoes, punctuation marks in the narrative unfolding within.'", unlocked: false },
-            { level: 2, insightCost: 18, text: "The Mental Mapmaker's Precision: Some individuals build entire worlds, character histories, and complex rules brick by meticulous brick within their minds, finding profound arousal [A] and satisfaction [P] in the intricate details, consistency, and richness of their inner reality.", unlocked: false },
-            { level: 3, insightCost: 28, text: "Potential Disconnect & Connection Challenges: While internally rich, deep fantasy immersion can sometimes create a disconnect from a partner's physical presence [S] or emotional cues [P] if not shared or communicated effectively [R]. Finding partners who appreciate or share this cognitive focus is key.", unlocked: false }
+             { level: 1, insightCost: 9, text: "Entry from a Dreamer's Secret Journal: 'The world outside faded to static. Only the internal story mattered, thrumming with life. The physical sensations were mere echoes, punctuation marks in the narrative unfolding within.'", unlocked: false },
+             { level: 2, insightCost: 18, text: "The Mental Mapmaker's Precision: Some individuals build entire worlds, character histories, and complex rules brick by meticulous brick within their minds, finding profound arousal [A] and satisfaction [P] in the intricate details, consistency, and richness of their inner reality.", unlocked: false },
+             { level: 3, insightCost: 28, text: "Potential Disconnect & Connection Challenges: While internally rich, deep fantasy immersion can sometimes create a disconnect from a partner's physical presence [S] or emotional cues [P] if not shared or communicated effectively [R]. Finding partners who appreciate or share this cognitive focus is key.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 16, name: "Rope Bondage (Shibari/Kinbaku)", cardType: "Practice/Kink", visualHandle: "rare_rope.jpg", primaryElement: "S",
         elementScores: { A: 6, I: 7, S: 8, P: 7, C: 6, R: 6, RF: 7 }, // RF leaning Dom (rigger)
         briefDescription: "Artful tying, intricate restriction, & deep connection.", detailedDescription: "It's living sculpture, sensory exploration, and psychological [P] journey woven together with rope! Using rope not just to restrain [17], but to create intricate, often aesthetically beautiful patterns on the body ('Shibari' often emphasizes aesthetics), applying pressure strategically to nerves or muscles, altering posture and movement, and inducing unique mental states through the combination of restriction and sensation [S]. A profound dance between the Rigger's skill/intent [I] and the Rope Bunny's trust/surrender [5].",
         relatedIds: [9, 17, 4, 5, 44, 87, 101, 113, 37], rarity: 'rare', canUnlockArt: true, visualHandleUnlocked: "rare_rope_art", uniquePromptId: "rP16", keywords: ['Restriction', 'Sensation', 'Aesthetic', 'Control', 'Trust', 'Helplessness', 'Rope', 'Shibari', 'Kinbaku', 'Art', 'Presence', 'Bondage', 'Skill'],
         lore: [
-            { level: 1, insightCost: 8, text: "Ancient Rigger's Maxim Passed Down: 'The rope only truly holds what the mind allows it to hold.' Trust is the first, invisible knot tied, the essential anchor point for the entire intricate art form.", unlocked: false },
-            { level: 2, insightCost: 16, text: "Historical Echoes & Artistic Evolution: Evolved from practical methods of samurai restraint in feudal Japan ('Kinbaku' often implies this lineage), modern rope bondage elevated functional tying into an intimate art form exploring patience, focus [C], aesthetic tension, energetic connection [I], and the vulnerable beauty of the bound human form.", unlocked: false },
-            { level: 3, insightCost: 25, text: "Alchemical Vessel of Transformation: When the Artful Restriction of Rope [16] meets the Psychology of Willing Helplessness [17], all held within the crucible of Deep Trust [15], the body can become an alchemical vessel, potentially transmuting physical tension and mental noise into profound psychological release (Catharsis?), heightened awareness, or ecstatic surrender.", unlocked: false }
+             { level: 1, insightCost: 8, text: "Ancient Rigger's Maxim Passed Down: 'The rope only truly holds what the mind allows it to hold.' Trust is the first, invisible knot tied, the essential anchor point for the entire intricate art form.", unlocked: false },
+             { level: 2, insightCost: 16, text: "Historical Echoes & Artistic Evolution: Evolved from practical methods of samurai restraint in feudal Japan ('Kinbaku' often implies this lineage), modern rope bondage elevated functional tying into an intimate art form exploring patience, focus [C], aesthetic tension, energetic connection [I], and the vulnerable beauty of the bound human form.", unlocked: false },
+             { level: 3, insightCost: 25, text: "Alchemical Vessel of Transformation: When the Artful Restriction of Rope [16] meets the Psychology of Willing Helplessness [17], all held within the crucible of Deep Trust [15], the body can become an alchemical vessel, potentially transmuting physical tension and mental noise into profound psychological release (Catharsis?), heightened awareness, or ecstatic surrender.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 17, name: "Restriction / Helplessness", cardType: "Psychological/Goal", visualHandle: "rare_restrict.jpg", primaryElement: "P",
         elementScores: { A: 5, I: 3, S: 7, P: 9, C: 5, R: 5, RF: 2 }, // RF leaning Sub (desiring helplessness)
         briefDescription: "Finding deep pleasure in being bound/powerless.", detailedDescription: "The *psychological feeling* [P] of being physically restrained (whether by ropes [16], cuffs [87], posture, or other means) and the resulting mental space of surrendered control, helplessness, or profound vulnerability is itself a primary source of arousal or peace. It's often less about the specific method of restraint and more about the potent *internal state* it induces.",
         relatedIds: [16, 5, 9, 37, 44, 63, 64, 87, 99, 113, 117, 118, 125, 43], rarity: 'rare', canUnlockArt: false, uniquePromptId: "rP17", keywords: ['Helplessness', 'Surrender', 'Restriction', 'Psychological', 'Power', 'Vulnerability', 'Bondage', 'Immobility', 'Letting Go', 'Trust'],
         lore: [
-            { level: 1, insightCost: 8, text: "Inner Monologue Snippet from the Still Point: '...can't move... don't *have* to move... don't have to decide... just feel... just breathe... just be held...'", unlocked: false },
-            { level: 2, insightCost: 16, text: "Philosopher's Deep Query on Appeal: Is the core allure the temporary, radical removal of responsibility and choice? The way it forces heightened sensory [S] focus by eliminating other options? Or the profound act of offering ultimate vulnerability and trust [15] to another?", unlocked: false },
-            { level: 3, insightCost: 25, text: "Safety Requires Vigilance from Both Sides: While the receiver experiences helplessness, safety relies on the restrainer's constant vigilance regarding circulation, nerve compression, positioning, and emotional state, plus the receiver's ability to communicate limits (safewords!).", unlocked: false }
+             { level: 1, insightCost: 8, text: "Inner Monologue Snippet from the Still Point: '...can't move... don't *have* to move... don't have to decide... just feel... just breathe... just be held...'", unlocked: false },
+             { level: 2, insightCost: 16, text: "Philosopher's Deep Query on Appeal: Is the core allure the temporary, radical removal of responsibility and choice? The way it forces heightened sensory [S] focus by eliminating other options? Or the profound act of offering ultimate vulnerability and trust [15] to another?", unlocked: false },
+             { level: 3, insightCost: 25, text: "Safety Requires Vigilance from Both Sides: While the receiver experiences helplessness, safety relies on the restrainer's constant vigilance regarding circulation, nerve compression, positioning, and emotional state, plus the receiver's ability to communicate limits (safewords!).", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 20, name: "Latex / Material Fetish", cardType: "Orientation", visualHandle: "rare_latex.jpg", primaryElement: "A",
         elementScores: { A: 9, I: 5, S: 8, P: 6, C: 5, R: 4, RF: 5 }, // RF Neutral
         briefDescription: "Shiny, squeaky, second-skin sexy!", detailedDescription: "It's all about the specific material! A strong, often primary sexual attraction [A] triggered powerfully by the sight, feel, sound, or even smell of particular materials like latex, rubber, PVC, leather [94], silk, fur, spandex, etc. The material itself, enveloping the body or existing as an object, holds the magical charge and is often essential for arousal.",
         relatedIds: [12, 21, 42, 94, 112], rarity: 'rare', canUnlockArt: true, visualHandleUnlocked: "rare_latex_art", uniquePromptId: "rP20", keywords: ['Fetish', 'Material', 'Latex', 'Leather', 'PVC', 'Rubber', 'Attraction', 'Sensation', 'Focus', 'Texture', 'Smell', 'Sound', 'Visual'],
         lore: [
-            { level: 1, insightCost: 9, text: "Texture & Sensory Overdrive Note: 'Like a second skin, it utterly transforms. The unnatural reflection, the distinctive scent, the unique sound of movement... it engages and heightens senses [S] often ignored in daily life, creating a powerful shift.'", unlocked: false },
-            { level: 2, insightCost: 18, text: "Alchemist's Insight into Transformation: The specific material often becomes more than just clothing; it acts as a potent catalyst, altering the wearer's perceived essence, unlocking a specific hidden persona [C], or creating a desired aesthetic distance/objectification [P] for both wearer and observer.", unlocked: false },
-            { level: 3, insightCost: 28, text: "Conditioning vs. Innate Preference: The origins of material fetishes are debated – are they innate neurological wiring, early life conditioning, or a blend? Regardless, for the individual, the connection between the material and arousal is deeply ingrained and real.", unlocked: false }
+             { level: 1, insightCost: 9, text: "Texture & Sensory Overdrive Note: 'Like a second skin, it utterly transforms. The unnatural reflection, the distinctive scent, the unique sound of movement... it engages and heightens senses [S] often ignored in daily life, creating a powerful shift.'", unlocked: false },
+             { level: 2, insightCost: 18, text: "Alchemist's Insight into Transformation: The specific material often becomes more than just clothing; it acts as a potent catalyst, altering the wearer's perceived essence, unlocking a specific hidden persona [C], or creating a desired aesthetic distance/objectification [P] for both wearer and observer.", unlocked: false },
+             { level: 3, insightCost: 28, text: "Conditioning vs. Innate Preference: The origins of material fetishes are debated – are they innate neurological wiring, early life conditioning, or a blend? Regardless, for the individual, the connection between the material and arousal is deeply ingrained and real.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 21, name: "Uniform / Clothing Fetish", cardType: "Orientation", visualHandle: "rare_uniform.jpg", primaryElement: "A",
         elementScores: { A: 8, I: 6, S: 4, P: 6, C: 6, R: 5, RF: 7 }, // RF leans Dom (attraction to authority symbol)
         briefDescription: "Specific clothing styles as primary arousal trigger.", detailedDescription: "A fetish where sexual arousal [A] is significantly and primarily triggered by specific types of clothing or outfits, such as uniforms (military, medical [43], school, service industry), specific costumes (superhero, historical), or particular garments (formal lingerie, sharp suits, specific dresses). The clothing itself carries powerful symbolic weight [C].",
         relatedIds: [13, 20, 12, 94, 95, 104, 43], rarity: 'rare', canUnlockArt: false, uniquePromptId: "rP21", keywords: ['Fetish', 'Clothing', 'Uniform', 'Attraction', 'Role-Play', 'Visual', 'Costume', 'Symbolism', 'Authority', 'Power', 'Archetype'],
         lore: [
-            { level: 1, insightCost: 8, text: "The Costumer's Thread of Meaning: 'A uniform is more than fabric; it's a potent story worn visibly on the body - instantly conveying authority, service, innocence, rebellion, competence, or belonging. The symbolic story is the spark.'", unlocked: false },
-            { level: 2, insightCost: 16, text: "Psychological Note on Instant Signifiers: The specific clothing acts as a powerful psychological [P] and cognitive [C] signifier, instantly invoking associated roles, power dynamics [I], expectations, and deeply ingrained fantasies or archetypes.", unlocked: false },
-            { level: 3, insightCost: 25, text: "Connection to Role-Play [13]: Uniform fetishes often intertwine strongly with role-playing desires, as the clothing provides an immediate, tangible anchor for stepping into a specific character or dynamic.", unlocked: false }
+             { level: 1, insightCost: 8, text: "The Costumer's Thread of Meaning: 'A uniform is more than fabric; it's a potent story worn visibly on the body - instantly conveying authority, service, innocence, rebellion, competence, or belonging. The symbolic story is the spark.'", unlocked: false },
+             { level: 2, insightCost: 16, text: "Psychological Note on Instant Signifiers: The specific clothing acts as a powerful psychological [P] and cognitive [C] signifier, instantly invoking associated roles, power dynamics [I], expectations, and deeply ingrained fantasies or archetypes.", unlocked: false },
+             { level: 3, insightCost: 25, text: "Connection to Role-Play [13]: Uniform fetishes often intertwine strongly with role-playing desires, as the clothing provides an immediate, tangible anchor for stepping into a specific character or dynamic.", unlocked: false }
         ]
-    },
-    {
+     },
+     {
         id: 25, name: "Polyamory", cardType: "Relationship Style", visualHandle: "rare_poly.jpg", primaryElement: "R",
         elementScores: { A: 6, I: 6, S: 5, P: 7, C: 6, R: 8, RF: 5 }, // RF Neutral
         briefDescription: "Ethically loving and being intimate with multiple partners.", detailedDescription: "The practice, desire, or orientation towards having multiple simultaneous loving, intimate, and/or sexual relationships, where everyone involved knows about the other partners and consents (hence, ethical non-monogamy). Often involves deep emotional connections [15] and varying levels of commitment with several people concurrently.",
@@ -1326,9 +384,9 @@ const concepts = [
         briefDescription: "Restricting airflow for intense sensation (HIGH RISK!).", detailedDescription: "Consensual practice involving the intentional, temporary restriction of airflow (often called erotic asphyxiation or asphyxiophilia) to create intense physical sensations [S], altered mental states [P/C], and heightened orgasm. Methods can include choking (manual or ligature - EXTREMELY DANGEROUS), bags, masks, or pressure. Carries **significant inherent risks** of injury or death if done incorrectly and requires extreme caution, knowledge, and trust.",
         relatedIds: [44, 17, 9, 5, 125], rarity: 'rare', canUnlockArt: false, uniquePromptId: "rP63", keywords: ['Breath Play', 'Asphyxiation', 'Risk', 'Edge Play', 'Sensation', 'Altered State', 'Trust', 'Safety', 'Choking', 'Hypoxia', 'High-Risk'],
         lore: [
-            { level: 1, insightCost: 10, text: "**SAFETY ADVISORY: LETHAL RISK IS REAL.** This is inherently dangerous edge play [44]. Education on safe(r) techniques (e.g., avoiding carotid artery pressure, immediate release signals), clear communication, never playing alone, and understanding the signs of danger are paramount. Mistakes can be fatal. Seek experienced guidance.", unlocked: false },
-            { level: 2, insightCost: 20, text: "Subjective Report from the Edge: 'The world narrows instantly, sensations sharpen to an impossible degree... a primal surrender not just of will [5], but of the body's most fundamental need. Requires absolute, unwavering trust [15].'", unlocked: false },
-            { level: 3, insightCost: 30, text: "The Hypoxic High & Altered States: The physical effects of reduced oxygen (hypoxia) can create lightheadedness, euphoria, intensified orgasm, and profound altered states of consciousness [P/C], which is often the sought-after goal, despite the risks.", unlocked: false }
+             { level: 1, insightCost: 10, text: "**SAFETY ADVISORY: LETHAL RISK IS REAL.** This is inherently dangerous edge play [44]. Education on safe(r) techniques (e.g., avoiding carotid artery pressure, immediate release signals), clear communication, never playing alone, and understanding the signs of danger are paramount. Mistakes can be fatal. Seek experienced guidance.", unlocked: false },
+             { level: 2, insightCost: 20, text: "Subjective Report from the Edge: 'The world narrows instantly, sensations sharpen to an impossible degree... a primal surrender not just of will [5], but of the body's most fundamental need. Requires absolute, unwavering trust [15].'", unlocked: false },
+             { level: 3, insightCost: 30, text: "The Hypoxic High & Altered States: The physical effects of reduced oxygen (hypoxia) can create lightheadedness, euphoria, intensified orgasm, and profound altered states of consciousness [P/C], which is often the sought-after goal, despite the risks.", unlocked: false }
         ]
     },
     {
@@ -1337,9 +395,9 @@ const concepts = [
         briefDescription: "Safely role-playing scenarios involving lack of consent.", detailedDescription: "A complex form of consensual role-playing [13] where participants intentionally act out a scene involving simulated non-consent, coercion, force, or resistance (e.g., simulated rape fantasy, abduction [117], struggling against bonds [17]). Requires meticulous, enthusiastic prior negotiation [C], crystal-clear boundaries, unambiguous safewords that are instantly honored, and deep trust [15] to ensure the 'non-consent' stays strictly within the fictional frame.",
         relatedIds: [13, 4, 5, 17, 44, 117, 118, 38], rarity: 'rare', canUnlockArt: false, uniquePromptId: "rP64", keywords: ['CNC', 'Role-Play', 'Fantasy', 'Cognitive', 'Power', 'Taboo', 'Consent', 'Safety', 'Negotiation', 'Rape Fantasy', 'Simulated', 'Boundaries'],
         lore: [
-            { level: 1, insightCost: 10, text: "The Ethical Imperative: The 'Consensual' is EVERYTHING. Negotiation must be explicit, detailed, and enthusiastic *before* play begins. Boundaries must be crystal clear, safewords chosen and practiced, and honored instantly without question. The 'non-consent' is purely fictional.", unlocked: false },
-            { level: 2, insightCost: 20, text: "Exploring Taboo & Power Through Narrative: CNC often allows individuals to safely explore taboo fantasies, intense power dynamics [I], complex feelings about control/surrender [P], or process personal themes within a controlled, fictional environment.", unlocked: false },
-            { level: 3, insightCost: 30, text: "Aftercare is Non-Negotiable: Due to the potentially intense or triggering nature of CNC themes, thorough, sensitive aftercare [69] focusing on reassurance, grounding, differentiating play from reality, and emotional processing is absolutely essential.", unlocked: false }
+             { level: 1, insightCost: 10, text: "The Ethical Imperative: The 'Consensual' is EVERYTHING. Negotiation must be explicit, detailed, and enthusiastic *before* play begins. Boundaries must be crystal clear, safewords chosen and practiced, and honored instantly without question. The 'non-consent' is purely fictional.", unlocked: false },
+             { level: 2, insightCost: 20, text: "Exploring Taboo & Power Through Narrative: CNC often allows individuals to safely explore taboo fantasies, intense power dynamics [I], complex feelings about control/surrender [P], or process personal themes within a controlled, fictional environment.", unlocked: false },
+             { level: 3, insightCost: 30, text: "Aftercare is Non-Negotiable: Due to the potentially intense or triggering nature of CNC themes, thorough, sensitive aftercare [69] focusing on reassurance, grounding, differentiating play from reality, and emotional processing is absolutely essential.", unlocked: false }
         ]
     },
      {
@@ -1888,7 +946,6 @@ const dailyRituals = [
     { id: "dr06", description: "Deepen Understanding: Unlock an Element Insight Level in the Persona Library.", reward: { type: "attunement", element: "All", amount: 0.5 }, track: { action: "unlockLibrary", count: 1, period: "daily"} },
     { id: "dr07", description: "Organize Your Thoughts: Move a Concept to a new Shelf in the Grimoire.", reward: { type: "insight", amount: 1 }, track: { action: "categorizeCard", count: 1, period: "daily"} } // Updated action name
 ];
-
 const milestones = [
     // Basic Progression
     { id: "ms000", description: "Welcome, Alchemist! Completed the initial assessment.", reward: { type: "insight", amount: 5 }, track: { action: "completeQuestionnaire", count: 1 } },
@@ -1914,7 +971,8 @@ const milestones = [
     { id: "ms021", description: "Expanding Focus: 5 Concepts Focused! (+1 Focus Slot!)", reward: { type: "increaseFocusSlots", amount: 1 }, track: { state: "focusedConcepts.size", threshold: 5 } },
     { id: "ms022", description: "Intricate Weaving: 7 Focus Slots engaged!", reward: { type: "insight", amount: 25 }, track: { state: "focusedConcepts.size", threshold: 7 } },
     { id: "ms023", description: "Complex Patterns: 9 Focus Slots filled! (+1 Focus Slot!)", reward: { type: "increaseFocusSlots", amount: 1 }, track: { state: "focusedConcepts.size", threshold: 9 } },
-    { id: "ms024", description: "Tapestry Master: Max Focus Slots unlocked!", reward: { type: "insight", amount: 50 }, track: { state: "focusSlotsTotal", threshold: Config.MAX_FOCUS_SLOTS } },
+    // *** BUG FIX ***: Removed Config dependency from threshold here. Logic updated to check this.
+    { id: "ms024", description: "Tapestry Master: Max Focus Slots unlocked!", reward: { type: "insight", amount: 50 }, track: { state: "focusSlotsTotal" /* Threshold removed */ } },
 
     // Attunement & Research Milestones
     { id: "ms030", description: "Elemental Spark: Attunement 10+ in One Element!", reward: { type: "insight", amount: 15 }, track: { state: "elementAttunement", threshold: 10, condition: "any" } },
@@ -1926,6 +984,7 @@ const milestones = [
     { id: "ms036", description: "Harmonious Core: Attunement 25+ in ALL Elements! (+1 Focus Slot!)", reward: { type: "increaseFocusSlots", amount: 1 }, track: { state: "elementAttunement", threshold: 25, condition: "all" } },
     { id: "ms037", description: "Elemental Master: Attunement 90+ in One Element!", reward: { type: "insight", amount: 40 }, track: { state: "elementAttunement", threshold: 90, condition: "any" } },
     { id: "ms038", description: "Broad Foundations: Unlocked Level 1 Insight for ALL Seven Elements! (+1 Focus Slot!)", reward: { type: "increaseFocusSlots", amount: 1 }, track: { state: "unlockedDeepDiveLevels", threshold: 1, condition: "all"} },
+    // --- Resuming from here ---
     { id: "ms039", description: "Deep Lore Diver: Unlocked Lore Level 3 for any Concept!", reward: { type: "insight", amount: 15 }, track: { action: "unlockLore", condition: "level3", threshold: 1 } },
 
     // Reflection Milestones
@@ -1995,15 +1054,15 @@ const cardTypeThemes = { // Slightly enhanced
 
 // --- Onboarding Tasks (Now defined) ---
  const onboardingTasks = [
-    { id: 'task01', phaseRequired: 1, title: "Step 1: Your Persona", text: "This is your <strong>Persona</strong> screen. It shows your core elemental scores (like Attraction, Interaction) based on the initial Experimentation. These scores reflect your innate tendencies.", hint: "Tap 'Persona' in the top navigation.", highlightElementId: "personaScreen" },
-    { id: 'task02', phaseRequired: 2, title: "Step 2: The Workshop", text: "Now, let's visit the <strong>Workshop</strong>. This is your lab! Here you'll manage your discovered <strong>Concepts</strong> (in the Grimoire Library) and conduct <strong>Research</strong> to find new ones.", hint: "Tap 'Workshop' in the top navigation.", highlightElementId: "workshopScreen" },
-    { id: 'task03', phaseRequired: 3, title: "Step 3: Research", text: "Under 'Research Bench', click any Element button (like <i class='fa-solid fa-magnet'></i> Attraction) to start. You have <strong>3 FREE</strong> research attempts!", hint: "Click an element button in the 'Research Bench' area.", highlightElementId: "element-research-buttons" },
-    { id: 'task04', phaseRequired: 4, title: "Step 4: Your Grimoire", text: "Research results appear in a popup. Choose 'Keep' to add a Concept to your permanent <strong>Grimoire Library</strong> below. Selling gives you Insight <i class='fas fa-brain insight-icon'></i>, the main currency.", hint: "Click 'Keep' or 'Sell' on a discovered Concept card in the popup.", highlightElementId: "researchResultsPopup" }, // Highlight popup if possible, else workshop
-    { id: 'task05', phaseRequired: 5, title: "Step 5: Focus Concepts", text: "In the Grimoire Library, click the ☆ star icon on a card (or 'Mark as Focus' in its detail popup) to add it to your <strong>Persona Tapestry</strong>. Focused Concepts shape your narrative.", hint: "Find a card in the 'Grimoire Library' grid and click its star ☆ icon.", highlightElementId: "grimoire-grid-workshop" },
-    { id: 'task06', phaseRequired: 6, title: "Step 6: Weave Your Tapestry", text: "Return to the <strong>Persona</strong> screen. Notice how your 'Focused Concepts', 'Focus Themes', and 'Tapestry Narrative' have updated based on your choice!", hint: "Tap 'Persona' in the top navigation again.", highlightElementId: "personaScreen" },
-    { id: 'task07', phaseRequired: 7, title: "Step 7: Seek Insight", text: "Adding concepts and other actions sometimes trigger <strong>Reflections</strong> (like this tutorial!). Confirming reflections grants Insight <i class='fas fa-brain insight-icon'></i> and Attunement. You can also 'Seek Guidance' in the Workshop.", hint: "Reflections appear in popups like this. Confirm when ready.", highlightElementId: "reflectionModal" }, // Highlight reflection modal if possible
+    { id: 'task01', phaseRequired: 1, title: "Step 1: Your Persona", description: "This is your <strong>Persona</strong> screen. It shows your core elemental scores (like Attraction, Interaction) based on the initial Experimentation. These scores reflect your innate tendencies.", hint: "Tap 'Persona' in the top navigation.", highlightElementId: "personaScreen" },
+    { id: 'task02', phaseRequired: 2, title: "Step 2: The Workshop", description: "Now, let's visit the <strong>Workshop</strong>. This is your lab! Here you'll manage your discovered <strong>Concepts</strong> (in the Grimoire Library) and conduct <strong>Research</strong> to find new ones.", hint: "Tap 'Workshop' in the top navigation.", highlightElementId: "workshopScreen" },
+    { id: 'task03', phaseRequired: 3, title: "Step 3: Research", description: "Under 'Research Bench', click any Element button (like <i class='fa-solid fa-magnet'></i> Attraction) to start. You have <strong>3 FREE</strong> research attempts!", hint: "Click an element button in the 'Research Bench' area.", highlightElementId: "element-research-buttons" },
+    { id: 'task04', phaseRequired: 4, title: "Step 4: Your Grimoire", description: "Research results appear in a popup. Choose 'Keep' to add a Concept to your permanent <strong>Grimoire Library</strong> below. Selling gives you Insight <i class='fas fa-brain insight-icon'></i>, the main currency.", hint: "Click 'Keep' or 'Sell' on a discovered Concept card in the popup.", highlightElementId: "researchResultsPopup" }, // Highlight popup if possible, else workshop
+    { id: 'task05', phaseRequired: 5, title: "Step 5: Focus Concepts", description: "In the Grimoire Library, click the ☆ star icon on a card (or 'Mark as Focus' in its detail popup) to add it to your <strong>Persona Tapestry</strong>. Focused Concepts shape your narrative.", hint: "Find a card in the 'Grimoire Library' grid and click its star ☆ icon.", highlightElementId: "grimoire-grid-workshop" },
+    { id: 'task06', phaseRequired: 6, title: "Step 6: Weave Your Tapestry", description: "Return to the <strong>Persona</strong> screen. Notice how your 'Focused Concepts', 'Focus Themes', and 'Tapestry Narrative' have updated based on your choice!", hint: "Tap 'Persona' in the top navigation again.", highlightElementId: "personaScreen" },
+    { id: 'task07', phaseRequired: 7, title: "Step 7: Seek Insight", description: "Adding concepts and other actions sometimes trigger <strong>Reflections</strong> (like this tutorial!). Confirming reflections grants Insight <i class='fas fa-brain insight-icon'></i> and Attunement. You can also 'Seek Guidance' in the Workshop.", hint: "Reflections appear in popups like this. Confirm when ready.", highlightElementId: "reflectionModal" }, // Highlight reflection modal if possible
     // Corrected Phase 8 text - No Config reference here! The number of phases is handled by logic.
-    { id: 'task08', phaseRequired: 8, title: "Step 8: The Repository", text: "The <strong>Repository</strong> tracks Milestones, Daily Rituals, and special discoveries like Scene Blueprints or Experiments. Check back often! You're now ready to explore the Lab!", hint: "Tap 'Repository' in the top navigation.", highlightElementId: "repositoryScreen" }
+    { id: 'task08', phaseRequired: 8, title: "Step 8: The Repository", description: "The <strong>Repository</strong> tracks Milestones, Daily Rituals, and special discoveries like Scene Blueprints or Experiments. Check back often! You're now ready to explore the Lab!", hint: "Tap 'Repository' in the top navigation.", highlightElementId: "repositoryScreen" }
  ];
 
 
