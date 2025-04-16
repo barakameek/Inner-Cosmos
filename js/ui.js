@@ -2639,5 +2639,5 @@ export function updateNoteSaveStatus(message, isError = false) {
     }
 }
 
-console.log("ui.js loaded. (Enhanced v4.5 - Refining Key Lookups)");
+console.log("ui.js loaded. (Enhanced v4.8 - Final FINAL Key Lookup Fix)");
 // --- END OF CORRECTED ui.js ---
