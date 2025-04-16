@@ -1,11 +1,11 @@
-// --- START OF CORRECTED utils.js (v4.7 - Refined Name/Key Handling) ---
+// --- START OF CORRECTED utils.js (v4.8 - Consistent Keying) ---
 
 // js/utils.js - Utility Functions (Enhanced for 7 Elements + v4)
 
 // Import elementDetails (for getElementShortName) and elementKeyToFullName (for reverse lookup)
 import { elementDetails, elementKeyToFullName } from '../data.js';
 
-console.log("utils.js loading... (Enhanced v4.7 - Refining Key/Name Handling)");
+console.log("utils.js loading... (Enhanced v4.8 - Consistent Keying)");
 
 /**
  * Returns a descriptive label for a score (0-10).
@@ -35,22 +35,31 @@ export function getAffinityLevel(score) {
 }
 
 /**
- * Gets the short name for an element (e.g., "Attraction").
- * Can accept either the short name ("Attraction") or the full descriptive name.
- * @param {string} nameOrKey - The short name key ("Attraction") or full descriptive name ("Attraction Focus: The Spark Plug").
- * @returns {string} The short name or the original input if lookup fails.
+ * Gets the short display name (e.g., "Attraction") from various possible inputs.
+ * @param {string} nameOrKey - Can be short name key ("Attraction"), full descriptive name ("Attraction Focus: ..."), or single letter key ('A').
+ * @returns {string} The short display name or the original input if lookup fails.
  */
 export function getElementShortName(nameOrKey) {
     if (!nameOrKey) return "Unknown";
-    // If it's already a key in elementDetails, use its name property
+
+    // 1. Check if it's a single letter key ('A', 'I', etc.)
+    if (nameOrKey.length === 1 && elementKeyToFullName[nameOrKey]) {
+        const shortNameKey = elementKeyToFullName[nameOrKey]; // "Attraction"
+        return elementDetails[shortNameKey]?.name?.split(':')[0] || shortNameKey;
+    }
+
+    // 2. Check if it's already the short name key ("Attraction", etc.)
     if (elementDetails[nameOrKey]?.name) {
         return elementDetails[nameOrKey].name.split(':')[0];
     }
-    // If it contains ':', assume it's a full name
+
+    // 3. Check if it's a full descriptive name ("Attraction Focus: ...")
     if (nameOrKey.includes(':')) {
         return nameOrKey.split(':')[0];
     }
-    // Otherwise, assume it's already the short name (or return as is)
+
+    // 4. Final fallback
+    console.warn(`Could not determine short name for: ${nameOrKey}`);
     return nameOrKey;
 }
 
@@ -75,7 +84,7 @@ export function getElementColor(elementNameKey) {
      if (fallbackColors[elementNameKey]) {
          return fallbackColors[elementNameKey];
      }
-    console.warn(`Color not found for element key: ${elementNameKey}`);
+    console.warn(`Utils: Color not found for element key: ${elementNameKey}`);
     return '#CCCCCC'; // Default grey
 }
 
@@ -132,7 +141,7 @@ export function getElementIcon(elementNameKey) {
          case "Relational": return "fa-solid fa-link";
          case "RoleFocus": return "fa-solid fa-gauge-high";
          default:
-             console.warn(`Icon not found for element key: ${elementNameKey}`);
+             console.warn(`Utils: Icon not found for element key: ${elementNameKey}`);
              return "fa-solid fa-atom";
      }
 }
