@@ -13,7 +13,7 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.3 - Fixed Scope/Decl Errors)");
+console.log("ui.js loading... (Enhanced v4.4 - Fixing Key Lookups)");
 
 // --- Helper Function for Image Errors ---
 function handleImageError(imgElement) {
@@ -33,7 +33,7 @@ window.handleImageError = handleImageError;
 
 // --- DOM Element References ---
 const getElement = (id) => document.getElementById(id);
-// Define all required elements, checking they exist might be good practice
+// ... (All other element references unchanged) ...
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
 const welcomeScreen = getElement('welcomeScreen');
@@ -182,17 +182,20 @@ const onboardingHighlight = getElement('onboardingHighlight');
 let personaChartInstance = null; // Declare only ONCE at module level
 let toastTimeout = null;
 let milestoneTimeout = null;
-let insightBoostTimeoutId = null; // Added for insight boost timer
+let insightBoostTimeoutId = null;
 let previousScreenId = 'welcomeScreen';
 
 // --- Utility UI Functions ---
+// ... (unchanged) ...
 export function showTemporaryMessage(message, duration = Config.TOAST_DURATION, isGuidance = false) { if (!toastElement || !toastMessageElement) { console.warn("Toast elements missing:", message); return; } console.info(`Toast: ${message}`); toastMessageElement.textContent = message; toastElement.classList.toggle('guidance-toast', isGuidance); if (toastTimeout) clearTimeout(toastTimeout); toastElement.classList.remove('hidden', 'visible'); void toastElement.offsetWidth; toastElement.classList.add('visible'); toastElement.classList.remove('hidden'); toastTimeout = setTimeout(() => { toastElement.classList.remove('visible'); setTimeout(() => { if (toastElement && !toastElement.classList.contains('visible')) { toastElement.classList.add('hidden'); } }, 500); toastTimeout = null; }, duration); }
 export function showMilestoneAlert(text) { if (!milestoneAlert || !milestoneAlertText) return; milestoneAlertText.textContent = `Milestone: ${text}`; milestoneAlert.classList.remove('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = setTimeout(hideMilestoneAlert, Config.MILESTONE_ALERT_DURATION); }
 export function hideMilestoneAlert() { if (milestoneAlert) milestoneAlert.classList.add('hidden'); if (milestoneTimeout) clearTimeout(milestoneTimeout); milestoneTimeout = null; }
 export function hidePopups() { console.log("UI: hidePopups called"); let researchPopupIsOpenAndPending = false; if (researchResultsPopup && !researchResultsPopup.classList.contains('hidden')) { const pendingItems = researchPopupContent?.querySelectorAll('.research-result-item[data-processed="false"], .research-result-item[data-choice-made="pending_dissonance"]'); if (pendingItems && pendingItems.length > 0) { researchPopupIsOpenAndPending = true; console.log(`UI: Keeping research results popup open (${pendingItems.length} items pending).`); } } document.querySelectorAll('.popup:not(.onboarding-popup)').forEach(popup => { if (!(popup.id === 'researchResultsPopup' && researchPopupIsOpenAndPending)) { popup.classList.add('hidden'); } }); const anyGeneralPopupVisible = document.querySelector('.popup:not(.hidden):not(.onboarding-popup)'); if (!anyGeneralPopupVisible && popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.add('hidden'); if (typeof GameLogic !== 'undefined' && GameLogic.clearPopupState) { GameLogic.clearPopupState(); console.log("UI: All general popups hidden, cleared popup state."); } } else if (anyGeneralPopupVisible) { console.log("UI: Some general popups remain visible, overlay kept."); } else if (onboardingOverlay?.classList.contains('visible')) { console.log("UI: Onboarding is visible, main popup overlay remains hidden."); popupOverlay?.classList.add('hidden'); } }
 export function showInfoPopup(message) { if (infoPopupElement && infoPopupContent) { infoPopupContent.textContent = message; infoPopupElement.classList.remove('hidden'); if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.remove('hidden'); } } else { console.error("Info popup elements not found."); showTemporaryMessage("Error displaying info.", 2000); } }
 
+
 // --- Screen Management ---
+// ... (unchanged) ...
 export function showScreen(screenId) {
     console.log(`UI: Attempting to show screen: ${screenId}`);
     const currentState = State.getState();
@@ -247,6 +250,7 @@ export function showScreen(screenId) {
 }
 
 // --- Insight Display & Log ---
+// ... (unchanged) ...
 export function updateInsightDisplays() { const insightValue = State.getInsight(); const insight = insightValue.toFixed(1); if (userInsightDisplayPersona) userInsightDisplayPersona.textContent = insight; if (userInsightDisplayWorkshop) userInsightDisplayWorkshop.textContent = insight; updateInsightBoostButtonState(); updateDependentUI(); if (personaScreen?.classList.contains('current') && insightLogContainer && !insightLogContainer.classList.contains('log-hidden')) { displayInsightLog(); } }
 function updateDependentUI() { const insightValue = State.getInsight(); if (workshopScreen?.classList.contains('current')) { displayWorkshopScreenContent(); } else if (elementResearchButtonsContainer) { elementResearchButtonsContainer.querySelectorAll('.initial-discovery-element').forEach(button => { if (!button.dataset.isFree || button.dataset.isFree === 'false') { const cost = parseFloat(button.dataset.cost); const canAfford = insightValue >= cost; button.classList.toggle('disabled', !canAfford); button.title = canAfford ? `Research (Cost: ${cost})` : `Requires ${cost} Insight`; button.querySelector('.element-action')?.classList.toggle('disabled', !canAfford); } }); } if (personaScreen?.classList.contains('current')) { updateSuggestSceneButtonState(); personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container').forEach(container => { const key = container.dataset.elementKey; if (key) displayElementDeepDive(key, container); }); } if (repositoryScreen?.classList.contains('current')) { displayRepositoryContent(); } updateContemplationButtonState(); if (conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) { const popupConceptId = GameLogic.getCurrentPopupConceptId(); if (popupConceptId !== null) { popupLoreContent?.querySelectorAll('.unlock-lore-button').forEach(button => { const cost = parseFloat(button.dataset.cost); button.disabled = !(insightValue >= cost); button.title = (insightValue >= cost) ? `Unlock for ${cost} Insight` : `Requires ${cost} Insight`; }); } } if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) { const cost = Config.GUIDED_REFLECTION_COST; seekGuidanceButtonWorkshop.disabled = insightValue < cost; seekGuidanceButtonWorkshop.title = insightValue >= cost ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; } }
 export function displayInsightLog() { if (!insightLogContainer) return; const logEntries = State.getInsightLog(); insightLogContainer.innerHTML = '<h5>Recent Insight Changes:</h5>'; if (logEntries.length === 0) { insightLogContainer.innerHTML += '<p><i>No recent changes logged.</i></p>'; return; } logEntries.slice().reverse().forEach(entry => { const entryDiv = document.createElement('div'); entryDiv.classList.add('insight-log-entry'); const amountClass = entry.amount > 0 ? 'log-amount-gain' : 'log-amount-loss'; const sign = entry.amount > 0 ? '+' : ''; entryDiv.innerHTML = ` <span class="log-timestamp">${entry.timestamp}</span> <span class="log-source">${entry.source || 'Unknown Source'}</span> <span class="log-amount ${amountClass}">${sign}${entry.amount.toFixed(1)}</span> `; insightLogContainer.appendChild(entryDiv); }); }
@@ -254,6 +258,7 @@ export function updateInsightBoostButtonState() { const btn = getElement('addIns
 
 
 // --- Questionnaire UI ---
+// ... (unchanged) ...
 export function initializeQuestionnaireUI() {
     console.log("UI: Initializing Questionnaire UI for 7 Elements");
     State.updateElementIndex(0); // Reset index in state
@@ -475,7 +480,7 @@ export function getQuestionnaireAnswers() {
 
 
 // --- Persona Screen UI ---
-
+// ... (togglePersonaView unchanged) ...
 export function togglePersonaView(showDetailed) {
     if (personaDetailedView && personaSummaryView && showDetailedViewBtn && showSummaryViewBtn) {
         const detailedIsCurrent = personaDetailedView.classList.contains('current');
@@ -496,6 +501,7 @@ export function togglePersonaView(showDetailed) {
     }
 }
 
+// ... (displayPersonaScreen unchanged - includes previous fix) ...
 export function displayPersonaScreen() {
     if (!personaElementDetailsDiv) { console.error("Persona element details div not found!"); return; }
     console.log("UI: Displaying Persona Screen (7 Elements)");
@@ -584,6 +590,7 @@ export function displayPersonaScreen() {
     GameLogic.checkSynergyTensionStatus(); // Includes updating synergy button state
 }
 
+// ... (displayElementAttunement unchanged - includes previous fix) ...
 export function displayElementAttunement() {
     if (!personaElementDetailsDiv) return;
     const attunement = State.getAttunement();
@@ -635,7 +642,7 @@ export function displayElementAttunement() {
     });
 }
 
-// ... (updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary functions unchanged) ...
+// ... (updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary functions unchanged - include previous fixes) ...
 export function updateFocusSlotsDisplay() {
     const focused = State.getFocusedConcepts();
     const totalSlots = State.getFocusSlots();
@@ -873,10 +880,8 @@ export function displayPersonaSummary() {
     drawPersonaChart(scores);
 }
 
-
-
 // --- Workshop Screen UI ---
-// ... (displayWorkshopScreenContent function unchanged) ...
+// ... (displayWorkshopScreenContent unchanged - includes previous fix) ...
 export function displayWorkshopScreenContent() {
     if (!workshopScreen) return;
     console.log(`UI: Populating Workshop Screen Content`);
@@ -893,16 +898,22 @@ export function displayWorkshopScreenContent() {
         const insight = State.getInsight();
 
         elementNames.forEach(elementName => { // Includes RF
-            const key = elementNameToKey[elementName];
+            // *** BUG FIX: Use correct key lookup ***
+            const key = Object.keys(elementDetails).find(k => elementDetails[k]?.name === elementName);
+            if (!key) {
+                 console.warn(`UI displayWorkshopScreenContent: Could not find key for element name: ${elementName}`);
+                 return; // Skip if key lookup fails
+            }
+
             const score = scores[key] ?? 5.0; // Default score if missing (shouldn't happen often)
             const scoreLabel = Utils.getScoreLabel(score);
             const elementData = elementDetails[elementName] || {};
-            const color = Utils.getElementColor(elementName);
-            const iconClass = Utils.getElementIcon(elementName);
+            const color = Utils.getElementColor(elementName); // Use Name
+            const iconClass = Utils.getElementIcon(elementName); // Use Name
             const elementDiv = document.createElement('div');
             elementDiv.classList.add('initial-discovery-element');
             elementDiv.style.borderLeft = `4px solid ${color}`; // Use border for emphasis
-            elementDiv.dataset.elementKey = key;
+            elementDiv.dataset.elementKey = key; // Store the KEY
 
             let costText = "";
             let isDisabled = false;
@@ -934,7 +945,7 @@ export function displayWorkshopScreenContent() {
             // Get and display rarity counts
             let rarityCountsHTML = '';
             try {
-                const rarityCounts = GameLogic.countUndiscoveredByRarity(key);
+                const rarityCounts = GameLogic.countUndiscoveredByRarity(key); // Use KEY
                 rarityCountsHTML = `
                     <div class="rarity-counts-display" title="Undiscovered Concepts (Primary Element: ${Utils.getElementShortName(elementName)})">
                         <span class="rarity-count common" title="${rarityCounts.common} Common"><i class="fas fa-circle"></i> ${rarityCounts.common}</span>
@@ -2593,5 +2604,5 @@ export function updateNoteSaveStatus(message, isError = false) {
     }
 }
 
-console.log("ui.js loaded. (Enhanced v4.3 - Fixed Scope/Decl Errors)");
+console.log("ui.js loaded. (Enhanced v4.4 - Fixing Key Lookups)");
 // --- END OF CORRECTED ui.js ---
