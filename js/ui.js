@@ -1,5 +1,3 @@
-// --- START OF CORRECTED ui.js (Focusing on Key/Name Lookup v4.5) ---
-
 // js/ui.js - User Interface Logic (Enhanced v4)
 
 import * as State from './state.js';
@@ -14,10 +12,9 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.6 - Correcting Util Calls)");
+console.log("ui.js loading... (Enhanced v4.7 - Final Key Lookup Fix)");
 
 // --- Helper Function for Image Errors ---
-// ... (unchanged) ...
 function handleImageError(imgElement) {
     console.warn(`Image failed to load: ${imgElement?.src}. Displaying placeholder.`);
     if (imgElement) {
@@ -33,8 +30,8 @@ window.handleImageError = handleImageError;
 
 
 // --- DOM Element References ---
-// ... (unchanged) ...
 const getElement = (id) => document.getElementById(id);
+// (All other element references assumed correct from previous versions)
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
 const welcomeScreen = getElement('welcomeScreen');
@@ -178,7 +175,6 @@ const onboardingNextButton = getElement('onboardingNextButton');
 const onboardingSkipButton = getElement('onboardingSkipButton');
 const onboardingHighlight = getElement('onboardingHighlight');
 
-
 // --- Module-level Variables ---
 let personaChartInstance = null;
 let toastTimeout = null;
@@ -274,7 +270,7 @@ export function updateElementProgressHeader(activeIndex) {
     if (!elementProgressHeader) return;
     elementProgressHeader.innerHTML = '';
     // Now iterates through 7 elements defined in data.js
-    elementNames.forEach((name, index) => {
+    elementNames.forEach((name, index) => { // name is "Attraction", etc.
         const tab = document.createElement('div');
         tab.classList.add('element-tab');
         const elementData = elementDetails[name] || {}; // Use name as key
@@ -481,7 +477,6 @@ export function getQuestionnaireAnswers() {
     });
     return answers;
 }
-
 // --- Persona Screen UI ---
 // ... (togglePersonaView unchanged) ...
 export function togglePersonaView(showDetailed) {
