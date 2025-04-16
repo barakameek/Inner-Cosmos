@@ -14,9 +14,10 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.5 - Refining Key Lookups)");
+console.log("ui.js loading... (Enhanced v4.6 - Correcting Util Calls)");
 
 // --- Helper Function for Image Errors ---
+// ... (unchanged) ...
 function handleImageError(imgElement) {
     console.warn(`Image failed to load: ${imgElement?.src}. Displaying placeholder.`);
     if (imgElement) {
@@ -28,13 +29,12 @@ function handleImageError(imgElement) {
         }
     }
 }
-// Expose to global scope for onerror attribute
 window.handleImageError = handleImageError;
 
 
 // --- DOM Element References ---
+// ... (unchanged) ...
 const getElement = (id) => document.getElementById(id);
-// (All other element references assumed correct from previous versions)
 const saveIndicator = getElement('saveIndicator');
 const screens = document.querySelectorAll('.screen');
 const welcomeScreen = getElement('welcomeScreen');
@@ -178,8 +178,9 @@ const onboardingNextButton = getElement('onboardingNextButton');
 const onboardingSkipButton = getElement('onboardingSkipButton');
 const onboardingHighlight = getElement('onboardingHighlight');
 
+
 // --- Module-level Variables ---
-let personaChartInstance = null; // Declare only ONCE at module level
+let personaChartInstance = null;
 let toastTimeout = null;
 let milestoneTimeout = null;
 let insightBoostTimeoutId = null;
@@ -480,7 +481,6 @@ export function getQuestionnaireAnswers() {
     });
     return answers;
 }
-
 
 // --- Persona Screen UI ---
 // ... (togglePersonaView unchanged) ...
