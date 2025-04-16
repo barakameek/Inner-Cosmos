@@ -10,7 +10,7 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.2 - Fixed Chart Scope)");
+console.log("ui.js loading... (Enhanced v4.3 - Fixed Scope/Decl Errors)");
 
 // --- Helper Function for Image Errors ---
 // ... (handleImageError function unchanged) ...
@@ -46,7 +46,7 @@ const showDetailedViewBtn = getElement('showDetailedViewBtn');
 const showSummaryViewBtn = getElement('showSummaryViewBtn');
 const personaElementDetailsDiv = getElement('personaElementDetails');
 const userInsightDisplayPersona = getElement('userInsightDisplayPersona');
-const insightLogContainer = getElement('insightLogContainer'); // Added for log
+const insightLogContainer = getElement('insightLogContainer');
 const focusedConceptsDisplay = getElement('focusedConceptsDisplay');
 const focusedConceptsHeader = getElement('focusedConceptsHeader');
 const tapestryNarrativeP = getElement('tapestryNarrative');
@@ -84,7 +84,7 @@ const milestonesDisplay = getElement('milestonesDisplay');
 const dailyRitualsDisplayRepo = getElement('dailyRitualsDisplayRepo');
 const conceptDetailPopup = getElement('conceptDetailPopup');
 const popupOverlay = getElement('popupOverlay');
-const closePopupButton = getElement('closePopupButton'); // Generic close button for this popup
+// Generic close button for concept detail popup is handled in event listeners
 const popupCardTypeIcon = getElement('popupCardTypeIcon');
 const popupConceptName = getElement('popupConceptName');
 const popupConceptType = getElement('popupConceptType');
@@ -162,9 +162,10 @@ const onboardingHighlight = getElement('onboardingHighlight');
 
 
 // --- Module-level Variables ---
-let personaChartInstance = null; // Declare chart instance here
+let personaChartInstance = null;
 let toastTimeout = null;
 let milestoneTimeout = null;
+// Moved previousScreenId declaration outside showScreen
 let previousScreenId = 'welcomeScreen';
 
 // --- Utility UI Functions ---
@@ -177,14 +178,12 @@ export function hidePopups() { console.log("UI: hidePopups called"); let researc
 export function showInfoPopup(message) { if (infoPopupElement && infoPopupContent) { infoPopupContent.textContent = message; infoPopupElement.classList.remove('hidden'); if (popupOverlay && !onboardingOverlay?.classList.contains('visible')) { popupOverlay.classList.remove('hidden'); } } else { console.error("Info popup elements not found."); showTemporaryMessage("Error displaying info.", 2000); } }
 
 // --- Screen Management ---
-let previousScreenId = 'welcomeScreen';
 export function showScreen(screenId) {
     console.log(`UI: Attempting to show screen: ${screenId}`);
     const currentState = State.getState();
     const isPostQuestionnaire = currentState.questionnaireCompleted;
     const onboardingComplete = currentState.onboardingComplete;
 
-    // Ensure the target screen exists
     const targetScreenElement = getElement(screenId);
     if (!targetScreenElement) {
         console.error(`UI Error: Screen element with ID '${screenId}' not found! Falling back to welcome.`);
@@ -192,209 +191,45 @@ export function showScreen(screenId) {
         getElement('welcomeScreen')?.classList.add('current');
         screenId = 'welcomeScreen'; // Update screenId to reflect fallback
     } else {
-        // Hide all screens first
-        screens.forEach(screen => {
-            if (screen) {
-                screen.classList.add('hidden');
-                screen.classList.remove('current');
-            }
-        });
-        // Show the target screen
+        screens.forEach(screen => { if (screen) { screen.classList.add('hidden'); screen.classList.remove('current'); } });
         targetScreenElement.classList.remove('hidden');
         targetScreenElement.classList.add('current');
         console.log(`UI: Screen ${screenId} activated.`);
     }
 
-    // Manage Nav Bar visibility and active state
     if (mainNavBar) {
-        // Show nav only if questionnaire is done AND we are not on welcome/questionnaire
         const showNav = isPostQuestionnaire && screenId !== 'welcomeScreen' && screenId !== 'questionnaireScreen';
         mainNavBar.classList.toggle('hidden', !showNav);
-
         if (showNav) {
             navButtons.forEach(button => {
                 if (button) {
                     button.classList.toggle('active', button.dataset.target === screenId);
-                    // Keep buttons hidden unless questionnaire complete (exception: settings)
-                     button.classList.toggle('hidden-by-flow', !isPostQuestionnaire && button.id !== 'settingsButton');
+                    const showButton = isPostQuestionnaire || button.id === 'settingsButton';
+                    button.classList.toggle('hidden-by-flow', !showButton && button.dataset.target !== 'personaScreen' && button.dataset.target !== 'repositoryScreen' && button.dataset.target !== 'workshopScreen');
                 }
             });
+            if (isPostQuestionnaire) { document.querySelectorAll('.hidden-by-flow[data-target="workshopScreen"], .hidden-by-flow[data-target="repositoryScreen"]').forEach(el => el.classList.remove('hidden-by-flow')); }
         }
     }
 
-    // Update content specific to the shown screen
-    switch(screenId) {
-        case 'personaScreen':
-            if (isPostQuestionnaire) {
-                const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen';
-                 if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView && showSummaryViewBtn && showDetailedViewBtn) {
-                     // Show summary view first time after questionnaire
-                     togglePersonaView(false);
-                 } else {
-                     // Show the view that was last active or default to detailed
-                     if (personaSummaryView?.classList.contains('current')) { displayPersonaSummary(); }
-                     else { GameLogic.displayPersonaScreenLogic(); }
-                 }
-                 displayInsightLog(); // Display log when showing persona screen
-            }
-            break;
-        case 'workshopScreen':
-            if (isPostQuestionnaire) {
-                displayWorkshopScreenContent();
-                handleFirstGrimoireVisit();
-                refreshGrimoireDisplay();
-            }
-            break;
-        case 'repositoryScreen':
-             if (isPostQuestionnaire) {
-                displayRepositoryContent();
-             }
-            break;
-        case 'questionnaireScreen':
-            if (!isPostQuestionnaire) {
-                 if(currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) {
-                     displayElementQuestions(currentState.currentElementIndex);
-                 } else {
-                     console.warn("Questionnaire screen shown but index is invalid:", currentState.currentElementIndex);
-                     // Perhaps reset questionnaire if index is bad?
-                      initializeQuestionnaireUI();
-                 }
-            } else {
-                 console.warn("Attempted to show questionnaire screen after completion.");
-                 showScreen('personaScreen'); // Redirect to persona if already done
-            }
-            break;
-         case 'welcomeScreen':
-             // Handled by initial showScreen logic
-             break;
+    switch (screenId) {
+        case 'personaScreen': if (isPostQuestionnaire) { const justFinishedQuestionnaire = previousScreenId === 'questionnaireScreen'; if (justFinishedQuestionnaire && personaSummaryView && personaDetailedView) { togglePersonaView(false); } else { if (personaSummaryView?.classList.contains('current')) { displayPersonaSummary(); } else { GameLogic.displayPersonaScreenLogic(); } } displayInsightLog(); } break;
+        case 'workshopScreen': if (isPostQuestionnaire) { displayWorkshopScreenContent(); handleFirstGrimoireVisit(); refreshGrimoireDisplay(); } break;
+        case 'repositoryScreen': if (isPostQuestionnaire) { displayRepositoryContent(); } break;
+        case 'questionnaireScreen': if (!isPostQuestionnaire) { if (currentState.currentElementIndex >= 0 && currentState.currentElementIndex < elementNames.length) { displayElementQuestions(currentState.currentElementIndex); } else { console.warn("Questionnaire screen shown but index is invalid:", currentState.currentElementIndex); initializeQuestionnaireUI(); } } else { console.warn("Attempted to show questionnaire screen after completion."); showScreen('personaScreen'); } break;
+        case 'welcomeScreen': break;
     }
 
-    // Scroll to top for main content screens
-    if (['questionnaireScreen', 'workshopScreen', 'personaScreen', 'repositoryScreen'].includes(screenId)) {
-        window.scrollTo(0, 0);
-    }
-    previousScreenId = screenId; // Update previous screen tracking
+    if (['questionnaireScreen', 'workshopScreen', 'personaScreen', 'repositoryScreen'].includes(screenId)) { window.scrollTo(0, 0); }
+    previousScreenId = screenId;
 }
-
 
 // --- Insight Display & Log ---
-export function updateInsightDisplays() {
-    const insightValue = State.getInsight();
-    const insight = insightValue.toFixed(1);
-    if (userInsightDisplayPersona) userInsightDisplayPersona.textContent = insight;
-    if (userInsightDisplayWorkshop) userInsightDisplayWorkshop.textContent = insight;
+export function updateInsightDisplays() { const insightValue = State.getInsight(); const insight = insightValue.toFixed(1); if (userInsightDisplayPersona) userInsightDisplayPersona.textContent = insight; if (userInsightDisplayWorkshop) userInsightDisplayWorkshop.textContent = insight; updateInsightBoostButtonState(); updateDependentUI(); if (personaScreen?.classList.contains('current') && insightLogContainer && !insightLogContainer.classList.contains('log-hidden')) { displayInsightLog(); } }
+function updateDependentUI() { const insightValue = State.getInsight(); if (workshopScreen?.classList.contains('current')) { displayWorkshopScreenContent(); } else if (elementResearchButtonsContainer) { elementResearchButtonsContainer.querySelectorAll('.initial-discovery-element').forEach(button => { if (!button.dataset.isFree || button.dataset.isFree === 'false') { const cost = parseFloat(button.dataset.cost); const canAfford = insightValue >= cost; button.classList.toggle('disabled', !canAfford); button.title = canAfford ? `Research (Cost: ${cost})` : `Requires ${cost} Insight`; button.querySelector('.element-action')?.classList.toggle('disabled', !canAfford); } }); } if (personaScreen?.classList.contains('current')) { updateSuggestSceneButtonState(); personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container').forEach(container => { const key = container.dataset.elementKey; if (key) displayElementDeepDive(key, container); }); } if (repositoryScreen?.classList.contains('current')) { displayRepositoryContent(); } updateContemplationButtonState(); if (conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) { const popupConceptId = GameLogic.getCurrentPopupConceptId(); if (popupConceptId !== null) { popupLoreContent?.querySelectorAll('.unlock-lore-button').forEach(button => { const cost = parseFloat(button.dataset.cost); button.disabled = !(insightValue >= cost); button.title = (insightValue >= cost) ? `Unlock for ${cost} Insight` : `Requires ${cost} Insight`; }); } } if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) { const cost = Config.GUIDED_REFLECTION_COST; seekGuidanceButtonWorkshop.disabled = insightValue < cost; seekGuidanceButtonWorkshop.title = insightValue >= cost ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`; } }
+export function displayInsightLog() { if (!insightLogContainer) return; const logEntries = State.getInsightLog(); insightLogContainer.innerHTML = '<h5>Recent Insight Changes:</h5>'; if (logEntries.length === 0) { insightLogContainer.innerHTML += '<p><i>No recent changes logged.</i></p>'; return; } logEntries.slice().reverse().forEach(entry => { const entryDiv = document.createElement('div'); entryDiv.classList.add('insight-log-entry'); const amountClass = entry.amount > 0 ? 'log-amount-gain' : 'log-amount-loss'; const sign = entry.amount > 0 ? '+' : ''; entryDiv.innerHTML = ` <span class="log-timestamp">${entry.timestamp}</span> <span class="log-source">${entry.source || 'Unknown Source'}</span> <span class="log-amount ${amountClass}">${sign}${entry.amount.toFixed(1)}</span> `; insightLogContainer.appendChild(entryDiv); }); }
+export function updateInsightBoostButtonState() { const btn = getElement('addInsightButton'); if (!btn) return; const cooldownEnd = State.getInsightBoostCooldownEnd(); const now = Date.now(); if (insightBoostTimeoutId) { clearTimeout(insightBoostTimeoutId); insightBoostTimeoutId = null; } if (cooldownEnd && now < cooldownEnd) { const remaining = Math.ceil((cooldownEnd - now) / 1000); btn.disabled = true; btn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${remaining}s`; btn.title = `Insight boost available in ${remaining} seconds.`; insightBoostTimeoutId = setTimeout(updateInsightBoostButtonState, 1000); } else { btn.disabled = false; btn.innerHTML = `<i class="fas fa-plus"></i> Add Insight`; btn.title = `Get an Insight boost (${Config.INSIGHT_BOOST_AMOUNT} Insight, ${Config.INSIGHT_BOOST_COOLDOWN / 60000} min cooldown)`; } }
 
-    updateInsightBoostButtonState(); // Update boost button state
-    updateDependentUI(); // Update UI elements dependent on Insight
-
-    // Refresh Insight Log if visible
-    if (personaScreen?.classList.contains('current') && insightLogContainer && !insightLogContainer.classList.contains('log-hidden')) {
-        displayInsightLog();
-    }
-}
-
-// Central place to update UI elements that depend on Insight across the app
-function updateDependentUI() {
-    const insightValue = State.getInsight();
-
-    // Workshop Screen elements (research buttons)
-    if (workshopScreen?.classList.contains('current')) {
-        displayWorkshopScreenContent(); // Re-renders buttons, checking affordability
-    } else if (elementResearchButtonsContainer) {
-        // Lightweight update if workshop not visible (less common case)
-        elementResearchButtonsContainer.querySelectorAll('.initial-discovery-element').forEach(button => {
-            if (!button.dataset.isFree || button.dataset.isFree === 'false') {
-                 const cost = parseFloat(button.dataset.cost);
-                 const canAfford = insightValue >= cost;
-                 button.classList.toggle('disabled', !canAfford);
-                 button.title = canAfford ? `Research (Cost: ${cost})` : `Requires ${cost} Insight`;
-                 button.querySelector('.element-action')?.classList.toggle('disabled', !canAfford);
-            }
-        });
-    }
-
-    // Persona Screen elements
-    if (personaScreen?.classList.contains('current')) {
-        updateSuggestSceneButtonState();
-        // Re-render deep dive unlocks to check affordability
-        personaElementDetailsDiv?.querySelectorAll('.element-deep-dive-container').forEach(container => {
-            const key = container.dataset.elementKey;
-            if (key) displayElementDeepDive(key, container);
-        });
-    }
-
-    // Repository Screen elements
-    if (repositoryScreen?.classList.contains('current')) {
-        displayRepositoryContent(); // Re-renders scenes/experiments, checks affordability
-    }
-
-    // Popups
-    updateContemplationButtonState(); // Deep dive modal button
-    if (conceptDetailPopup && !conceptDetailPopup.classList.contains('hidden')) {
-        const popupConceptId = GameLogic.getCurrentPopupConceptId();
-        if (popupConceptId !== null) {
-            // Re-check lore unlock button affordability
-            popupLoreContent?.querySelectorAll('.unlock-lore-button').forEach(button => {
-                const cost = parseFloat(button.dataset.cost);
-                button.disabled = !(insightValue >= cost);
-                button.title = (insightValue >= cost) ? `Unlock for ${cost} Insight` : `Requires ${cost} Insight`;
-            });
-        }
-    }
-    // Guidance button cost check
-    if (seekGuidanceButtonWorkshop && guidedReflectionCostDisplayWorkshop) {
-        const cost = Config.GUIDED_REFLECTION_COST;
-        seekGuidanceButtonWorkshop.disabled = insightValue < cost;
-        seekGuidanceButtonWorkshop.title = insightValue >= cost ? `Spend ${cost} Insight for a Guided Reflection.` : `Requires ${cost} Insight.`;
-    }
-}
-
-export function displayInsightLog() {
-    if (!insightLogContainer) return;
-    const logEntries = State.getInsightLog(); // Get log from state
-    insightLogContainer.innerHTML = '<h5>Recent Insight Changes:</h5>'; // Add a title
-
-    if (logEntries.length === 0) {
-        insightLogContainer.innerHTML += '<p><i>No recent changes logged.</i></p>';
-        return;
-    }
-
-    // Display entries, newest first
-    logEntries.slice().reverse().forEach(entry => {
-        const entryDiv = document.createElement('div');
-        entryDiv.classList.add('insight-log-entry');
-        const amountClass = entry.amount > 0 ? 'log-amount-gain' : 'log-amount-loss';
-        const sign = entry.amount > 0 ? '+' : ''; // Add sign for positive changes too
-
-        entryDiv.innerHTML = `
-            <span class="log-timestamp">${entry.timestamp}</span>
-            <span class="log-source">${entry.source || 'Unknown Source'}</span>
-            <span class="log-amount ${amountClass}">${sign}${entry.amount.toFixed(1)}</span>
-        `;
-        insightLogContainer.appendChild(entryDiv);
-    });
-}
-
-// --- Insight Boost Button State ---
-let insightBoostTimeoutId = null;
-export function updateInsightBoostButtonState() {
-    const btn = getElement('addInsightButton'); if (!btn) return;
-    const cooldownEnd = State.getInsightBoostCooldownEnd();
-    const now = Date.now();
-    if (insightBoostTimeoutId) { clearTimeout(insightBoostTimeoutId); insightBoostTimeoutId = null; }
-
-    if (cooldownEnd && now < cooldownEnd) {
-        const remaining = Math.ceil((cooldownEnd - now) / 1000);
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${remaining}s`;
-        btn.title = `Insight boost available in ${remaining} seconds.`;
-        insightBoostTimeoutId = setTimeout(updateInsightBoostButtonState, 1000); // Schedule next update
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-plus"></i> Add Insight`;
-        btn.title = `Get an Insight boost (${Config.INSIGHT_BOOST_AMOUNT} Insight, ${Config.INSIGHT_BOOST_COOLDOWN / 60000} min cooldown)`;
-    }
-}
 
 // --- Questionnaire UI ---
 export function initializeQuestionnaireUI() {
