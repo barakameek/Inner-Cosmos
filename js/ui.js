@@ -1,4 +1,4 @@
-// --- START OF CORRECTED ui.js (v4.9 - Final FINAL FINAL Key Lookup Fix) ---
+// --- START OF CORRECTED ui.js (v4.9 + Score Label Enhancement) ---
 
 // js/ui.js - User Interface Logic (Enhanced v4)
 
@@ -15,7 +15,7 @@ import {
     grimoireShelves, elementalDilemmas, onboardingTasks // Include onboardingTasks
 } from '../data.js';
 
-console.log("ui.js loading... (Enhanced v4.9 - Stricter Key/Name Handling)");
+console.log("ui.js loading... (Enhanced v4.9 + Score Label Enhancement)");
 
 // --- Helper Function for Image Errors ---
 // ... (unchanged) ...
@@ -259,7 +259,7 @@ export function displayInsightLog() { if (!insightLogContainer) return; const lo
 export function updateInsightBoostButtonState() { const btn = getElement('addInsightButton'); if (!btn) return; const cooldownEnd = State.getInsightBoostCooldownEnd(); const now = Date.now(); if (insightBoostTimeoutId) { clearTimeout(insightBoostTimeoutId); insightBoostTimeoutId = null; } if (cooldownEnd && now < cooldownEnd) { const remaining = Math.ceil((cooldownEnd - now) / 1000); btn.disabled = true; btn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${remaining}s`; btn.title = `Insight boost available in ${remaining} seconds.`; insightBoostTimeoutId = setTimeout(updateInsightBoostButtonState, 1000); } else { btn.disabled = false; btn.innerHTML = `<i class="fas fa-plus"></i> Add Insight`; btn.title = `Get an Insight boost (${Config.INSIGHT_BOOST_AMOUNT} Insight, ${Config.INSIGHT_BOOST_COOLDOWN / 60000} min cooldown)`; } }
 
 // --- Questionnaire UI ---
-// ... (unchanged) ...
+// ... (initializeQuestionnaireUI, updateElementProgressHeader unchanged) ...
 export function initializeQuestionnaireUI() {
     console.log("UI: Initializing Questionnaire UI for 7 Elements");
     State.updateElementIndex(0); // Reset index in state
@@ -287,6 +287,7 @@ export function updateElementProgressHeader(activeIndex) {
     });
 }
 
+// ... (displayElementQuestions unchanged) ...
 export function displayElementQuestions(index) {
     const actualIndex = State.getState().currentElementIndex;
     const displayIndex = (actualIndex >= 0 && actualIndex < elementNames.length) ? actualIndex : index;
@@ -387,6 +388,7 @@ export function displayElementQuestions(index) {
     console.log(`UI: Finished displaying questions for ${elementName} at index ${displayIndex}`);
 }
 
+// ... (updateSliderFeedbackText unchanged) ...
 export function updateSliderFeedbackText(sliderElement, elementName) {
     if (!sliderElement || sliderElement.type !== 'range') return;
     const qId = sliderElement.dataset.questionId;
@@ -415,6 +417,7 @@ export function updateSliderFeedbackText(sliderElement, elementName) {
     feedbackElement.title = `Meaning of score ${currentValue.toFixed(1)} (${scoreLabel})`;
 }
 
+// --- updateDynamicFeedback: MODIFIED ---
 export function updateDynamicFeedback(elementName, currentAnswers) {
     // Use elementName ("Attraction") directly as key for elementDetails
     const elementData = elementDetails?.[elementName];
@@ -424,13 +427,14 @@ export function updateDynamicFeedback(elementName, currentAnswers) {
     }
 
     const tempScore = GameLogic.calculateElementScore(elementName, currentAnswers); // Pass name ("Attraction")
-    const scoreLabel = Utils.getScoreLabel(tempScore);
+    const scoreLabel = Utils.getScoreLabel(tempScore); // <-- Get the descriptive label
     const fullName = elementData.name || elementName; // Get full descriptive name
 
     feedbackElementSpan.textContent = Utils.getElementShortName(fullName); // Use full name for short name util
     feedbackScoreSpan.textContent = tempScore.toFixed(1);
 
-    // Update or create the score label span
+    // --- CHANGE START ---
+    // Update or create the score label span (now includes descriptive label)
     let scoreParent = feedbackScoreSpan?.parentNode;
     let labelSpan = scoreParent?.querySelector('.score-label');
     if (!labelSpan && scoreParent) {
@@ -440,13 +444,15 @@ export function updateDynamicFeedback(elementName, currentAnswers) {
         feedbackScoreSpan.parentNode.insertBefore(labelSpan, feedbackScoreSpan.nextSibling);
     }
     if (labelSpan) {
-        labelSpan.textContent = ` (${scoreLabel})`;
+        labelSpan.textContent = ` (${scoreLabel})`; // Display the descriptive label here
     } else { console.warn("Could not find/create score label span."); }
+    // --- CHANGE END ---
 
     feedbackScoreBar.style.width = `${tempScore * 10}%`;
     dynamicScoreFeedback.style.display = 'block';
 }
 
+// ... (getQuestionnaireAnswers unchanged) ...
 export function getQuestionnaireAnswers() {
     const answers = {};
     const inputs = questionContent?.querySelectorAll('.q-input');
@@ -484,7 +490,7 @@ export function getQuestionnaireAnswers() {
 
 
 // --- Persona Screen UI ---
-// ... (togglePersonaView unchanged) ...
+// ... (togglePersonaView, displayPersonaScreen, displayElementAttunement, updateFocusSlotsDisplay, displayFocusedConceptsPersona, generateTapestryNarrative, synthesizeAndDisplayThemesPersona, drawPersonaChart, displayPersonaSummary unchanged) ...
 export function togglePersonaView(showDetailed) {
     if (personaDetailedView && personaSummaryView && showDetailedViewBtn && showSummaryViewBtn) {
         const detailedIsCurrent = personaDetailedView.classList.contains('current');
@@ -594,7 +600,6 @@ export function displayPersonaScreen() {
     GameLogic.checkSynergyTensionStatus();
 }
 
-// ... (displayElementAttunement unchanged, should work now) ...
 export function displayElementAttunement() {
     if (!personaElementDetailsDiv) return;
     const attunement = State.getAttunement();
@@ -643,7 +648,6 @@ export function displayElementAttunement() {
     });
 }
 
-// ... (updateFocusSlotsDisplay unchanged) ...
 export function updateFocusSlotsDisplay() {
     const focused = State.getFocusedConcepts();
     const totalSlots = State.getFocusSlots();
@@ -654,7 +658,6 @@ export function updateFocusSlotsDisplay() {
     }
 }
 
-// ... (displayFocusedConceptsPersona unchanged) ...
 export function displayFocusedConceptsPersona() {
     if (!focusedConceptsDisplay) return;
     focusedConceptsDisplay.innerHTML = ''; // Clear previous
@@ -722,14 +725,12 @@ export function displayFocusedConceptsPersona() {
     updateSuggestSceneButtonState();
 }
 
-// ... (generateTapestryNarrative unchanged) ...
 export function generateTapestryNarrative() {
     if (!tapestryNarrativeP) return;
     const narrativeHTML = GameLogic.calculateTapestryNarrative(); // Gets HTML from logic
     tapestryNarrativeP.innerHTML = narrativeHTML || 'Mark concepts as "Focus" to generate narrative...';
 }
 
-// ... (synthesizeAndDisplayThemesPersona unchanged) ...
 export function synthesizeAndDisplayThemesPersona() {
     if (!personaThemesList) return;
     personaThemesList.innerHTML = ''; // Clear previous themes
@@ -757,7 +758,6 @@ export function synthesizeAndDisplayThemesPersona() {
     });
 }
 
-// ... (drawPersonaChart unchanged) ...
 export function drawPersonaChart(scores) {
     const canvas = personaScoreChartCanvas;
     if (!canvas) { console.error("Persona score chart canvas not found!"); return; }
@@ -813,7 +813,6 @@ export function drawPersonaChart(scores) {
     personaChartInstance = new Chart(ctx, { type: 'radar', data: chartData, options: chartOptions });
 }
 
-// ... (displayPersonaSummary unchanged) ...
 export function displayPersonaSummary() {
     if (!summaryContentDiv || !summaryCoreEssenceTextDiv || !summaryTapestryInfoDiv) {
         console.error("Summary view content divs not found!");
@@ -892,6 +891,7 @@ export function displayPersonaSummary() {
 }
 
 // --- Workshop Screen UI ---
+// ... (displayWorkshopScreenContent unchanged) ...
 export function displayWorkshopScreenContent() {
     if (!workshopScreen) return;
     console.log(`UI: Populating Workshop Screen Content`);
@@ -1013,7 +1013,7 @@ export function displayWorkshopScreenContent() {
 
 
 // --- Grimoire UI ---
-// ... (unchanged) ...
+// ... (updateGrimoireCounter, populateGrimoireFilters, updateShelfCounts, displayGrimoire, refreshGrimoireDisplay, handleFirstGrimoireVisit, renderCard, showConceptDetailPopup, displayPopupResonanceGauge, displayPopupRelatedConceptsTags, displayPopupRecipeComparison, updateGrimoireButtonStatus, updateFocusButtonStatus, updatePopupSellButton unchanged) ...
 export function updateGrimoireCounter() {
     if (grimoireCountSpan) {
         grimoireCountSpan.textContent = State.getDiscoveredConcepts().size;
@@ -1138,7 +1138,6 @@ export function displayGrimoire(filterParams = {}) {
     });
 
     // --- Sorting ---
-    // ... (unchanged) ...
     const rarityOrder = { 'common': 1, 'uncommon': 2, 'rare': 3 };
     conceptsToDisplay.sort((a, b) => {
         if (!a.concept || !b.concept) return 0;
@@ -1178,7 +1177,6 @@ export function displayGrimoire(filterParams = {}) {
     updateShelfCounts(); // Update counts after filtering/rendering
 }
 
-// ... (rest of ui.js functions unchanged) ...
 export function refreshGrimoireDisplay(overrideFilters = {}) {
     if (workshopScreen && !workshopScreen.classList.contains('hidden')) {
         // Get current filter values from UI elements
@@ -1341,7 +1339,6 @@ export function renderCard(concept, context = 'grimoire') {
 }
 
 // --- Concept Detail Popup UI ---
-// ... (showConceptDetailPopup unchanged - includes previous fix) ...
 export function showConceptDetailPopup(conceptId) {
      console.log(`--- UI: Opening Popup for Concept ID: ${conceptId} ---`);
      const conceptData = concepts.find(c => c.id === conceptId);
@@ -1500,8 +1497,6 @@ export function showConceptDetailPopup(conceptId) {
      console.log(`--- UI: Finished Opening Popup for Concept ID: ${conceptId} ---`);
 } // End showConceptDetailPopup
 
-
-// ... (rest of file unchanged) ...
 function displayPopupResonanceGauge(distance) {
     const gaugeBar = getElement('popupResonanceGaugeBar');
     const gaugeLabel = getElement('popupResonanceGaugeLabel');
@@ -2120,7 +2115,6 @@ export function displayRepositoryContent() {
     GameLogic.updateMilestoneProgress('repositoryContents', null); // Check repo milestone
 }
 
-// ... (unchanged) ...
 export function renderRepositoryItem(item, type, cost, canDoAction, completed = false, unmetReqs = []) {
     const div = document.createElement('div');
     div.classList.add('repository-item', `repo-item-${type}`);
@@ -2649,5 +2643,5 @@ export function updateNoteSaveStatus(message, isError = false) {
     }
 }
 
-console.log("ui.js loaded. (Enhanced v4.8 - Final FINAL Key Lookup Fix)"); // Updated log message
+console.log("ui.js loaded. (Enhanced v4.9 + Score Label Enhancement)");
 // --- END OF CORRECTED ui.js ---
