@@ -73,10 +73,22 @@ function triggerActionAndCheckOnboarding(actionFn, actionName, targetPhase, acti
     const currentPhase = State.getOnboardingPhase();
     const onboardingComplete = State.isOnboardingComplete();
 
-    if (Config.ONBOARDING_ENABLED && !onboardingComplete && currentPhase === targetPhase) {
-        // Check if the specific action condition is met (if provided)
-        const meetsCondition = !State.getState().onboardingTasks[targetPhase -1]?.track.value ||
-                                State.getState().onboardingTasks[targetPhase -1]?.track.value === actionValue;
+    // Find the task corresponding to the targetPhase
+    const task = onboardingTasks.find(t => t.phaseRequired === targetPhase);
+
+    if (Config.ONBOARDING_ENABLED && !onboardingComplete && currentPhase === targetPhase && task) {
+        // Check if the specific action condition is met (if provided in the task's track object)
+        let meetsCondition = false;
+        if (task.track) {
+            if(task.track.action === actionName) {
+                 meetsCondition = !task.track.value || task.track.value === actionValue;
+            }
+            // Could add checks for task.track.state here if needed later
+        } else {
+            // If no track object, assume the action itself is the trigger
+            meetsCondition = true;
+        }
+
 
         if (meetsCondition) {
              console.log(`Action '${actionName}' matches condition for phase ${targetPhase}. Advancing onboarding.`);
@@ -85,6 +97,8 @@ function triggerActionAndCheckOnboarding(actionFn, actionName, targetPhase, acti
         } else {
              console.log(`Action '${actionName}' triggered, but condition not met for phase ${targetPhase}.`);
         }
+    } else if (Config.ONBOARDING_ENABLED && !onboardingComplete && currentPhase === targetPhase && !task) {
+         console.warn(`Onboarding task definition missing for phase ${targetPhase}. Cannot check trigger conditions.`);
     }
 }
 
@@ -122,7 +136,7 @@ function setupGlobalEventListeners() {
     if (overlay) {
         overlay.addEventListener('click', (event) => {
             // Prevent closing if onboarding overlay is active
-            if (event.target.id !== 'onboardingOverlay') {
+            if (event.target.id !== 'onboardingOverlay' && !onboardingOverlay?.classList.contains('visible')) {
                  UI.hidePopups();
             }
         });
@@ -151,8 +165,11 @@ function setupGlobalEventListeners() {
 
 function setupNavigationListeners() {
     // Main Navigation
-    const navButtons = document.querySelectorAll('.nav-button');
+    const navButtons = document.querySelectorAll('.nav-button, .theme-toggle'); // Include theme toggle
     navButtons.forEach(button => {
+        // Check if it's the theme toggle, handle separately if needed
+        if (button.id === 'themeToggle') return; // Theme toggle handled by IIFE later
+
         button.removeEventListener('click', handleNavClick); // Prevent duplicates
         button.addEventListener('click', handleNavClick);
     });
@@ -186,31 +203,32 @@ function setupNavigationListeners() {
 }
 
 function handleNavClick(event) {
-    const button = event.target.closest('.nav-button');
-    if (!button) return;
+    const button = event.target.closest('.nav-button'); // Only target nav buttons here
+    if (!button || button.id === 'settingsButton') return; // Ignore settings button, handled globally
 
     const targetScreen = button.dataset.target;
     const isPostQuestionnaire = State.getState().questionnaireCompleted;
-    const canNavigate = isPostQuestionnaire || ['welcomeScreen', 'questionnaireScreen'].includes(targetScreen) || button.id === 'settingsButton';
+    const canNavigate = isPostQuestionnaire || ['welcomeScreen', 'questionnaireScreen'].includes(targetScreen);
 
-    if (targetScreen && targetScreen !== 'settingsButton' && canNavigate) {
-         // Use the helper function to potentially advance onboarding
-         triggerActionAndCheckOnboarding(() => UI.showScreen(targetScreen), 'showScreen', /* Phase target */ 1, /* Action value */ targetScreen);
-          // Special check for workshop/grimoire screen for onboarding task 2
-          if(targetScreen === 'workshopScreen') {
-              triggerActionAndCheckOnboarding(null, 'showScreen', 2, targetScreen);
-          }
-         // Special check for repository screen for onboarding task 8
-         if(targetScreen === 'repositoryScreen') {
-              triggerActionAndCheckOnboarding(null, 'showScreen', 8, targetScreen);
+    if (targetScreen && canNavigate) {
+         // Show the target screen immediately
+         UI.showScreen(targetScreen);
+
+         // Define onboarding phase targets for screen changes AFTER showing screen
+         let phaseTarget = null;
+         if(targetScreen === 'personaScreen') phaseTarget = 1;
+         else if(targetScreen === 'workshopScreen') phaseTarget = 2;
+         else if(targetScreen === 'repositoryScreen') phaseTarget = 8;
+
+         if(phaseTarget !== null) {
+              // Use the helper function to potentially advance onboarding
+              triggerActionAndCheckOnboarding(null, 'showScreen', phaseTarget, targetScreen);
          }
 
-    } else if (targetScreen === 'settingsButton') {
-        UI.showSettings(); // Settings handled globally, no onboarding check needed here
-    } else if (!canNavigate) {
+    } else if (targetScreen && !canNavigate) {
         console.log("Navigation blocked: Questionnaire not complete.");
         UI.showTemporaryMessage("Complete the Experimentation first!", 2500);
-    } else {
+    } else if (!targetScreen) {
          console.warn("Nav button clicked without target screen:", button);
     }
 }
@@ -234,21 +252,31 @@ function setupPersonaScreenListeners() {
         summaryViewBtn.addEventListener('click', () => UI.togglePersonaView(false));
     }
 
-    // Element Details Delegation (for unlock buttons)
+    // Element Details Delegation (for unlock buttons and accordion toggle)
     const personaElementsContainer = document.getElementById('personaElementDetails');
     if (personaElementsContainer) {
         personaElementsContainer.addEventListener('click', (event) => {
             const unlockButton = event.target.closest('.unlock-button');
+            const detailsToggle = event.target.closest('summary.element-detail-header');
+            const elaborationToggle = event.target.closest('.element-elaboration summary');
+
             if (unlockButton) {
-                // Pass the action function to the helper
+                 // Pass the action function to the helper
                 triggerActionAndCheckOnboarding(() => GameLogic.handleUnlockLibraryLevel(event), 'unlockLibrary', 6);
+            } else if (detailsToggle) {
+                // Optional: Track element accordion opens for onboarding?
+                 // Check if opening phase 1 task element
+                 const parentDetails = detailsToggle.closest('details.element-detail-entry');
+                 if (parentDetails?.open) { // Check if it was just opened
+                      triggerActionAndCheckOnboarding(null, 'openElementDetails', 1);
+                 }
+            } else if (elaborationToggle) {
+                 // Optional: track opening the elaboration accordion
+                 // console.log('Elaboration toggled');
             }
-             const detailsToggle = event.target.closest('summary.element-detail-header');
-             if (detailsToggle) {
-                 // Optional: Add tracking if needed for onboarding specific element opens
-             }
         });
     }
+
 
     // Focused Concepts Delegation (for opening detail popup)
     const focusedConceptsContainer = document.getElementById('focusedConceptsDisplay');
@@ -278,9 +306,13 @@ function setupPersonaScreenListeners() {
     const dilemmaBtn = document.getElementById('elementalDilemmaButton');
     const synergyBtn = document.getElementById('exploreSynergyButton');
     const suggestSceneBtn = document.getElementById('suggestSceneButton');
+    const deepDiveBtn = document.getElementById('deepDiveTriggerButton'); // Added listener
+
     if (dilemmaBtn) dilemmaBtn.addEventListener('click', GameLogic.handleElementalDilemmaClick);
     if (synergyBtn) synergyBtn.addEventListener('click', GameLogic.handleExploreSynergyClick);
     if (suggestSceneBtn) suggestSceneBtn.addEventListener('click', GameLogic.handleSuggestSceneClick);
+    if (deepDiveBtn) deepDiveBtn.addEventListener('click', GameLogic.showTapestryDeepDive); // Link button
+
 
     // Suggested Scene Container (for meditate button)
     const suggestedSceneContainer = document.getElementById('suggestedSceneContent');
@@ -313,8 +345,8 @@ function setupWorkshopScreenListeners() {
     const seekGuidanceBtn = document.getElementById('seekGuidanceButtonWorkshop');
     if (freeResearchBtn) {
         freeResearchBtn.addEventListener('click', () => {
-            // No specific onboarding check needed here, usually covered by daily login or research action
-            GameLogic.handleFreeResearchClick();
+            // Daily meditation might also trigger phase 3 if it's the first research
+            triggerActionAndCheckOnboarding(GameLogic.handleFreeResearchClick, 'conductResearch', 3);
         });
     }
     if (seekGuidanceBtn) {
@@ -351,8 +383,6 @@ function setupWorkshopScreenListeners() {
                 shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('active-shelf'));
                 shelf.classList.add('active-shelf');
                 UI.refreshGrimoireDisplay({ filterCategory: shelf.dataset.categoryId });
-                 // Onboarding: Check if a card was moved (handled in drop event)
-                 // This click itself doesn't fulfill the task, but drop does
             }
         });
     }
@@ -385,7 +415,7 @@ function setupWorkshopScreenListeners() {
 
         // Drag and Drop
         let draggedCardId = null;
-        grid.addEventListener('dragstart', (event) => { /* Unchanged */
+        grid.addEventListener('dragstart', (event) => {
             const card = event.target.closest('.concept-card[draggable="true"]');
             if (card?.dataset.conceptId) {
                 draggedCardId = parseInt(card.dataset.conceptId);
@@ -394,14 +424,14 @@ function setupWorkshopScreenListeners() {
                 setTimeout(() => card.classList.add('dragging'), 0);
             } else { event.preventDefault(); }
         });
-        grid.addEventListener('dragend', (event) => { /* Unchanged */
+        grid.addEventListener('dragend', (event) => {
             const card = event.target.closest('.concept-card');
             if (card) { card.classList.remove('dragging'); }
             draggedCardId = null;
             shelves?.querySelectorAll('.grimoire-shelf').forEach(shelf => shelf.classList.remove('drag-over'));
         });
         if (shelves) {
-            shelves.addEventListener('dragover', (event) => { /* Unchanged */
+            shelves.addEventListener('dragover', (event) => {
                 event.preventDefault();
                 const shelf = event.target.closest('.grimoire-shelf:not(.show-all-shelf)');
                 if (shelf) {
@@ -413,7 +443,7 @@ function setupWorkshopScreenListeners() {
                     shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over'));
                 }
             });
-            shelves.addEventListener('dragleave', (event) => { /* Unchanged */
+            shelves.addEventListener('dragleave', (event) => {
                 const shelf = event.target.closest('.grimoire-shelf');
                  if (shelf && !shelf.contains(event.relatedTarget)) { shelf.classList.remove('drag-over'); }
                  if (event.currentTarget === shelves && !shelves.contains(event.relatedTarget)){ shelves.querySelectorAll('.grimoire-shelf').forEach(s => s.classList.remove('drag-over')); }
@@ -428,8 +458,8 @@ function setupWorkshopScreenListeners() {
 
                 if (shelf?.dataset.categoryId && finalCardId) {
                     const categoryId = shelf.dataset.categoryId;
-                    // Use onboarding helper
-                    triggerActionAndCheckOnboarding(() => GameLogic.handleCategorizeCard(finalCardId, categoryId), 'categorizeCard', 5); // Check if this fulfills phase 5
+                    // Use onboarding helper - Check if categorizing fulfills phase 5
+                    triggerActionAndCheckOnboarding(() => GameLogic.handleCategorizeCard(finalCardId, categoryId), 'categorizeCard', 5);
                 } else { console.log("Drop failed: Invalid target or missing card ID."); }
                 draggedCardId = null;
             });
@@ -482,27 +512,33 @@ function setupConceptDetailPopupListeners() {
     }
     if (focusBtn) {
         focusBtn.addEventListener('click', () => {
-            const conceptId = GameLogic.getCurrentPopupConceptId();
-             // Pass action to helper for onboarding check
+            // Pass action to helper for onboarding check
             triggerActionAndCheckOnboarding(() => GameLogic.handleToggleFocusConcept(), 'markFocus', 5);
         });
     }
     if (saveNoteBtn) saveNoteBtn.addEventListener('click', GameLogic.handleSaveNote);
     if (loreContent) {
-        loreContent.addEventListener('click', (event) => { /* Unchanged */
+        loreContent.addEventListener('click', (event) => {
             const button = event.target.closest('.unlock-lore-button');
             if (button?.dataset.conceptId && button.dataset.loreLevel && button.dataset.cost && !button.disabled) {
-                GameLogic.handleUnlockLore(parseInt(button.dataset.conceptId), parseInt(button.dataset.loreLevel), parseFloat(button.dataset.cost));
+                 // Check onboarding phase 6 for unlocking lore
+                triggerActionAndCheckOnboarding(
+                     () => GameLogic.handleUnlockLore(parseInt(button.dataset.conceptId), parseInt(button.dataset.loreLevel), parseFloat(button.dataset.cost)),
+                     'unlockLore',
+                     6
+                 );
             }
         });
     }
+
     if (sellBtnContainer) {
-        sellBtnContainer.addEventListener('click', (event) => { /* Unchanged */
+        sellBtnContainer.addEventListener('click', (event) => {
             const sellButton = event.target.closest('.popup-sell-button');
             if (sellButton?.dataset.conceptId) { GameLogic.handleSellConcept(event); }
         });
     }
 }
+
 
 function setupResearchPopupListeners() {
     const closeResearchBtn = document.getElementById('closeResearchResultsPopupButton');
@@ -569,15 +605,24 @@ function setupOnboardingListeners() {
 
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
-            const nextPhase = State.advanceOnboardingPhase();
-            UI.showOnboarding(nextPhase);
+            const currentPhase = State.getOnboardingPhase();
+            if(currentPhase === Config.MAX_ONBOARDING_PHASE) {
+                 // Last step, finish onboarding
+                 State.markOnboardingComplete();
+                 UI.hideOnboarding();
+                 initializeApp(); // Refresh main UI
+            } else {
+                 const nextPhase = State.advanceOnboardingPhase();
+                 UI.showOnboarding(nextPhase);
+            }
         });
     }
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             const currentPhase = State.getOnboardingPhase();
             if (currentPhase > 1) {
-                 State.updateOnboardingPhase(currentPhase - 1); // Need a direct setter in state.js
+                 // Need a function in state.js to specifically set the phase
+                 State.updateOnboardingPhase(currentPhase - 1); // Assumes updateOnboardingPhase exists
                  UI.showOnboarding(currentPhase - 1);
             }
         });
@@ -597,6 +642,25 @@ function setupOnboardingListeners() {
 
 // --- App Start ---
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+// ---------------- Dark‑mode persistence & toggle ---------------
+// Added IIFE for dark mode
+(() => {
+  const root = document.documentElement;
+  // apply saved theme on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') root.classList.add('dark');
+
+  // set up toggle button
+  const toggle = document.getElementById('themeToggle');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      root.classList.toggle('dark');
+      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+    });
+  }
+})();
+
 
 console.log("main.js loaded. (Enhanced v4)");
 // --- END OF FILE main.js ---
