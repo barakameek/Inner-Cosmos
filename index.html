@@ -26,19 +26,30 @@
         <!-- Saving Indicator -->
         <div id="saveIndicator" class="save-indicator hidden"><i class="fas fa-save"></i> Saving...</div>
 
+        <!-- Main Navigation Bar -->
+        <nav id="mainNavBar" class="main-nav hidden" aria-label="Main Navigation">
+             <button class="nav-button active" data-target="personaScreen">Persona</button>
+             <button class="nav-button hidden-by-flow" data-target="workshopScreen">Workshop (<span id="grimoireCount">0</span>)</button>
+             <button class="nav-button hidden-by-flow" data-target="repositoryScreen">Repository</button>
+             <button id="settingsButton" class="nav-button settings-button" title="Settings & Save/Load Options" aria-label="Settings"><i class="fas fa-cog"></i></button>
+             <!-- Theme Toggle Button Added Here -->
+             <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌗</button>
+        </nav>
+
         <!-- Welcome Screen -->
         <div id="welcomeScreen" class="screen current">
              <h1>Welcome to the Persona Alchemy Lab! <i class="fas fa-info-circle info-icon" title="Discover concepts reflecting your inner self through guided introspection and experimentation."></i></h1>
              <p>Uncover Concept Cards that resonate with your essence and weave your unique Persona Tapestry.</p>
              <button id="startGuidedButton" class="button">Begin Experimentation</button>
              <button id="loadButton" class="button secondary-button hidden">Load Previous Session</button>
-             <p><small>Version: Enhanced v4</small></p>
+             <p><small>Version: Enhanced v4 + UI Polish</small></p>
         </div>
 
         <!-- Questionnaire Screen (Will show 7 steps) -->
         <div id="questionnaireScreen" class="screen hidden">
              <header>
-                 <div id="elementProgressHeader" aria-label="Questionnaire Progress"></div> <!-- Will be populated with 7 tabs by JS -->
+                 <!-- Updated: Now uses #elementProgressHeader for the stepper -->
+                 <div id="elementProgressHeader" aria-label="Questionnaire Progress"></div> <!-- Will be populated with 7 steps by JS -->
                  <p id="progressText"></p>
                  <div id="dynamicScoreFeedback" style="display: none;"> <!-- Initially hidden -->
                     Current <span id="feedbackElement">[Element]</span> Score: <span id="feedbackScore">5.0</span><span class="score-label">(Moderate)</span>
@@ -54,14 +65,6 @@
                  <button id="nextElementButton" class="button next-button">Next Element</button> <!-- Text updates dynamically -->
              </footer>
         </div>
-
-        <!-- Main Navigation Bar -->
-        <nav id="mainNavBar" class="main-nav hidden" aria-label="Main Navigation">
-             <button class="nav-button active" data-target="personaScreen">Persona</button>
-             <button class="nav-button hidden-by-flow" data-target="workshopScreen">Workshop (<span id="grimoireCount">0</span>)</button>
-             <button class="nav-button hidden-by-flow" data-target="repositoryScreen">Repository</button>
-             <button id="settingsButton" class="nav-button settings-button" title="Settings & Save/Load Options" aria-label="Settings"><i class="fas fa-cog"></i></button>
-        </nav>
 
         <!-- Persona Screen -->
         <div id="personaScreen" class="screen hidden persona-screen">
@@ -103,7 +106,7 @@
                           <p>Curate concepts to shape your active Persona.</p>
                           <div class="tapestry-area" id="tapestryArea">
                                <h4 id="focusedConceptsHeader">Focused Concepts (0 / X) <i class="fas fa-info-circle info-icon" title="The number of Concepts currently marked as Focus out of your total available slots. Slots can be increased via Milestones."></i></h4>
-                               <div id="focusedConceptsDisplay" class="focus-concepts-grid" aria-live="polite">
+                               <div id="focusedConceptsDisplay" class="focus-concepts-grid concept-grid" aria-live="polite"> <!-- Added concept-grid class -->
                                    <!-- Focused concepts populated by JS -->
                                     <div class="focus-placeholder">Focus Concepts from your Workshop Library (tap the ☆)</div>
                                </div>
@@ -211,7 +214,8 @@
                      <!-- JS populates shelves -->
                      <p><i>Loading shelves...</i></p>
                 </div>
-                <div id="grimoire-grid-workshop" class="card-grid grimoire-grid" aria-live="polite">
+                <!-- Updated: Added concept-grid class for masonry -->
+                <div id="grimoire-grid-workshop" class="card-grid grimoire-grid concept-grid" aria-live="polite">
                      <!-- JS populates permanent grimoire cards -->
                      <p><i>Loading Grimoire...</i></p>
                 </div>
@@ -474,7 +478,11 @@
         .log-hidden { display: none; } /* Simple hide for insight log initially */
          .onboarding-highlight { position: fixed; /* Use fixed to overlay everything */ border: 3px dashed var(--accent-color); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 216, 0, 0.7); pointer-events: none; z-index: 1049; /* Below popup but above overlay */ transition: all 0.3s ease-in-out; display: none; /* Hidden by default */ }
          #onboardingOverlay.visible { display: flex; opacity: 1; } /* Ensure overlay shows */
-
+         /* Add internal accordion style */
+        .element-elaboration summary { cursor: pointer; color: var(--link-color); font-weight: bold; font-size: 0.9em; margin-top: 8px; }
+        .element-elaboration summary::before { content: '▶ '; display: inline-block; transition: transform 0.2s; }
+        .element-elaboration[open] summary::before { transform: rotate(90deg); }
+        .element-elaboration[open] p { margin-top: 8px; }
     </style>
 
 </body>
