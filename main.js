@@ -5,6 +5,8 @@ import * as State from './js/state.js';
 import * as GameLogic from './js/gameLogic.js';
 import * as Utils from './js/utils.js';
 import * as Config from './js/config.js';
+// *** ADDED onboardingTasks to the import from data.js ***
+import { onboardingTasks } from './data.js'; // Import onboarding tasks
 
 console.log("main.js loading... (Enhanced v4 - Onboarding, Debounce)");
 
@@ -74,6 +76,7 @@ function triggerActionAndCheckOnboarding(actionFn, actionName, targetPhase, acti
     const onboardingComplete = State.isOnboardingComplete();
 
     // Find the task corresponding to the targetPhase
+    // *** Now onboardingTasks will be defined here because of the import ***
     const task = onboardingTasks.find(t => t.phaseRequired === targetPhase);
 
     if (Config.ONBOARDING_ENABLED && !onboardingComplete && currentPhase === targetPhase && task) {
@@ -136,6 +139,7 @@ function setupGlobalEventListeners() {
     if (overlay) {
         overlay.addEventListener('click', (event) => {
             // Prevent closing if onboarding overlay is active
+            const onboardingOverlay = document.getElementById('onboardingOverlay'); // Check dynamically
             if (event.target.id !== 'onboardingOverlay' && !onboardingOverlay?.classList.contains('visible')) {
                  UI.hidePopups();
             }
@@ -268,6 +272,7 @@ function setupPersonaScreenListeners() {
                  // Check if opening phase 1 task element
                  const parentDetails = detailsToggle.closest('details.element-detail-entry');
                  if (parentDetails?.open) { // Check if it was just opened
+                      // Check onboarding phase 1 completion
                       triggerActionAndCheckOnboarding(null, 'openElementDetails', 1);
                  }
             } else if (elaborationToggle) {
