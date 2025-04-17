@@ -1,857 +1,362 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Persona Alchemy Lab</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> <!-- Updated FA version -->
-    <!-- Chart.js Library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:,"> <!-- Prevent favicon error -->
-</head>
-<body>
-    <!-- Onboarding Highlight Element (Positioned absolutely/fixed by CSS) -->
-    <div id="onboardingHighlight" class="onboarding-highlight hidden"></div>
+/* =========================================================
+   Persona Alchemy Lab - Merged & Restyled CSS (v4 + New Look)
+   ========================================================= */
 
-    <!-- Main Application Container -->
-    <div class="app-container study-theme">
-
-        <!-- Saving Indicator -->
-        <div id="saveIndicator" class="save-indicator hidden"><i class="fas fa-save"></i> Saving...</div>
-
-        <!-- Main Navigation Bar -->
-        <nav id="mainNavBar" class="main-nav hidden" aria-label="Main Navigation">
-             <button class="nav-button active" data-target="personaScreen">Persona</button>
-             <button class="nav-button hidden-by-flow" data-target="workshopScreen">Workshop (<span id="grimoireCount">0</span>)</button>
-             <button class="nav-button hidden-by-flow" data-target="repositoryScreen">Repository</button>
-             <button id="settingsButton" class="nav-button settings-button" title="Settings & Save/Load Options" aria-label="Settings"><i class="fas fa-cog"></i></button>
-             <!-- Theme Toggle Button Added Here -->
-             <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌗</button>
-        </nav>
-
-        <!-- Welcome Screen -->
-        <div id="welcomeScreen" class="screen current">
-             <h1>Welcome to the Persona Alchemy Lab! <i class="fas fa-info-circle info-icon" title="Discover concepts reflecting your inner self through guided introspection and experimentation."></i></h1>
-             <p>Uncover Concept Cards that resonate with your essence and weave your unique Persona Tapestry.</p>
-             <button id="startGuidedButton" class="button">Begin Experimentation</button>
-             <button id="loadButton" class="button secondary-button hidden">Load Previous Session</button>
-             <p><small>Version: Enhanced v4 + UI Polish</small></p>
-        </div>
-
-        <!-- Questionnaire Screen (Will show 7 steps) -->
-        <div id="questionnaireScreen" class="screen hidden">
-             <header>
-                 <!-- Updated: Now uses #elementProgressHeader for the stepper -->
-                 <div id="elementProgressHeader" aria-label="Questionnaire Progress"></div> <!-- Will be populated with 7 steps by JS -->
-                 <p id="progressText"></p>
-                 <div id="dynamicScoreFeedback" style="display: none;"> <!-- Initially hidden -->
-                    Current <span id="feedbackElement">[Element]</span> Score: <span id="feedbackScore">5.0</span><span class="score-label">(Moderate)</span>
-                    <i class="fas fa-info-circle info-icon" title="This shows your approximate score for the current element based on your answers so far. Final scores across all 7 elements (including RoleFocus) are calculated at the end."></i>
-                    <div class="score-bar-container">
-                        <div id="feedbackScoreBar" style="width: 50%;"></div>
-                    </div>
-                 </div>
-             </header>
-             <main id="questionContent"></main> <!-- Questions loaded here -->
-             <footer>
-                 <button id="prevElementButton" class="button back-button" style="visibility: hidden;">Previous Element</button>
-                 <button id="nextElementButton" class="button next-button">Next Element</button> <!-- Text updates dynamically -->
-             </footer>
-        </div>
-
-        <!-- Persona Screen -->
-        <div id="personaScreen" class="screen hidden persona-screen">
-             <div class="persona-header">
-                 <h1>My Persona Tapestry <i class="fas fa-info-circle info-icon" title="This screen summarizes your calculated persona based on the questionnaire and focused Concepts. Use the Workshop to discover more Concepts."></i></h1>
-                 <div class="view-toggle-buttons">
-                     <button id="showDetailedViewBtn" class="button small-button view-toggle-btn active" aria-pressed="true">Detailed View</button>
-                     <button id="showSummaryViewBtn" class="button small-button view-toggle-btn" aria-pressed="false">Summary View</button>
-                 </div>
-             </div>
-
-             <!-- Detailed View -->
-             <div id="personaDetailedView" class="persona-view current">
-                 <div class="persona-overview">
-                     <!-- Left Column: Elements & Resources -->
-                     <div class="persona-column persona-elements-detailed">
-                         <h2>Core Foundation <i class="fas fa-info-circle info-icon" title="Your scores across the 7 core elements, based on the initial questionnaire. Expand each for details, interpretations, current Attunement, and unlockable Insights."></i></h2>
-                         <p>Your fundamental attributes and elemental attunement. Expand each element below.</p>
-                         <div id="personaElementDetails" aria-live="polite">
-                             <!-- JS will populate this with 7 element sections -->
-                         </div>
-                         <hr>
-                         <h2 style="cursor: pointer; display: inline-block;" title="Click to toggle Insight Log">Resources <i class="fas fa-info-circle info-icon" title="Insight is the primary currency, earned through discovery, reflection, and rituals. Spend it in The Workshop to research new Concepts or unlock deeper knowledge."></i></h2>
-                         <p>
-                             Current Insight: <strong id="userInsightDisplayPersona">0.0</strong> <i class="fas fa-brain insight-icon"></i>
-                             <button id="addInsightButton" class="button tiny-button hidden-by-flow" title="Get an Insight boost (cooldown applies)">
-                                  <i class="fas fa-plus"></i> <span class="visually-hidden">Add Insight</span>
-                             </button>
-                         </p>
-                         <!-- Insight Log Container -->
-                         <div id="insightLogContainer" class="log-hidden" aria-live="polite">
-                            <h5>Recent Insight Changes:</h5>
-                            <p><i>Loading log...</i></p>
-                         </div>
-                     </div>
-                     <!-- Right Column: Tapestry Focus -->
-                     <div class="persona-column persona-constellation">
-                          <h2>Persona Tapestry - Focus <i class="fas fa-info-circle info-icon" title="Mark Concepts from your Workshop as 'Focus' here (using the ☆ icon). This shapes your Tapestry Narrative and may unlock unique content based on combinations."></i></h2>
-                          <p>Curate concepts to shape your active Persona.</p>
-                          <div class="tapestry-area" id="tapestryArea">
-                               <h4 id="focusedConceptsHeader">Focused Concepts (0 / X) <i class="fas fa-info-circle info-icon" title="The number of Concepts currently marked as Focus out of your total available slots. Slots can be increased via Milestones."></i></h4>
-                               <div id="focusedConceptsDisplay" class="focus-concepts-grid" aria-live="polite">
-                                   <!-- Focused concepts populated by JS -->
-                                    <div class="focus-placeholder">Focus Concepts from your Workshop Library (tap the ☆)</div>
-                               </div>
-                          </div>
-                           <div class="grimoire-insights">
-                              <h3>Focus Themes <i class="fas fa-info-circle info-icon" title="Highlights the dominant Elements based on your Focused Concepts."></i></h3>
-                              <p>Dominant elemental themes emerging from your focus.</p>
-                              <ul id="personaThemesList" aria-live="polite">
-                                  <!-- Themes populated by JS -->
-                                   <li>Mark Focused Concepts...</li>
-                              </ul>
-                          </div>
-                          <div class="tapestry-narrative-section">
-                              <h3>Tapestry Narrative <i class="fas fa-info-circle info-icon" title="A dynamically generated interpretation based on your Focused Concepts, highlighting dominant elements and potential synergies/tensions between them."></i></h3>
-                              <p id="tapestryNarrative" aria-live="polite">Mark concepts as "Focus" to generate narrative...</p>
-                              <div class="tapestry-actions">
-                                  <button id="elementalDilemmaButton" class="button small-button hidden-by-flow" title="Engage with an Elemental Dilemma for Insight.">Elemental Dilemma</button>
-                                  <button id="exploreSynergyButton" class="button small-button hidden-by-flow" disabled title="Focus concepts to explore synergies...">Explore Synergy</button>
-                                  <button id="suggestSceneButton" class="button small-button hidden-by-flow" title="Suggest resonant scenes (Cost Insight)">Suggest Scenes (<span id="sceneSuggestCostDisplay">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
-                                   <button id="deepDiveTriggerButton" class="button small-button hidden-by-flow" title="Explore your focused Tapestry in the Resonance Chamber">Resonance Chamber</button> <!-- Added Deep Dive Trigger -->
-                              </div>
-                              <div id="sceneSuggestionOutput" class="scene-suggestion-output hidden" aria-live="polite">
-                                    <h4>Scene Suggestion:</h4>
-                                    <p>Based on your current focus, this scene may resonate:</p>
-                                    <div id="suggestedSceneContent">
-                                        <!-- Suggested scene populated by JS -->
-                                    </div>
-                               </div>
-                          </div>
-                     </div>
-                 </div>
-             </div>
-
-             <!-- Summary View -->
-             <div id="personaSummaryView" class="persona-view hidden">
-                  <h2>Persona Summary <i class="fas fa-info-circle info-icon" title="A concise overview combining your Core Foundation scores, Tapestry Narrative, and Focus Themes, plus a visual profile chart."></i></h2>
-                  <div id="summaryContent">
-                        <h3>Core Essence</h3>
-                        <div class="summary-section" id="summaryCoreEssenceText" aria-live="polite">
-                            <p>Loading essence details...</p> <!-- JS Populates with 7 elements -->
-                        </div>
-                        <hr class="popup-hr">
-                        <h3>Elemental Profile</h3>
-                         <p style="text-align: center; font-size: 0.9em; color: var(--text-muted-color);">Visual representation of your 7 element scores.</p>
-                        <div class="chart-container" style="position: relative; height:400px; width: 100%; max-width: 850px; margin: 20px auto; padding: 15px; background-color: rgba(255, 248, 231, 0.3); border-radius: 8px;">
-                            <canvas id="personaScoreChartCanvas" aria-label="Radar chart showing persona scores for the 7 elements"></canvas> <!-- JS will draw 7 points -->
-                        </div>
-                        <hr class="popup-hr">
-                        <h3>Focused Tapestry</h3>
-                        <div class="summary-section" id="summaryTapestryInfo" aria-live="polite">
-                             <p>Loading tapestry details...</p> <!-- JS Populates -->
-                        </div>
-                  </div>
-             </div>
-        </div>
-
-        <!-- Workshop Screen -->
-        <div id="workshopScreen" class="screen hidden workshop-screen">
-            <h1>The Workshop <i class="fas fa-info-circle info-icon" title="Conduct research using Insight or Daily Meditation, perform other actions, and manage your permanent Grimoire collection."></i></h1>
-
-            <div class="workshop-insight-display">
-                Current Insight: <strong id="userInsightDisplayWorkshop">0.0</strong> <i class="fas fa-brain insight-icon"></i>
-            </div>
-
-            <!-- Top Section: Research & Actions -->
-            <section id="workshop-research-area" class="workshop-section research-area" aria-labelledby="research-heading">
-                <h2 id="research-heading">Research Bench <i class="fas fa-info-circle info-icon" title="Select an Element to research or perform daily actions. Results appear in a popup. Research costs Insight unless using Daily Meditation or initial free attempts."></i></h2>
-                <div id="element-research-buttons" class="element-research-buttons-grid" aria-live="polite">
-                    <!-- JS populates research element buttons -->
-                    <p><i>Loading research options...</i></p>
-                </div>
-                <div id="daily-actions" class="daily-actions-area">
-                    <button id="freeResearchButtonWorkshop" class="button free-research-button hidden-by-flow" title="Once per day, perform free research on your least attuned element.">Perform Daily Meditation ☆</button>
-                    <button id="seekGuidanceButtonWorkshop" class="button small-button guidance-button hidden-by-flow" title="Spend Insight for a Guided Reflection prompt.">Seek Guidance (<span id="guidedReflectionCostDisplayWorkshop">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
-                </div>
-            </section>
-
-            <!-- Bottom Section: Grimoire Library -->
-            <section id="workshop-library-area" class="workshop-section library-area" aria-labelledby="library-heading">
-                <h2 id="library-heading">Grimoire Library <i class="fas fa-info-circle info-icon" title="Your permanent collection of discovered Concepts. Filter, sort, categorize using shelves (drag cards onto shelves!), and manage focus (☆ icon)."></i></h2>
-                <div id="grimoire-controls-workshop" class="grimoire-controls">
-                     <label for="grimoireSortOrderWorkshop">Sort:</label>
-                     <select id="grimoireSortOrderWorkshop" aria-label="Sort Grimoire Concepts">
-                         <option value="discovered">Date Added</option>
-                         <option value="name">Name</option>
-                         <option value="type">Type</option>
-                         <option value="rarity">Rarity</option>
-                         <option value="resonance">Resonance</option>
-                     </select>
-                     <span class="filter-controls hidden-by-flow">
-                            <label for="grimoireTypeFilterWorkshop">Type:</label>
-                            <select id="grimoireTypeFilterWorkshop" aria-label="Filter by Concept Type"><option value="All">All Types</option></select>
-                            <label for="grimoireElementFilterWorkshop">Element:</label>
-                            <select id="grimoireElementFilterWorkshop" aria-label="Filter by Element"><option value="All">All Elements</option></select>
-                            <label for="grimoireRarityFilterWorkshop">Rarity:</label>
-                            <select id="grimoireRarityFilterWorkshop" aria-label="Filter by Rarity"><option value="All">All Rarities</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option></select>
-                            <label for="grimoireFocusFilterWorkshop">Focus:</label>
-                            <select id="grimoireFocusFilterWorkshop" aria-label="Filter by Focus Status"><option value="All">All</option><option value="Focused">Focused</option><option value="Not Focused">Not Focused</option></select>
-                            <label for="grimoireSearchInputWorkshop">Search:</label>
-                            <input type="text" id="grimoireSearchInputWorkshop" placeholder="Name/Keyword..." aria-label="Search Grimoire Concepts" />
-                      </span>
-                     <i class="fas fa-info-circle info-icon" title="Use these controls to filter and sort the Concepts displayed below. Shelves provide quick category filters (drag cards to categorize)."></i>
-                </div>
-                <div id="grimoire-shelves-workshop" class="grimoire-shelves-area hidden-by-flow" aria-label="Grimoire Shelves">
-                     <!-- JS populates shelves -->
-                     <p><i>Loading shelves...</i></p>
-                </div>
-                <!-- Updated: Added concept-grid class for masonry -->
-                <div id="grimoire-grid-workshop" class="card-grid grimoire-grid concept-grid" aria-live="polite">
-                     <!-- JS populates permanent grimoire cards -->
-                     <p><i>Loading Grimoire...</i></p>
-                </div>
-            </section>
-        </div> <!-- /#workshopScreen -->
-
-         <!-- Repository Screen -->
-         <div id="repositoryScreen" class="screen hidden repository-screen hidden-by-flow">
-             <h1>Repository <i class="fas fa-info-circle info-icon" title="A collection of rare discoveries, daily tasks, and milestones achieved."></i></h1>
-             <p>Track your progress and review unique findings.</p>
-             <div class="repository-layout">
-                 <section id="repositoryFocusUnlocks" class="repository-section" aria-labelledby="focus-unlocks-heading">
-                     <h2 id="focus-unlocks-heading"><i class="fas fa-link"></i> Focus-Driven Discoveries <i class="fas fa-info-circle info-icon" title="Special items unlocked automatically by having specific combinations of Concepts marked as 'Focus'."></i></h2>
-                     <div class="repo-list focus-unlocks-list" aria-live="polite"></div>
-                 </section>
-                 <hr>
-                 <section id="repositoryScenes" class="repository-section" aria-labelledby="scenes-heading">
-                     <h2 id="scenes-heading"><i class="fas fa-scroll"></i> Scene Blueprints <i class="fas fa-info-circle info-icon" title="Scenarios discovered via 'Suggest Scenes' or other means. Meditate on them (costs Insight) for unique Reflection prompts."></i></h2>
-                     <div class="repo-list" aria-live="polite"></div>
-                 </section>
-                 <hr>
-                 <section id="repositoryExperiments" class="repository-section" aria-labelledby="experiments-heading">
-                     <h2 id="experiments-heading"><i class="fas fa-flask"></i> Alchemical Experiments <i class="fas fa-info-circle info-icon" title="Challenging procedures unlocked by high Attunement. Attempting them costs Insight and may require specific Focused Concepts or RoleFocus scores."></i></h2>
-                     <div class="repo-list" aria-live="polite"></div>
-                 </section>
-                 <hr>
-                 <section id="repositoryInsights" class="repository-section" aria-labelledby="insights-heading">
-                     <h2 id="insights-heading"><i class="fas fa-lightbulb"></i> Elemental Insights <i class="fas fa-info-circle info-icon" title="Short, evocative text fragments related to specific Elements, occasionally discovered during Research."></i></h2>
-                     <div class="repo-list" aria-live="polite"></div>
-                 </section>
-                 <hr>
-                 <section id="dailyRitualsSection" class="repository-section" aria-labelledby="rituals-heading">
-                      <h2 id="rituals-heading"><i class="fas fa-clock"></i> Daily Rituals <i class="fas fa-info-circle info-icon" title="Track your progress on daily tasks here. Rituals reset each day. Focus Rituals appear based on your focused Concepts."></i></h2>
-                      <ul id="dailyRitualsDisplayRepo" aria-live="polite"> <!-- New ID -->
-                          <li>Loading rituals...</li>
-                      </ul>
-                 </section>
-                 <hr>
-                 <section id="milestonesSection" class="repository-section" aria-labelledby="milestones-heading">
-                      <h2 id="milestones-heading"><i class="fas fa-award"></i> Milestones Achieved <i class="fas fa-info-circle info-icon" title="Significant accomplishments tracked throughout your journey, often granting rewards."></i></h2>
-                      <ul id="milestonesDisplay" aria-live="polite"></ul>
-                 </section>
-             </div>
-         </div>
-
-      <!-- ======================= -->
-      <!-- Popups and Modals       -->
-      <!-- ======================= -->
-        <div id="popupOverlay" class="overlay hidden" aria-hidden="true"></div>
-
-        <!-- Concept Detail Popup -->
-        <div id="conceptDetailPopup" class="popup hidden card-popup" role="dialog" aria-modal="true" aria-labelledby="popupConceptName">
-              <button id="closePopupButton" class="close-button" aria-label="Close Concept Detail">×</button>
-              <div class="popup-header">
-                  <span id="popupCardTypeIcon" class="card-type-icon" aria-hidden="true">?</span>
-                  <h3 id="popupConceptName">Concept Name</h3>
-                  <p id="popupConceptType">Card Type</p> <!-- Element icon added here by JS -->
-              </div>
-              <div class="popup-main-content">
-                  <div class="popup-visual-area">
-                      <div id="popupVisualContainer" class="popup-visual" role="img" aria-label="Concept Art">
-                          <i class="fas fa-image card-visual-placeholder" title="Visual Placeholder"></i>
-                      </div>
-                  </div>
-                  <div class="popup-info-area">
-                      <section class="popup-section popup-resonance-gauge-section" aria-labelledby="resonance-heading">
-                          <h4 id="resonance-heading">Resonance <i class="fas fa-info-circle info-icon" title="How closely this Concept aligns with your Core Foundation scores."></i></h4>
-                          <div id="popupResonanceGaugeContainer" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="5" aria-labelledby="resonance-label-text">
-                              <div id="popupResonanceGaugeBar" style="width: 50%;"></div>
-                              <span id="popupResonanceGaugeLabel" class="popup-resonance-gauge-label" aria-hidden="true">Moderate</span>
-                          </div>
-                          <small id="popupResonanceGaugeText" aria-describedby="resonance-heading">Some similarities.</small>
-                      </section>
-                      <section class="popup-section" aria-labelledby="overview-heading">
-                           <h4 id="overview-heading">Overview</h4>
-                           <p id="popupBriefDescription" class="popup-brief-desc">Brief flavour text here...</p>
-                       </section>
-                      <section class="popup-section" aria-labelledby="elaboration-heading">
-                          <h4 id="elaboration-heading">Elaboration</h4>
-                          <p id="popupDetailedDescription" class="popup-detailed-desc">Loading description...</p>
-                      </section>
-                      <section class="popup-section popup-related-concepts-section" aria-labelledby="related-heading">
-                          <h4 id="related-heading">Synergies / Related <i class="fas fa-info-circle info-icon" title="Concepts with thematic/functional relationships. Focusing synergistic concepts may unlock content."></i></h4>
-                          <div id="popupRelatedConceptsTags" class="related-concepts-tags">
-                              <p><i>None specified.</i></p>
-                          </div>
-                      </section>
-                  </div>
-              </div>
-              <div class="popup-collapsible-area">
-                  <details id="popupLoreSection" class="collapsible-popup-section hidden">
-                      <summary>Lore Insights <i class="fas fa-scroll" aria-hidden="true"></i></summary>
-                      <div id="popupLoreContent" class="collapsible-content" aria-live="polite"></div>
-                  </details>
-                  <details id="popupRecipeDetails" class="collapsible-popup-section">
-                      <summary>Elemental Recipe <i class="fas fa-flask" aria-hidden="true"></i></summary>
-                      <div class="collapsible-content">
-                           <div id="popupComparisonHighlights" aria-live="polite"></div>
-                           <details class="element-details">
-                               <summary>View Full Score Comparison</summary>
-                               <div class="profile-comparison">
-                                   <div class="profile-column"><h5>Concept Scores</h5><div id="popupConceptProfile"></div></div>
-                                   <div class="profile-column"><h5>Your Scores</h5><div id="popupUserComparisonProfile"></div></div>
-                               </div>
-                           </details>
-                      </div>
-                  </details>
-                  <details id="myNotesSection" class="collapsible-popup-section my-notes-section hidden">
-                       <summary>My Notes <i class="fas fa-pencil-alt" aria-hidden="true"></i></summary>
-                       <div class="collapsible-content">
-                           <label for="myNotesTextarea" class="visually-hidden">Personal Notes</label>
-                           <textarea id="myNotesTextarea" rows="3" placeholder="Add your personal reflections here..."></textarea>
-                           <button id="saveMyNoteButton" class="button small-button">Save Note</button>
-                           <span id="noteSaveStatus" class="note-status" aria-live="assertive"></span>
-                       </div>
-                  </details>
-              </div>
-              <div class="popup-actions">
-                   <!-- Sell button added dynamically by JS if applicable -->
-                  <button id="addToGrimoireButton" class="button small-button add-grimoire-button" title="Add this Concept to your permanent Grimoire collection.">Add to Grimoire</button>
-                  <button id="markAsFocusButton" class="button small-button focus-button hidden" title="Toggle whether this Concept contributes to your Persona Tapestry.">Mark as Focus</button>
-              </div>
-        </div> <!-- /#conceptDetailPopup -->
-
-        <!-- Research Results Popup -->
-        <div id="researchResultsPopup" class="popup hidden research-results-popup" role="dialog" aria-modal="true" aria-labelledby="research-results-heading">
-             <button id="closeResearchResultsPopupButton" class="close-button" disabled title="Make a choice for all concepts first" aria-label="Close Research Results">×</button>
-             <h3 id="research-results-heading">Research Findings</h3>
-             <div id="researchPopupContent" class="research-popup-content" aria-live="polite">
-                  <!-- JS populates with discovered concept cards -->
-                  <p><i>Processing research...</i></p>
-             </div>
-             <div class="popup-actions research-popup-actions">
-                  <small id="researchPopupStatus" aria-live="polite">Choose an action for each finding above.</small>
-                 <button id="confirmResearchChoicesButton" class="button small-button hidden">Confirm & Close</button>
-             </div>
-        </div> <!-- /#researchResultsPopup -->
-
-        <!-- Reflection Modal -->
-         <div id="reflectionModal" class="popup hidden reflection-modal" role="dialog" aria-modal="true" aria-labelledby="reflectionModalTitle">
-             <button id="closeReflectionModalButton" class="close-button" aria-label="Close Reflection">×</button>
-             <h3 id="reflectionModalTitle">Moment for Reflection <i class="fas fa-info-circle info-icon" title="Pause and consider the presented prompt. Check the box once you've genuinely reflected. Confirming grants Insight and potentially Attunement."></i></h3>
-             <p>Regarding <strong id="reflectionElement">[Element/Concept]</strong>:</p>
-             <p id="reflectionPromptText" class="prompt-text">Prompt text...</p>
-             <div class="reflection-confirm">
-                 <input type="checkbox" id="reflectionCheckbox">
-                 <label for="reflectionCheckbox">I have taken a moment to reflect on this.</label>
-                 <br>
-                 <input type="checkbox" id="scoreNudgeCheckbox" class="hidden">
-                 <label for="scoreNudgeCheckbox" id="scoreNudgeLabel" class="hidden score-nudge-label" title="If checked (only available for Dissonance reflections), completing this reflection may slightly adjust your Core Foundation scores towards this Concept's profile.">Allow this reflection to potentially nudge your core understanding?</label>
-             </div>
-             <button id="confirmReflectionButton" class="button small-button" disabled>Confirm Reflection (+<span id="reflectionRewardAmount">?</span> <i class="fas fa-brain insight-icon"></i>)</button>
-         </div> <!-- /#reflectionModal -->
-
-         <!-- Settings Popup -->
-         <div id="settingsPopup" class="popup hidden settings-popup" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
-             <button id="closeSettingsPopupButton" class="close-button" aria-label="Close Settings">×</button>
-             <h3 id="settings-heading">Settings <i class="fas fa-info-circle info-icon" title="Manage your session data. 'Force Save' manually triggers saving. 'Reset All Progress' completely wipes your saved data (use with caution!)."></i></h3>
-             <div class="settings-content">
-                  <p>Manage your session data.</p>
-                  <button id="forceSaveButton" class="button small-button">Force Save</button>
-                  <button id="resetAppButton" class="button small-button back-button">Reset All Progress</button>
-                  <p class="reset-warning"><strong>Warning:</strong> Resetting will erase all scores, discovered concepts, insight, and progress permanently.</p>
-             </div>
-         </div> <!-- /#settingsPopup -->
-
-        <!-- Tapestry Deep Dive Modal (Resonance Chamber) -->
-        <div id="tapestryDeepDiveModal" class="popup hidden resonance-chamber-modal" role="dialog" aria-modal="true" aria-labelledby="deepDiveTitle">
-            <button id="closeDeepDiveButton" class="close-button" aria-label="Close Resonance Chamber">×</button>
-            <div class="popup-header"> <h3 id="deepDiveTitle">Resonance Chamber</h3> </div>
-            <div class="resonance-chamber-content">
-                <div class="resonance-chamber-summary">
-                     <h4>Weaver's Summary</h4>
-                     <p id="deepDiveNarrativeP" aria-live="polite">Loading narrative...</p>
-                     <div class="focused-concepts-icons" id="deepDiveFocusIcons" aria-label="Icons representing focused concepts"> </div>
-                </div>
-                 <hr class="popup-hr">
-                <div class="resonance-chamber-main">
-                    <nav class="aspects-navigation" id="deepDiveAnalysisNodes" aria-label="Tapestry Aspects">
-                        <h4>Aspects of the Weave</h4>
-                        <button class="aspect-node button small-button" data-node-id="elemental" aria-controls="deepDiveDetailContent"> <i class="fas fa-atom" aria-hidden="true"></i> Elemental Flow </button>
-                        <button class="aspect-node button small-button" data-node-id="archetype" aria-controls="deepDiveDetailContent"> <i class="fas fa-mask" aria-hidden="true"></i> Concept Archetype </button> <!-- Changed icon -->
-                        <button class="aspect-node button small-button" data-node-id="synergy" aria-controls="deepDiveDetailContent"> <i class="fas fa-link" aria-hidden="true"></i> Synergy & Tension </button>
-                        <button id="contemplationNode" class="aspect-node button small-button contemplation-node" data-node-id="contemplation" aria-controls="deepDiveDetailContent"> <i class="fas fa-brain" aria-hidden="true"></i> Focusing Lens (<span class="contemplation-cost">?</span> <i class="fas fa-brain insight-icon"></i>) </button>
-                    </nav>
-                    <div class="insight-scroll-panel" id="deepDiveDetailContent" role="region" aria-live="polite"> <p><i>Select an Aspect to explore...</i></p> </div>
-                </div>
-            </div>
-        </div> <!-- /#tapestryDeepDiveModal -->
-
-        <!-- Elemental Dilemma Modal -->
-         <div id="dilemmaModal" class="popup hidden reflection-modal" role="dialog" aria-modal="true" aria-labelledby="dilemma-heading">
-             <button id="closeDilemmaModalButton" class="close-button" aria-label="Close Dilemma">×</button>
-             <h3 id="dilemma-heading">Elemental Dilemma</h3>
-             <p id="dilemmaSituationText">Situation description...</p>
-             <hr class="popup-hr">
-             <p id="dilemmaQuestionText">Question text...</p>
-             <div class="slider-container" style="max-width: 90%; margin: 20px auto;">
-                  <label for="dilemmaSlider" class="visually-hidden">Dilemma Choice Slider</label>
-                 <input type="range" id="dilemmaSlider" class="slider" min="0" max="10" step="0.5" value="5">
-                 <div class="label-container">
-                     <span id="dilemmaSliderMinLabel" class="label-text">Min Label</span>
-                     <span id="dilemmaSliderMaxLabel" class="label-text">Max Label</span>
-                 </div>
-                 <p class="value-text" aria-live="polite">Leaning: <span id="dilemmaSliderValueDisplay">Balanced</span></p>
-             </div>
-             <div class="reflection-confirm" style="margin-top: 20px;">
-                 <input type="checkbox" id="dilemmaNudgeCheckbox">
-                 <label for="dilemmaNudgeCheckbox" title="Allow this choice to slightly influence your Core Foundation scores?">Allow Score Nudge?</label>
-             </div>
-             <button id="confirmDilemmaButton" class="button small-button">Confirm Choice (+3 <i class="fas fa-brain insight-icon"></i>)</button>
-         </div> <!-- /#dilemmaModal -->
-
-         <!-- Info Popup -->
-         <div id="infoPopup" class="popup hidden info-popup" role="alertdialog" aria-modal="true" aria-labelledby="info-heading">
-             <button id="closeInfoPopupButton" class="close-button" aria-label="Close Information">×</button>
-             <div class="popup-header"><h3 id="info-heading">Information</h3></div>
-             <div class="popup-content"><p id="infoPopupContent">Info text goes here.</p></div>
-             <div class="popup-actions"><button id="confirmInfoPopupButton" class="button small-button">OK</button></div>
-         </div> <!-- /#infoPopup -->
-
-        <!-- Onboarding Popup -->
-        <div id="onboardingOverlay" class="overlay hidden" aria-hidden="true">
-            <div id="onboardingPopup" class="popup onboarding-popup hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-heading">
-                 <h2 id="onboarding-heading">Orientation</h2>
-                 <div id="onboardingContent">
-                      <p>Loading orientation steps...</p>
-                 </div>
-                 <p class="onboarding-progress"><span id="onboardingProgress">Step ? of ?</span></p>
-                 <div class="onboarding-nav">
-                     <button id="onboardingSkipButton" class="skip-button">Skip Orientation</button>
-                     <div>
-                          <button id="onboardingPrevButton" class="button small-button back-button" disabled>Previous</button>
-                          <button id="onboardingNextButton" class="button small-button">Next</button>
-                     </div>
-                 </div>
-            </div>
-        </div> <!-- /#onboardingOverlay -->
-
-
-         <!-- Alerts & Toasts -->
-         <div id="milestoneAlert" class="milestone-alert hidden" role="alert"> <span id="milestoneAlertText">Milestone Reached!</span> <button id="closeMilestoneAlertButton" aria-label="Close Milestone Alert">×</button> </div>
-         <div id="toastNotification" class="toast hidden" role="status" aria-live="polite"> <span id="toastMessage">Message text here</span> </div>
-
-
-    </div> <!-- End App Container -->
-
-    <!-- Load Scripts (Type Module) -->
-    <script src="data.js" type="module"></script>
-    <script src="js/config.js" type="module"></script>
-    <script src="js/utils.js" type="module"></script>
-    <script src="js/state.js" type="module"></script>
-    <script src="js/ui.js" type="module"></script>
-    <script src="js/gameLogic.js" type="module"></script>
-    <script src="main.js" type="module"></script>
-
-    <!-- Visually Hidden Class for Accessibility -->
-    <style>
-        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
-        .log-hidden { display: none; } /* Simple hide for insight log initially */
-         .onboarding-highlight { position: fixed; /* Use fixed to overlay everything */ border: 3px dashed var(--accent-color); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 216, 0, 0.7); pointer-events: none; z-index: 1049; /* Below popup but above overlay */ transition: all 0.3s ease-in-out; display: none; /* Hidden by default */ }
-         #onboardingOverlay.visible { display: flex; opacity: 1; } /* Ensure overlay shows */
-
-    </style>
-
-</body>
-</html>
-```
-
---- END OF FILE index.html ---
-
---- START OF FILE style.css ---
-
-```css
-/* --- START OF COMPLETE style.css (Enhanced v4 - Onboarding, RF, Logging) --- */
-
+/* ---------- 0. Global Variables & Base Styles ------------- */
 :root {
-    /* --- Color Palette --- */
-    --primary-color: #8b4513; /* Saddle Brown */
-    --secondary-color: #d2b48c; /* Tan */
-    --accent-color: #ffd700; /* Gold */
-    --text-color: #4a392c; /* Dark Brown */
-    --text-muted-color: #6a5a4a; /* Lighter Brown */
-    --link-color: #5a3a22; /* Darker Brown for links */
-    --background-light: #fdf8f0; /* Very light beige */
-    --background-medium: #f5f0e1; /* Light beige */
-    --background-dark: #e8d8c0; /* Darker beige/tan */
-    --border-color-light: #d3c0a0;
-    --border-color-dark: #a08460;
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --info-color: #17a2b8; /* Tealish blue */
+    /* New Color & Font Palette */
+    --primary-color: #1e90ff;       /* Blue */
+    --secondary-color: #32cd32;     /* Lime Green */
+    --accent-color: #ff6347;        /* Tomato Red */
+    --background-color: #f0f0f0;    /* Light Grey */
+    --text-color: #333;             /* Dark Grey */
+    --text-muted-color: #666;       /* Medium Grey */
+    --link-color: var(--primary-color); /* Use primary for links */
+    --background-light: #ffffff;    /* White */
+    --background-medium: #f8f9fa;   /* Very light grey */
+    --background-dark: #e9ecef;     /* Light grey */
+    --border-color-light: #dee2e6;
+    --border-color-dark: #adb5bd;
+    --success-color: #28a745;       /* Green */
+    --warning-color: #ffc107;       /* Yellow */
+    --danger-color: #dc3545;        /* Red */
+    --info-color: #17a2b8;          /* Teal */
 
-    /* --- Element Colors (7 Elements) --- */
-    --attraction-color: #FF6347; /* Tomato Red */
-    --interaction-color: #4682B4; /* Steel Blue */
-    --sensory-color: #32CD32; /* Lime Green */
-    --psychological-color: #FFD700; /* Gold */
-    --cognitive-color: #8A2BE2; /* Blue Violet */
-    --relational-color: #FF8C00; /* Dark Orange */
-    --rolefocus-color: #40E0D0; /* Turquoise */
+    --font-family: 'Arial', sans-serif; /* New font */
+    --font-heading: var(--font-family); /* Use same font for headings */
+    --font-accent: var(--font-family);  /* Use same font */
 
-    /* --- Category Colors --- */
-    --category-wantToTry-bg: rgba(173, 216, 230, 0.1);
-    --category-wantToTry-border: #add8e6;
-    --category-liked-bg: rgba(144, 238, 144, 0.1);
-    --category-liked-border: #90ee90;
-    --category-dislikedLimit-bg: rgba(255, 182, 193, 0.1);
-    --category-dislikedLimit-border: #ffb6c1;
-    --category-coreIdentity-bg: rgba(255, 228, 181, 0.15);
-    --category-coreIdentity-border: #ffe4b5;
+    --border-radius: 8px;           /* From new CSS */
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* From new CSS */
+    --transition-duration: 0.3s;    /* From new CSS */
+
+    /* Element Colors (Keep these from original) */
+    --attraction-color: #FF6347;
+    --interaction-color: #4682B4;
+    --sensory-color: #32CD32;
+    --psychological-color: #FFD700; /* Keeping Gold for this */
+    --cognitive-color: #8A2BE2;
+    --relational-color: #FF8C00;
+    --rolefocus-color: #40E0D0;
+
+    /* Category Colors (Adapted) */
+    --category-wantToTry-bg: rgba(30, 144, 255, 0.1);  /* Light Blue */
+    --category-wantToTry-border: #1e90ff;
+    --category-liked-bg: rgba(50, 205, 50, 0.1);     /* Light Green */
+    --category-liked-border: #32cd32;
+    --category-dislikedLimit-bg: rgba(255, 99, 71, 0.1); /* Light Red */
+    --category-dislikedLimit-border: #ff6347;
+    --category-coreIdentity-bg: rgba(255, 193, 7, 0.1);  /* Light Yellow */
+    --category-coreIdentity-border: #ffc107;
     --category-uncategorized-bg: transparent;
     --category-uncategorized-border: var(--border-color-light);
 
-    /* --- UI Component Backgrounds & Borders --- */
-    --research-area-bg: rgba(232, 216, 180, 0.4);
-    --library-area-bg: rgba(255, 248, 231, 0.7);
-    --panel-divider-color: var(--border-color-dark);
-    --popup-gradient: linear-gradient(to bottom, #fdf5e6, #faf0e6);
+    /* UI Components (Adapted) */
+    --research-area-bg: rgba(255, 255, 255, 0.7);
+    --library-area-bg: rgba(255, 255, 255, 0.9);
+    --panel-divider-color: var(--border-color-light);
+    --popup-gradient: linear-gradient(to bottom, #ffffff, #f8f9fa);
     --popup-border: var(--border-color-dark);
-    --popup-header-bg: #e8d8c0;
+    --popup-header-bg: var(--background-dark);
     --popup-header-border: var(--primary-color);
-    --overlay-bg: rgba(0, 0, 0, 0.7);
-    --input-bg: #fff8e7;
-    --input-border: var(--border-color-dark);
+    --overlay-bg: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+    --input-bg: #ffffff;
+    --input-border: var(--border-color-light);
 
-    /* --- Typography --- */
-    --font-main: 'Merriweather', serif;
-    --font-heading: 'Cinzel Decorative', cursive;
-    --font-accent: 'Garamond', serif; /* For specific subheads */
-
-    /* --- Visual Polish Bundle --- */
-    --spacing: clamp(0.75rem, 1.2vw, 1.25rem); /* Global spacing */
-    --progress-pct: 0%; /* Questionnaire progress */
+    /* Visual Polish Bundle Variables */
+    --spacing: clamp(0.75rem, 1.2vw, 1.25rem);
+    --progress-pct: 0%;
 }
 
 /* --- Global Styles --- */
 body {
-  font-family: var(--font-main);
-  margin: 0;
-  background-color: #f0e7d8; /* Slightly darker page background */
-  color: var(--text-color);
+  font-family: var(--font-family);
   line-height: 1.6;
-  font-size: 16px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color var(--transition-duration) ease;
+}
+a:hover {
+  color: var(--accent-color);
 }
 
 .app-container {
-  max-width: 1450px; /* Slightly wider for comfort */
+  max-width: 1450px;
   margin: 10px auto;
-  background: linear-gradient(to bottom, var(--background-light), var(--background-medium));
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* Softer shadow */
+  background: var(--background-light);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   border: 1px solid var(--border-color-light);
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
   position: relative;
 }
 
 /* --- Saving Indicator --- */
-.save-indicator { position: fixed; top: 55px; right: 10px; background-color: rgba(40, 167, 69, 0.85); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75em; z-index: 1000; /* High z-index */ opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+.save-indicator { position: fixed; top: calc(var(--nav-height, 50px) + 5px); /* Position below sticky nav */ right: 10px; background-color: rgba(40, 167, 69, 0.9); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75em; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
 .save-indicator:not(.hidden) { opacity: 1; }
 .save-indicator i { margin-right: 4px; }
 
-/* --- Screen Management --- */
-/* Updated for visual polish bundle */
+/* ---------- 1. Screen viewport behaviour --------------- */
 .screen {
-    padding: calc(var(--spacing) * 2) var(--spacing); /* Use fluid spacing */
-    box-sizing: border-box;
-    height: 100dvh;            /* full mobile viewport incl. notch */
-    overflow: auto;            /* scroll *inside* the screen only   */
-    /* min-height: calc(100vh - 20px - 50px); REMOVED: Replaced by height/overflow */
+  height: calc(100dvh - var(--nav-height, 50px)); /* full mobile viewport minus nav */
+  overflow: auto;            /* scroll *inside* the screen only */
+  padding: calc(var(--spacing) * 1.5) var(--spacing); /* Adjusted padding */
+  box-sizing: border-box;
 }
 .hidden { display: none !important; }
 .current { display: block; }
 
 /* --- Headings and Text --- */
-/* Updated for visual polish bundle (fluid type) */
-h1, h2, h3, h4, h5 { letter-spacing: 0.5px; margin-top: 0; margin-bottom: 0.6em; /* Consistent bottom margin */ line-height: 1.3; }
-h1 { font-family: var(--font-heading); color: #6a3906; text-align: center; margin-bottom: 25px; font-size: clamp(1.75rem, 2.2vw, 2.4rem); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-h2 { font-family: var(--font-heading); text-align: center; color: var(--primary-color); margin-bottom: 20px; font-size: clamp(1.30rem, 1.6vw, 1.60rem); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; }
+h1, h2, h3, h4, h5 { letter-spacing: 0.5px; margin-top: 0; margin-bottom: 0.6em; line-height: 1.3; font-family: var(--font-heading); /* Use base font */ }
+h1 { color: var(--primary-color); text-align: center; margin-bottom: 25px; font-size: clamp(1.75rem, 2.2vw, 2.4rem); } /* Fluid H1 */
+h2 { text-align: center; color: var(--primary-color); margin-bottom: 20px; font-size: clamp(1.30rem, 1.6vw, 1.60rem); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; } /* Fluid H2 */
 .persona-elements-detailed h2 { text-align: left; border-bottom: none; }
 .repository-section h2 { text-align: left; font-size: 1.3em; }
-h3 { font-family: var(--font-accent); font-size: 1.25em; font-weight: bold; margin-bottom: 18px; color: var(--link-color); text-align: center; }
+h3 { font-size: 1.25em; font-weight: bold; margin-bottom: 18px; color: var(--primary-color); text-align: center; }
 .popup h3 { margin-bottom: 12px; }
-h4 { font-family: var(--font-accent); font-size: 1.15em; margin-bottom: 12px; color: var(--link-color); text-align: left; font-weight: 600; }
-h5 { font-family: var(--font-accent); font-size: 1.05em; margin-bottom: 10px; color: var(--text-muted-color); text-align: center; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 5px; font-weight: 600; }
-p { margin-bottom: 15px; color: var(--text-muted-color); font-size: 1em; text-align: left; }
+h4 { font-size: 1.15em; margin-bottom: 12px; color: var(--primary-color); text-align: left; font-weight: 600; }
+h5 { font-size: 1.05em; margin-bottom: 10px; color: var(--text-muted-color); text-align: center; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 5px; font-weight: 600; }
+p { margin-bottom: 15px; color: var(--text-color); font-size: 1em; text-align: left; }
 #welcomeScreen p, .reflection-modal p, .settings-popup p, .info-popup p { text-align: center; }
 hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 20px 0; }
 .popup-hr { border-top: 1px solid var(--border-color-light); margin: 10px 0; }
-.panel-divider { border: none; height: 1px; background: linear-gradient(to right, transparent, var(--panel-divider-color, var(--border-color-dark)), transparent); margin: 20px 0; }
-.insight-icon { color: var(--cognitive-color); /* Purple */ margin-left: 4px; font-size: 1.1em; vertical-align: middle; }
+.panel-divider { border: none; height: 1px; background: linear-gradient(to right, transparent, var(--panel-divider-color, var(--border-color-light)), transparent); margin: 20px 0; }
+.insight-icon { color: var(--cognitive-color); /* Keep distinct color */ margin-left: 4px; font-size: 1.1em; vertical-align: middle; }
+.info-icon { color: var(--text-muted-color); margin-left: 6px; cursor: help; font-size: 0.9em; transition: color 0.2s ease; border-bottom: 1px dotted transparent; vertical-align: baseline; }
+.info-icon:hover { color: var(--accent-color); border-bottom-color: #ccc; }
 
-/* Info Icon Style */
-.info-icon { color: var(--info-icon-color, #999); margin-left: 6px; cursor: help; font-size: 0.9em; transition: color 0.2s ease; border-bottom: 1px dotted transparent; vertical-align: baseline; }
-.info-icon:hover { color: var(--info-icon-hover-color, var(--primary-color)); border-bottom-color: #ccc; }
+/* ---------- 5. Buttons — hover & active ---------------- */
+/* Applying .btn styles to .button base */
+.button, .btn { /* Target both for flexibility */
+  display: inline-block;
+  padding: 10px 20px; /* From .btn */
+  border: none; /* Removed border */
+  border-radius: 5px; /* From .btn */
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color var(--transition-duration) ease, transform 0.1s ease, box-shadow 0.1s ease;
+  color: white; /* From .btn */
+  background-color: var(--primary-color); /* From .btn */
+  box-shadow: var(--box-shadow);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: var(--font-family);
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none; /* Ensure link-like buttons are styled */
+  text-shadow: none; /* Remove old shadow */
+}
+.button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  background-color: var(--accent-color); /* From .btn hover */
+  color: white; /* Ensure text stays white on accent hover */
+  box-shadow: 0 2px 6px rgba(0 0 0 / .15); /* From bundle */
+  transform: translateY(-1px);
+}
+.button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: scale(.97); /* From bundle */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.button:disabled, .btn:disabled {
+  background-color: #aaa;
+  /* border-color: #888; */ /* No border */
+  color: #eee;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+/* Adapt existing variations */
+.small-button { padding: 7px 14px; font-size: 0.8em; border-radius: 5px; }
+.tiny-button { padding: 4px 9px; font-size: 0.8em; border-radius: 4px; min-width: auto; min-height: auto; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.tiny-button i { margin: 0 3px 0 0; font-size: 0.95em; }
+.back-button { background-color: #6c757d; /* Grey */ }
+.back-button:hover:not(:disabled) { background-color: #5a6268; }
+.secondary-button { background-color: var(--secondary-color); color: var(--text-color); /* Green button, dark text */ }
+.secondary-button:hover:not(:disabled) { background-color: #2aaa2a; }
+#addInsightButton { margin-left: 10px; padding: 3px 8px; font-size: 0.75em; vertical-align: middle; background-color: var(--success-color); }
+#addInsightButton:hover:not(:disabled) { background-color: #218838; }
+.free-research-button { background-color: var(--info-color); /* Teal */ }
+.free-research-button:hover:not(:disabled) { background-color: #138496; }
+.guidance-button { background-color: #ffc107; color: #333; /* Yellow, dark text */ }
+.guidance-button:hover:not(:disabled) { background-color: #e0a800; }
 
-/* --- General Button Styles --- */
-/* Updated for visual polish bundle */
-.button { display: inline-block; padding: 9px 22px; border: 1px solid #5a2d0c; border-radius: 20px; font-size: 0.9em; font-weight: bold; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; color: #ffffff; text-shadow: 1px 1px 1px rgba(0,0,0,0.2); background-color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; letter-spacing: 0.8px; font-family: var(--font-main); line-height: 1.4; text-align: center; }
-.button:hover:not(:disabled) { background-color: #a0522d; box-shadow: 0 3px 6px rgba(0,0,0,0.15); transform: translateY(-1px); }
-.button:active:not(:disabled) { transform: scale(.97) translateY(0); /* Combined transforms */ box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-.button:disabled { background-color: #aaa; border-color: #888; color: #eee; cursor: not-allowed; text-shadow: none; transform: none; box-shadow: none; opacity: 0.7; }
-.small-button { padding: 7px 14px; font-size: 0.8em; border-radius: 16px; letter-spacing: 0.5px; }
-.tiny-button { padding: 4px 9px; font-size: 0.8em; border-radius: 14px; line-height: 1; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background-color 0.2s ease, transform 0.1s ease; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
-.tiny-button i { margin: 0 3px 0 0; font-size: 0.95em; line-height: 1; }
-.tiny-button:hover:not(:disabled) { transform: scale(1.05); /* Slightly less jumpy */ }
-.tiny-button:active:not(:disabled) { transform: scale(.97); } /* Add active state */
-.tiny-button:disabled { cursor: not-allowed; opacity: 0.6; }
-.back-button { background-color: #a8a296; border-color: #7a746a; color: var(--text-color); text-shadow: none; }
-.back-button:hover:not(:disabled) { background-color: #948e82; }
-.secondary-button { background-color: #b0a48a; border-color: #8b7d6b; color: #3f372e; text-shadow: none; }
-.secondary-button:hover:not(:disabled) { background-color: #c4bba8; }
-#addInsightButton { margin-left: 10px; padding: 3px 8px; font-size: 0.75em; vertical-align: middle; background-color: var(--success-color); border-color: #1c7430; }
-#addInsightButton:disabled { background-color: #aaa; border-color: #888; opacity: 0.6; cursor: not-allowed; }
-#addInsightButton i { margin-right: 4px; }
-.free-research-button { background-color: #66cdaa; border-color: #3cb371; font-size: 0.95em; padding: 8px 16px; }
-.free-research-button:hover:not(:disabled) { background-color: #98fb98; }
-.free-research-button:disabled { background-color: #aaa; border-color: #888; color: #eee; cursor: default; text-shadow: none; }
-.guidance-button { background-color: #add8e6; border-color: #87ceeb;}
-.guidance-button:hover:not(:disabled) { background-color: #b0e0e6; }
-.guidance-button:disabled { background-color: #aaa; border-color: #888; opacity: 0.7; }
-
-/* --- Navigation Bar --- */
-/* Updated for visual polish bundle */
+/* ---------- 2. Sticky top nav -------------------------- */
+:root { --nav-height: 50px; /* Define nav height for calc() */ }
 .main-nav {
-  position: sticky; /* Make nav sticky */
-  top: 0;           /* Stick to top */
-  z-index: 900;     /* Ensure it's above content */
-  background: var(--background-light); /* Background for contrast */
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: var(--background-light);
   display: flex;
-  flex-wrap: wrap;  /* Allow wrapping on small screens */
-  gap: .5rem;       /* Space between buttons */
-  padding: .4rem .6rem; /* Padding around buttons */
-  box-shadow: 0 1px 4px rgb(0 0 0 / .08); /* Subtle shadow */
-  border-bottom: 1px solid var(--border-color-light); /* Add subtle border */
-  align-items: center; /* Vertically align items */
+  flex-wrap: wrap;
+  gap: .5rem;
+  padding: .4rem var(--spacing); /* Use fluid spacing */
+  box-shadow: 0 1px 4px rgba(0 0 0 / .08);
+  border-bottom: 1px solid var(--border-color-light);
+  min-height: var(--nav-height); /* Ensure consistent height */
+  align-items: center;
 }
 .nav-button {
   background: none;
   border: none;
   color: var(--link-color);
-  padding: 9px 12px;
+  padding: 8px 12px; /* Adjusted padding */
   font-size: 0.95em;
   font-weight: bold;
   cursor: pointer;
   border-bottom: 3px solid transparent;
-  margin: 0; /* Removed default margin */
-  transition: background .15s, color .15s, border-color 0.2s ease; /* Added background transition */
-  font-family: var(--font-main);
+  margin: 0;
+  transition: background .15s, color .15s, border-color 0.2s ease;
+  font-family: var(--font-family);
   white-space: nowrap;
-  border-radius: 4px; /* Slightly rounded corners for hover */
+  border-radius: 4px;
 }
 .nav-button:hover:not(.active) {
-  background: var(--accent-color); /* Accent hover background */
-  color: var(--primary-color); /* Darker text on hover */
-  border-bottom-color: transparent; /* Remove border on hover */
+  background: var(--accent-color);
+  color: white;
+  border-bottom-color: transparent;
 }
 .nav-button.active {
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
   font-weight: bold;
-  background: none; /* Ensure active doesn't have hover bg */
+  background: none;
 }
 .nav-button.settings-button {
-  margin-left: 0; /* Removed margin-left auto */
-  padding: 9px 14px;
-  font-size: 1.05em;
-  order: 99; /* Keep settings button towards end if wrapping */
-  background: none; /* Ensure no background initially */
+  margin-left: auto; /* Push settings/theme to right */
+  order: 99;
+  background: none;
+  padding: 8px 10px;
 }
-.nav-button.settings-button:hover {
-    background: rgba(0,0,0,0.05); /* Subtle hover */
-}
+.nav-button.settings-button:hover { background: rgba(0,0,0,0.05); }
 .main-nav.hidden { display: none !important; }
 .nav-button.hidden-by-flow { display: none; }
-
-/* Theme Toggle Button (from bundle) */
 .theme-toggle {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  margin-left: auto; /* Push to the right */
-  padding: 0.3rem 0.5rem;
-  border-radius: 5px;
-  transition: background 0.15s;
-  line-height: 1; /* Prevent extra height */
+  background: none; border: none; font-size: 1.2rem; cursor: pointer;
+  margin-left: 5px; /* Space after settings */
+  padding: 0.3rem 0.5rem; border-radius: 5px; transition: background 0.15s;
+  line-height: 1; order: 100; /* Ensure it's last */
 }
-.theme-toggle:hover {
-    background: rgba(0,0,0,0.08);
-}
-
+.theme-toggle:hover { background: rgba(0,0,0,0.08); }
 
 /* --- Welcome Screen --- */
-#welcomeScreen { text-align: center; padding: 50px var(--spacing); /* Use fluid spacing */ }
+#welcomeScreen { text-align: center; padding: 50px var(--spacing); }
 #welcomeScreen .button { margin: 10px; }
 
 /* --- Questionnaire Screen --- */
 #questionnaireScreen { text-align: center; }
 #questionnaireScreen header {
-  padding: 10px 12px 12px 12px;
+  padding: 10px var(--spacing); /* Use fluid spacing */
   border-bottom: 1px solid var(--border-color-light);
   margin-bottom: 25px;
-  position: sticky; /* Sticky header for questionnaire */
-  top: 0; /* Stick below main nav (if main nav is also sticky) */
-  background: rgba(var(--background-medium-rgb, 245, 240, 225), 0.98); /* Use RGB for opacity fallback */
+  position: sticky;
+  top: var(--nav-height, 50px); /* Stick below main nav */
+  background: rgba(240, 240, 240, 0.98); /* Use --background-color */
   backdrop-filter: blur(3px);
-  z-index: 890; /* Below main nav */
+  z-index: 10; /* Above content, below nav */
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
 }
 
-/* Stepper Styling (from bundle) */
+/* Stepper Styling */
 #elementProgressHeader {
-  display: flex;
-  position: relative;
-  counter-reset: step;
-  margin-bottom: 1rem;
-  gap: .25rem;
-  padding: 5px;
-  background-color: rgba(232, 228, 216, 0.5);
-  border-radius: 5px;
-  border: 1px solid var(--border-color-light);
+  display: flex; position: relative; counter-reset: step;
+  margin-bottom: 1rem; gap: .25rem; padding: 5px;
+  background-color: rgba(200, 200, 200, 0.3);
+  border-radius: 5px; border: 1px solid var(--border-color-light);
 }
-#elementProgressHeader::before {       /* animated progress bar */
-  content: '';
-  position: absolute;
-  background: var(--accent-color);
-  inset: 50% 0 auto; /* Center vertically */
-  transform: translateY(-50%);
-  height: 3px;
-  width: var(--progress-pct, 0%); /* Controlled by JS */
-  transition: width .3s ease-in-out;
-  z-index: 0; /* Behind step numbers */
+#elementProgressHeader::before {
+  content: ''; position: absolute; background: var(--accent-color);
+  inset: 50% 0 auto; transform: translateY(-50%);
+  height: 3px; width: var(--progress-pct, 0%);
+  transition: width .3s ease-in-out; z-index: 0;
 }
 #elementProgressHeader .step {
-  flex: 1 1 0; /* Equal width steps */
-  text-align: center;
-  font-size: .8rem;
-  padding-bottom: .3rem;
-  position: relative; /* For pseudo-element positioning */
-  color: var(--text-muted-color);
-  cursor: default;
-  z-index: 1; /* Above progress bar */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 1 0; text-align: center; font-size: .8rem; padding-bottom: .3rem;
+  position: relative; color: var(--text-muted-color); cursor: default;
+  z-index: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: color 0.3s ease;
 }
 #elementProgressHeader .step::before {
-  counter-increment: step;
-  content: counter(step);
-  display: block; /* Changed to block for centering */
-  margin: 0 auto 0.25rem auto; /* Center the number */
-  background: var(--secondary-color);
-  color: #fff;
-  width: 1.5rem; height: 1.5rem;
-  line-height: 1.5rem;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-  font-weight: bold;
+  counter-increment: step; content: counter(step); display: block;
+  margin: 0 auto 0.25rem auto; background: #adb5bd; /* Grey */
+  color: #fff; width: 1.5rem; height: 1.5rem; line-height: 1.5rem;
+  border-radius: 50%; transition: background-color 0.3s ease; font-weight: bold;
 }
-#elementProgressHeader .step.active {
-    color: var(--primary-color);
-    font-weight: bold;
-}
-#elementProgressHeader .step.active::before {
-    background: var(--primary-color); /* Make active step number primary color */
-    box-shadow: 0 0 0 3px var(--accent-color); /* Highlight active step */
-}
-#elementProgressHeader .step.completed::before {
-    background: var(--accent-color);
-    color: var(--primary-color);
-}
+#elementProgressHeader .step.active { color: var(--primary-color); font-weight: bold; }
+#elementProgressHeader .step.active::before { background: var(--primary-color); box-shadow: 0 0 0 3px var(--accent-color); }
+#elementProgressHeader .step.completed::before { background: var(--accent-color); color: var(--primary-color); }
 
-/* Rest of questionnaire styles remain similar */
-#progressText { color: var(--text-muted-color); font-size: 1em; font-weight: bold; margin-bottom: 5px; font-family: var(--font-main); }
-#dynamicScoreFeedback { font-size: 0.9em; color: #555; background-color: #eee9dd; padding: 8px 14px; border-radius: 4px; margin-top: 10px; border: 1px solid var(--border-color-light); }
-#dynamicScoreFeedback > div:first-of-type { margin-bottom: 6px; }
+#progressText { color: var(--text-muted-color); font-size: 1em; font-weight: bold; margin-bottom: 5px; }
+#dynamicScoreFeedback { font-size: 0.9em; color: #555; background-color: var(--background-medium); padding: 8px 14px; border-radius: 4px; margin-top: 10px; border: 1px solid var(--border-color-light); }
 #feedbackElement, #feedbackScore { font-weight: bold; color: var(--primary-color); }
-#feedbackScore { font-size: 1.1em; margin: 0 2px; }
 #dynamicScoreFeedback .score-label { font-style: italic; color: var(--text-muted-color); margin-left: 4px; }
-.score-bar-container { height: 8px; background-color: var(--border-color-light); border-radius: 4px; margin-top: 5px; max-width: 200px; margin-left: auto; margin-right: auto; overflow: hidden; border: 1px solid #b8a880; }
+.score-bar-container { height: 8px; background-color: var(--border-color-light); border-radius: 4px; margin-top: 5px; max-width: 200px; margin-left: auto; margin-right: auto; overflow: hidden; border: 1px solid #ccc; }
 #feedbackScoreBar { height: 100%; background-color: var(--primary-color); width: 50%; border-radius: 4px; transition: width 0.3s ease; }
 #questionnaireScreen main { padding: 0 5px; }
-.element-intro { background-color: #faf8f0; padding: 18px; border-radius: 8px; margin: 0 auto 30px auto; border-left: 5px solid var(--primary-color); max-width: 95%; box-shadow: 0 2px 5px rgba(0,0,0,0.07); }
-.element-intro h2 { text-align: left; margin-bottom: 10px; color: var(--link-color); font-size: 1.35em; font-family: var(--font-heading); border: none; }
-.element-intro p { text-align: left; font-size: 0.98em; color: #444; margin-bottom: 12px; }
-.element-intro p em { color: #7a5230; font-weight: bold; font-style: normal; }
+.element-intro { background-color: var(--background-light); padding: 18px; border-radius: var(--border-radius); margin: 0 auto 30px auto; border-left: 5px solid var(--primary-color); max-width: 95%; box-shadow: var(--box-shadow); }
+.element-intro h2 { text-align: left; margin-bottom: 10px; color: var(--primary-color); font-size: 1.35em; border: none; }
+.element-intro p { text-align: left; font-size: 0.98em; color: var(--text-color); margin-bottom: 12px; }
+.element-intro p em { color: var(--primary-color); font-weight: bold; font-style: normal; }
 .element-intro p small { color: var(--text-muted-color); display: block; margin-top: 8px; font-size: 0.88em; font-style: italic; }
-.question-block { margin: 0 auto 35px auto; padding: 22px 18px; border: 1px solid #e0d8c8; background-color: #fffefa; border-radius: 10px; max-width: 95%; box-shadow: 0 3px 7px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; }
-.question-title { font-size: 1.2em; font-weight: 600; margin-bottom: 22px; color: var(--text-color); text-align: center; max-width: 95%; line-height: 1.4; font-family: var(--font-main); }
+.question-block { margin: 0 auto 35px auto; padding: 22px 18px; border: 1px solid var(--border-color-light); background-color: var(--background-light); border-radius: var(--border-radius); max-width: 95%; box-shadow: var(--box-shadow); display: flex; flex-direction: column; align-items: center; }
+.question-title { font-size: 1.2em; font-weight: 600; margin-bottom: 22px; color: var(--text-color); text-align: center; max-width: 95%; line-height: 1.4; }
 .input-container { margin-top: 10px; width: 100%; display: flex; justify-content: center; padding: 0 5px; box-sizing: border-box; }
 .slider-container { width: 100%; max-width: 420px; margin: 0; }
-.slider { width: 100%; cursor: pointer; appearance: none; height: 9px; background: var(--border-color-light); border-radius: 5px; outline: none; border: 1px solid #b8a880; }
-.slider::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; background: #a0522d; border-radius: 50%; cursor: pointer; border: 2px solid var(--background-light); box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.1s ease; }
-.slider::-moz-range-thumb { width: 26px; height: 26px; background: #a0522d; border-radius: 50%; cursor: pointer; border: 2px solid var(--background-light); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.slider::-webkit-slider-thumb:active { transform: scale(1.1); }
-.slider::-moz-range-thumb:active { transform: scale(1.1); }
+.slider { width: 100%; cursor: pointer; appearance: none; height: 9px; background: var(--border-color-light); border-radius: 5px; outline: none; border: 1px solid #ccc; }
+.slider::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; background: var(--primary-color); border-radius: 50%; cursor: pointer; border: 2px solid var(--background-light); box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.1s ease; }
+.slider::-moz-range-thumb { width: 26px; height: 26px; background: var(--primary-color); border-radius: 50%; cursor: pointer; border: 2px solid var(--background-light); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 .label-container { display: flex; justify-content: space-between; margin-top: 8px; }
 .label-text { font-size: 0.85em; color: var(--text-muted-color); }
 .value-text { margin-top: 12px; text-align: center; font-size: 0.95em; font-weight: 500; }
-.slider-feedback { font-size: 0.9em; color: var(--link-color); background-color: var(--background-medium); border: 1px dashed var(--border-color-light); border-radius: 4px; padding: 10px 14px; margin-top: 18px; min-height: 2.5em; text-align: left; line-height: 1.45; }
+.slider-feedback { font-size: 0.9em; color: var(--primary-color); background-color: var(--background-medium); border: 1px dashed var(--border-color-light); border-radius: 4px; padding: 10px 14px; margin-top: 18px; min-height: 2.5em; text-align: left; line-height: 1.45; }
 .radio-options, .checkbox-options { width: 100%; max-width: 420px; margin: 0; text-align: left; }
 .radio-options div, .checkbox-options div { margin-bottom: 10px; }
 .radio-options label, .checkbox-options label { display: block; background-color: var(--background-medium); padding: 11px 14px; border-radius: 6px; border: 1px solid var(--border-color-light); cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; font-size: 0.98em; }
 .radio-options input[type="radio"], .checkbox-options input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
-.radio-options input[type="radio"]:checked + label, .checkbox-options input[type="checkbox"]:checked + label { background-color: #eaddb3; border-color: #b8860b; color: var(--text-color); font-weight: bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+.radio-options input[type="radio"]:checked + label, .checkbox-options input[type="checkbox"]:checked + label { background-color: var(--secondary-color); border-color: #2aaa2a; color: white; font-weight: bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
 #questionnaireScreen footer { margin-top: 30px; display: flex; justify-content: space-between; padding: 0 5px; }
 
 /* --- Persona Screen --- */
+/* Adapting styles */
 .persona-screen .persona-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing); flex-wrap: wrap; gap: 10px; }
 .persona-screen .persona-header h1 { margin-bottom: 0; flex-grow: 1; text-align: left; }
 .persona-screen .view-toggle-buttons button { margin-left: 10px; }
 .persona-overview { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--spacing); }
-.persona-column { background-color: rgba(255, 255, 255, 0.3); border-radius: 8px; padding: var(--spacing); border: 1px solid var(--border-color-light); }
+.persona-column { /* Styles inherited from .card */ }
 .persona-elements-detailed h2 { margin-bottom: 10px; font-size: 1.4em; }
 .persona-elements-detailed hr { margin: var(--spacing) 0; }
 .element-detail-entry { margin-bottom: var(--spacing); border: 1px solid transparent; border-radius: 5px; transition: border-color 0.2s ease; }
-.element-detail-entry[open] { border-color: var(--element-color, var(--border-color-light)); background-color: rgba(255,255,255,0.3); }
-.element-detail-entry summary.element-detail-header { cursor: pointer; padding: 10px; list-style: none; /* Remove default marker */ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-radius: 4px; background-color: rgba(0,0,0,0.02); transition: background-color 0.2s ease; }
+.element-detail-entry[open] { border-color: var(--element-color, var(--border-color-light)); background-color: rgba(0,0,0,0.05); } /* Subtle open background */
+.element-detail-entry summary.element-detail-header { cursor: pointer; padding: 10px; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-radius: 4px; background-color: rgba(0,0,0,0.02); transition: background-color 0.2s ease; }
 .element-detail-entry summary.element-detail-header:hover { background-color: rgba(0,0,0,0.05); }
-.element-detail-entry summary.element-detail-header::-webkit-details-marker { display: none; } /* Hide marker */
+.element-detail-entry summary.element-detail-header::-webkit-details-marker { display: none; }
 .element-detail-header > div:first-child { display: flex; align-items: center; gap: 8px; font-size: 1.1em; }
 .element-icon-indicator { font-size: 1.1em; }
 .element-detail-header .score-label { font-size: 0.85em; color: var(--text-muted-color); }
-.element-detail-header .score-bar-container { width: 100px; height: 6px; background-color: #ddd; border-radius: 3px; overflow: hidden; margin-left: auto; }
+.element-detail-header .score-bar-container { width: 100px; height: 6px; background-color: var(--background-dark); border-radius: 3px; overflow: hidden; margin-left: auto; }
 .element-detail-header .score-bar-container div { height: 100%; border-radius: 3px; }
 .element-description { padding: 15px; border-top: 1px solid var(--border-color-light); }
 .element-description hr { margin: 12px 0; border-color: var(--border-color-light); }
+/* Elaboration accordion */
+.element-elaboration summary { cursor: pointer; color: var(--link-color); font-weight: bold; font-size: 0.9em; margin-top: 8px; }
+.element-elaboration summary::before { content: '▶ '; display: inline-block; transition: transform 0.2s; }
+.element-elaboration[open] summary::before { transform: rotate(90deg); }
+.element-elaboration[open] p { margin-top: 8px; font-size: 0.9em; }
+
 .attunement-display { margin: 15px 0; }
 .attunement-item { display: flex; align-items: center; gap: 8px; }
 .attunement-name { font-weight: bold; font-size: 0.9em; }
-.attunement-bar-container { flex-grow: 1; height: 8px; background-color: #e0e0e0; border-radius: 4px; overflow: hidden; border: 1px solid #ccc; }
+.attunement-bar-container { flex-grow: 1; height: 8px; background-color: var(--background-dark); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color-light); }
 .attunement-bar { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
-.element-deep-dive-container h5 { font-size: 1em; text-align: left; border: none; padding: 0; margin-bottom: 10px; color: var(--link-color); }
+.element-deep-dive-container h5 { font-size: 1em; text-align: left; border: none; padding: 0; margin-bottom: 10px; color: var(--primary-color); }
 .library-level { margin-bottom: 15px; }
 .library-level .level-title { font-size: 1em; color: var(--primary-color); font-weight: bold; margin-bottom: 5px; }
 .library-level .level-content { font-size: 0.95em; color: var(--text-muted-color); }
@@ -860,21 +365,20 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 20p
 .library-unlock .unlock-error { color: var(--danger-color); font-size: 0.85em; margin-top: 5px; }
 .persona-constellation h2 { margin-bottom: 10px; font-size: 1.4em; }
 .tapestry-area { margin-bottom: var(--spacing); }
-.focus-concepts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--spacing); }
-.focus-concept-item { background-color: rgba(255, 255, 255, 0.7); border: 1px solid var(--border-color-light); border-radius: 5px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: box-shadow 0.2s ease; background-size: cover; background-position: center; min-height: 80px; position: relative; }
-.focus-concept-item.has-background-image::before { content: ''; position: absolute; inset: 0; background-color: rgba(253, 248, 240, 0.8); border-radius: inherit; z-index: 0; } /* Overlay for text readability */
+.focus-concepts-grid { /* Masonry applied via class */ }
+.focus-concept-item { background-color: var(--background-medium); border: 1px solid var(--border-color-light); border-radius: 5px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: box-shadow 0.2s ease, transform 0.2s ease; background-size: cover; background-position: center; min-height: 80px; position: relative; }
+.focus-concept-item.has-background-image::before { content: ''; position: absolute; inset: 0; background-color: rgba(255, 255, 255, 0.8); border-radius: inherit; z-index: 0; }
 .focus-concept-item > * { position: relative; z-index: 1; }
-.focus-concept-item:hover { box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+.focus-concept-item:hover { box-shadow: 0 2px 5px rgba(0,0,0,0.15); transform: translateY(-2px); }
 .focus-concept-item i { font-size: 1.3em; margin-bottom: 5px; }
-.focus-concept-item .name { font-weight: bold; font-size: 0.95em; margin-bottom: 3px; }
+.focus-concept-item .name { font-weight: bold; font-size: 0.95em; margin-bottom: 3px; color: var(--text-color); }
 .focus-concept-item .type { font-size: 0.8em; color: var(--text-muted-color); }
-.focus-placeholder { grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-muted-color); border: 2px dashed var(--border-color-light); border-radius: 5px; font-style: italic; }
+.focus-placeholder { grid-column: 1 / -1; column-span: all; text-align: center; padding: 20px; color: var(--text-muted-color); border: 2px dashed var(--border-color-light); border-radius: 5px; font-style: italic; }
 .grimoire-insights h3, .tapestry-narrative-section h3 { margin-bottom: 10px; font-size: 1.2em; }
 #personaThemesList { list-style: none; padding-left: 0; margin-bottom: var(--spacing); }
 #personaThemesList li { margin-bottom: 8px; border-left: 3px solid var(--border-color-light); padding-left: 10px; font-size: 0.95em; }
 .tapestry-actions { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-.scene-suggestion-output { margin-top: 15px; padding: 15px; border: 1px dashed var(--accent-color); border-radius: 5px; background-color: rgba(255, 215, 0, 0.05); }
-.scene-suggestion-output h4 { margin-top: 0; margin-bottom: 10px; }
+.scene-suggestion-output { margin-top: 15px; padding: 15px; border: 1px dashed var(--accent-color); border-radius: 5px; background-color: rgba(255, 99, 71, 0.05); }
 /* Summary View Specifics */
 #personaSummaryView h2 { margin-bottom: var(--spacing); }
 #personaSummaryView h3 { text-align: left; font-size: 1.3em; border-bottom: 1px solid var(--border-color-light); padding-bottom: 5px; margin-bottom: 15px; }
@@ -882,82 +386,69 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 20p
 .summary-section ul { list-style: disc; padding-left: 20px; }
 .summary-section ul li { margin-bottom: 5px; font-size: 0.95em; }
 .summary-section strong { color: var(--primary-color); }
+.chart-container { /* Inherits card style if applied */ }
+
 
 /* --- Workshop Screen --- */
-.workshop-screen { background: linear-gradient(to bottom, #e0d8c0, #f0e7d8); padding-bottom: 30px; display: flex; flex-direction: column; }
-.workshop-insight-display { text-align: center; font-size: 1.15em; font-weight: bold; color: var(--link-color); background-color: rgba(255, 248, 220, 0.85); padding: 10px 15px; border-radius: 6px; border: 1px dashed var(--primary-color); margin: 0 auto 25px auto; max-width: 320px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-.workshop-insight-display .insight-icon { font-size: 1.1em; vertical-align: -1px; }
-.workshop-section { padding: 22px 18px; margin-bottom: 30px; border-radius: 8px; border: 1px solid var(--border-color-dark); background-color: rgba(245, 240, 225, 0.6); }
-.research-area { background-color: var(--research-area-bg); border-color: var(--border-color-dark); flex-shrink: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.06); }
-.library-area { background-color: var(--library-area-bg); border-color: var(--border-color-light); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 3px 6px rgba(0,0,0,0.06); }
-.workshop-section h2 { text-align: center; margin-bottom: 25px; font-size: 1.6em; }
-/* Research Area Content */
-.element-research-buttons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; margin-bottom: 25px; }
-.element-research-buttons-grid .initial-discovery-element { border-radius: 8px; padding: 12px 15px; background-color: rgba(255, 250, 240, 0.95); border: 1px solid var(--border-color-light); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-.element-research-buttons-grid .initial-discovery-element.clickable:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.12); cursor: pointer; }
-.element-research-buttons-grid .initial-discovery-element.disabled { opacity: 0.65; background-color: #e9e9e9; cursor: not-allowed; border-color: #ccc; box-shadow: none; }
+.workshop-screen { /* Inherits screen style */ display: flex; flex-direction: column; }
+.workshop-insight-display { /* Inherits card style */ text-align: center; font-size: 1.15em; font-weight: bold; color: var(--primary-color); padding: 10px 15px; margin: 0 auto var(--spacing) auto; max-width: 320px; flex-shrink: 0; }
+.workshop-section { /* Inherits card style */ padding: var(--spacing); margin-bottom: var(--spacing); }
+.workshop-section h2 { text-align: center; margin-bottom: var(--spacing); font-size: 1.6em; }
+/* Research Area */
+.element-research-buttons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--spacing); margin-bottom: var(--spacing); }
+.element-research-buttons-grid .initial-discovery-element { /* Apply card-like style */ border-radius: var(--border-radius); padding: 12px 15px; background-color: var(--background-light); border: 1px solid var(--border-color-light); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: var(--box-shadow); }
+.element-research-buttons-grid .initial-discovery-element.clickable:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); cursor: pointer; }
+.element-research-buttons-grid .initial-discovery-element.disabled { opacity: 0.65; background-color: var(--background-dark); cursor: not-allowed; border-color: var(--border-color-dark); box-shadow: none; }
 .element-research-buttons-grid .initial-discovery-element.disabled:hover { transform: none; }
-.element-research-buttons-grid .initial-discovery-element .element-header { display: flex; align-items: center; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #eee;}
+.element-research-buttons-grid .initial-discovery-element .element-header { display: flex; align-items: center; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--border-color-light); }
 .element-research-buttons-grid .initial-discovery-element .element-header i { font-size: 1.3em; margin-right: 10px; flex-shrink: 0; }
-.element-research-buttons-grid .initial-discovery-element .element-name { font-weight: bold; font-size: 1.05em; color: var(--primary-color); font-family: var(--font-heading); flex-grow: 1; }
+.element-research-buttons-grid .initial-discovery-element .element-name { font-weight: bold; font-size: 1.05em; color: var(--primary-color); flex-grow: 1; }
 .element-research-buttons-grid .initial-discovery-element .element-score-display { font-size: 0.9em; font-weight: bold; color: var(--text-muted-color); text-align: center; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 6px; }
 .element-research-buttons-grid .initial-discovery-element .element-concept { font-size: 0.9em; color: var(--text-muted-color); margin-bottom: 10px; line-height: 1.45; min-height: 3em; flex-grow: 1; }
 .rarity-counts-display { display: flex; justify-content: center; gap: 10px; margin: 8px 0; font-size: 0.8em; opacity: 0.85; }
 .rarity-count i { margin-right: 3px; }
 .rarity-count.common { color: #6c757d; }
-.rarity-count.uncommon { color: #17a2b8; }
-.rarity-count.rare { color: #8a2be2; }
+.rarity-count.uncommon { color: var(--info-color); }
+.rarity-count.rare { color: var(--cognitive-color); }
 .element-research-buttons-grid .initial-discovery-element .element-action { text-align: center; margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border-color-light); }
-.element-research-buttons-grid .initial-discovery-element .element-cost { font-weight: bold; font-size: 0.95em; color: var(--link-color); }
-.daily-actions-area { text-align: center; margin-top: 25px; padding-top: 18px; border-top: 1px solid var(--panel-divider-color); display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.element-research-buttons-grid .initial-discovery-element .element-cost { font-weight: bold; font-size: 0.95em; color: var(--primary-color); }
+.daily-actions-area { text-align: center; margin-top: var(--spacing); padding-top: var(--spacing); border-top: 1px solid var(--border-color-light); display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
 .daily-actions-area .button { margin: 0; flex-basis: content; }
-/* Library Area Content */
-.library-area .grimoire-controls { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 12px; margin-bottom: 18px; background-color: rgba(255,255,255,0.4); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color-dark); }
-.library-area .grimoire-controls label { margin: 0 5px 0 10px; font-weight: bold; color: var(--link-color); font-family: var(--font-main); font-size: 0.95em; }
-.library-area .grimoire-controls select, .library-area .grimoire-controls input[type="text"] { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--input-border); background-color: var(--input-bg); font-family: var(--font-main); font-size: 0.9em; transition: border-color 0.2s; }
-.library-area .grimoire-controls select:focus, .library-area .grimoire-controls input[type="text"]:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2); }
+/* Library Area */
+.library-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+.library-area .grimoire-controls { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 12px; margin-bottom: var(--spacing); background-color: var(--background-medium); padding: 10px 14px; border-radius: var(--border-radius); border: 1px solid var(--border-color-dark); }
+.library-area .grimoire-controls label { margin: 0 5px 0 10px; font-weight: bold; color: var(--primary-color); font-size: 0.95em; }
+.library-area .grimoire-controls select, .library-area .grimoire-controls input[type="text"] { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--input-border); background-color: var(--input-bg); font-family: var(--font-family); font-size: 0.9em; transition: border-color 0.2s; color: var(--text-color); }
+.library-area .grimoire-controls select:focus, .library-area .grimoire-controls input[type="text"]:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2); }
 .library-area .grimoire-controls input[type="text"] { width: 140px; }
-.library-area .grimoire-shelves-area { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 8px; margin-bottom: 18px; background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05)); border-radius: 6px; border-top: 1px solid var(--border-color-dark); border-bottom: 1px solid var(--border-color-dark); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-.library-area .grimoire-shelf { flex: 1 1 160px; background: linear-gradient(to bottom, #fdf8f0, #f5f0e1); border: 1px solid var(--border-color-light); border-radius: 6px; padding: 12px 14px; text-align: center; cursor: pointer; transition: all 0.2s ease; min-height: 70px; display: flex; flex-direction: column; justify-content: center; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.grimoire-shelf h4 { font-size: 1em; font-weight: bold; margin: 0 0 5px 0; color: var(--link-color); }
+.library-area .grimoire-shelves-area { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 8px; margin-bottom: var(--spacing); background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05)); border-radius: 6px; border-top: 1px solid var(--border-color-light); border-bottom: 1px solid var(--border-color-light); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+.library-area .grimoire-shelf { flex: 1 1 160px; background: var(--background-light); border: 1px solid var(--border-color-light); border-radius: 6px; padding: 12px 14px; text-align: center; cursor: pointer; transition: all 0.2s ease; min-height: 70px; display: flex; flex-direction: column; justify-content: center; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.grimoire-shelf h4 { font-size: 1em; font-weight: bold; margin: 0 0 5px 0; color: var(--primary-color); }
 .grimoire-shelf .info-icon { font-size: 0.8em; vertical-align: top; }
 .grimoire-shelf .shelf-count { font-size: 0.85em; color: var(--text-muted-color); }
 .grimoire-shelf:not(.show-all-shelf):hover, .grimoire-shelf.active-shelf:not(.show-all-shelf) { box-shadow: 0 3px 6px rgba(0,0,0,0.1); transform: translateY(-2px); }
-.grimoire-shelf.active-shelf:not(.show-all-shelf) { border-color: var(--primary-color); background: #fdf5e6; }
-.grimoire-shelf.drag-over { border-style: dashed; border-color: var(--primary-color); background-color: rgba(255, 215, 0, 0.1); transform: scale(1.03); }
-.show-all-shelf { background: #e9e4d9; border-color: #c9c0b1; cursor: pointer; transition: background-color 0.2s ease; }
-.show-all-shelf:hover { background-color: #dcd5c7; }
-.show-all-shelf.active-shelf { background-color: #f0ead6; border-color: var(--primary-color); font-weight: bold; }
-/* Grimoire Grid Area (Masonry applied via class in HTML) */
-#grimoire-grid-workshop {
-    flex-grow: 1;
-    background-color: rgba(255, 250, 235, 0.85);
-    border-radius: 8px;
-    border: 1px solid var(--border-color-light);
-    margin-top: 10px;
-    overflow-y: auto;
-    min-height: 350px;
-    padding: var(--spacing);
-    /* Masonry specific */
-    column-count: 3;
-    column-gap: var(--spacing);
-}
-#grimoire-grid-workshop > p { text-align: center; color: #666; margin-top: 25px; font-style: italic; grid-column: 1 / -1; column-span: all; /* Masonry fallback */ }
-#grimoire-grid-workshop .concept-card { /* Masonry item */ break-inside: avoid; margin: 0 0 var(--spacing); display: block; width: 100%; }
-/* Responsive Masonry */
-@media (max-width: 900px) { #grimoire-grid-workshop { column-count: 2; } }
-@media (max-width: 600px) { #grimoire-grid-workshop { column-count: 1; } }
-
+.grimoire-shelf.active-shelf:not(.show-all-shelf) { border-color: var(--primary-color); background: #e7f5ff; /* Light blue active */ }
+.grimoire-shelf.drag-over { border-style: dashed; border-color: var(--primary-color); background-color: rgba(30, 144, 255, 0.1); transform: scale(1.03); }
+.show-all-shelf { background: var(--background-dark); border-color: var(--border-color-dark); cursor: pointer; transition: background-color 0.2s ease; }
+.show-all-shelf:hover { background-color: #d3d9df; }
+.show-all-shelf.active-shelf { background-color: #e7f5ff; border-color: var(--primary-color); font-weight: bold; }
+/* Grimoire Grid Area (Masonry) */
+#grimoire-grid-workshop { /* Masonry applied via .concept-grid */ flex-grow: 1; background-color: var(--background-medium); border-radius: var(--border-radius); border: 1px solid var(--border-color-light); margin-top: 10px; overflow-y: auto; min-height: 350px; padding: var(--spacing); }
+#grimoire-grid-workshop > p { text-align: center; color: #666; margin-top: 25px; font-style: italic; grid-column: 1 / -1; column-span: all; }
+.concept-grid { column-count: 3; column-gap: var(--spacing); }
+.concept-grid .concept-card { break-inside: avoid; margin: 0 0 var(--spacing); display: block; width: 100%; }
+@media (max-width: 900px) { .concept-grid { column-count: 2; } }
+@media (max-width: 600px) { .concept-grid { column-count: 1; } }
 
 /* --- Repository Screen --- */
 .repository-screen { padding: var(--spacing) * 1.5; }
 .repository-layout { max-width: 1000px; margin: 0 auto; }
-.repository-section { margin-bottom: calc(var(--spacing) * 1.5); padding-bottom: calc(var(--spacing) * 1.5); border-bottom: 1px dashed var(--border-color-light); }
+.repository-section { /* Uses .card styling */ margin-bottom: calc(var(--spacing) * 1.5); padding: var(--spacing); }
 .repository-section:last-child { border-bottom: none; margin-bottom: 0; }
 .repository-section h2 { border: none; padding: 0; margin-bottom: var(--spacing); text-align: left; font-size: 1.4em; }
 .repository-section h2 i:first-child { margin-right: 8px; color: var(--primary-color); }
 .repo-list { list-style: none; padding-left: 0; margin-top: 10px; }
-.repo-list li, .repo-list .repository-item { background-color: rgba(255, 255, 255, 0.4); border-radius: 5px; padding: 10px 15px; margin-bottom: 10px; border-left: 4px solid var(--secondary-color); font-size: 0.95em; }
+.repo-list li, .repo-list .repository-item { background-color: var(--background-light); border-radius: 5px; padding: 10px 15px; margin-bottom: 10px; border-left: 4px solid var(--secondary-color); font-size: 0.95em; }
 .repository-item { display: flex; flex-direction: column; gap: 8px; }
 .repository-item h4 { margin: 0 0 5px 0; font-size: 1.1em; }
 .repository-item p { margin: 0; font-size: 0.9em; }
@@ -965,67 +456,57 @@ hr { border: none; border-top: 1px dashed var(--border-color-light); margin: 20p
 .repo-actions .button { margin-right: 8px; }
 .repo-actions .req-missing { font-size: 0.8em; color: var(--danger-color); font-style: italic; }
 .repo-list .completed, .repository-item.completed { border-left-color: var(--success-color); opacity: 0.7; background-color: rgba(40, 167, 69, 0.05); }
-.repo-list .completed .repo-actions { display: none; } /* Hide actions for completed */
+.repo-list .completed .repo-actions { display: none; }
 .focus-unlocks-list h4 { font-size: 1em; }
 .repo-insight-text { font-style: italic; color: var(--cognitive-color); border-left: 3px solid var(--cognitive-color); padding-left: 8px; margin-top: 5px; }
-#dailyRitualsDisplayRepo li { position: relative; padding-right: 80px; /* Space for reward */ }
-#dailyRitualsDisplayRepo li.focus-ritual { border-left-color: var(--accent-color); background-color: rgba(255, 215, 0, 0.05); }
-#dailyRitualsDisplayRepo li .ritual-reward { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 0.85em; color: var(--success-color); font-weight: bold; }
+#dailyRitualsDisplayRepo li { position: relative; padding-right: 80px; background: none; border: none; padding: 5px 0; }
+#dailyRitualsDisplayRepo li.focus-ritual { border-left-color: var(--accent-color); padding-left: 10px; background-color: rgba(255, 99, 71, 0.05); }
+#dailyRitualsDisplayRepo li .ritual-reward { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 0.85em; color: var(--success-color); font-weight: bold; }
+#dailyRitualsDisplayRepo li.completed { text-decoration: line-through; opacity: 0.6; }
 #dailyRitualsDisplayRepo li.completed .ritual-reward { display: none; }
 #milestonesDisplay li { background: none; border: none; padding: 5px 0; margin-bottom: 5px; font-size: 1em; }
 #milestonesDisplay li.milestone-achieved::before { content: '✓ '; color: var(--success-color); font-weight: bold; margin-right: 5px; }
 
-/* --- Popups & Overlay --- */
+/* ---------- 6. Modal centring & Styling -------------- */
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--overlay-bg); z-index: 990; backdrop-filter: blur(2px); }
-/* Updated for visual polish bundle */
 .popup {
-  position: fixed !important; /* Ensure fixed */
-  top: 50% !important;      /* Center vertically */
-  left: 50% !important;     /* Center horizontally */
-  transform: translate(-50%, -50%) !important; /* Precise centering */
-  background: var(--popup-gradient);
-  border: 1px solid var(--popup-border);
-  padding: 0; /* Padding applied to inner content */
-  border-radius: 10px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  width: 92%;
-  max-width: 750px; /* Max width for larger popups */
-  max-height: 85dvh; /* Use dvh for mobile */
-  overflow-y: auto; /* Scroll inside popup */
-  display: flex;
-  flex-direction: column;
+  position: fixed !important; top: 50% !important; left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background: var(--popup-gradient); border: 1px solid var(--popup-border);
+  padding: 0; border-radius: var(--border-radius); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 1000; width: 92%; max-width: 750px; max-height: 85dvh;
+  overflow-y: auto; display: flex; flex-direction: column;
 }
-.close-button { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 1.9em; color: #b8a880; cursor: pointer; line-height: 1; z-index: 1001; transition: color 0.2s ease; padding: 2px 5px; }
-.close-button:hover { color: var(--primary-color); }
+.close-button { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 1.9em; color: var(--text-muted-color); cursor: pointer; line-height: 1; z-index: 1001; transition: color 0.2s ease; padding: 2px 5px; }
+.close-button:hover { color: var(--accent-color); }
 .close-button:disabled { color: #ccc; cursor: not-allowed; }
 .popup-header { padding: 15px var(--spacing); background-color: var(--popup-header-bg); border-bottom: 2px solid var(--popup-header-border); display: flex; align-items: center; gap: 10px; }
-.popup-header h3 { margin: 0; text-align: left; flex-grow: 1; font-size: 1.4em; }
+.popup-header h3 { margin: 0; text-align: left; flex-grow: 1; font-size: 1.4em; color: var(--primary-color); }
 .popup-header p { margin: 0; font-size: 0.9em; color: var(--text-muted-color); }
 .popup-header .card-type-icon { font-size: 1.5em; color: var(--primary-color); }
-.popup-main-content { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--spacing); padding: var(--spacing); flex-grow: 1; /* Allow content to grow */ overflow: hidden; /* Prevent inner overflow issues */ }
-.popup-visual-area { /* Adjustments if needed */ }
-.popup-visual { width: 100%; aspect-ratio: 1 / 1; background-color: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color-light); overflow: hidden; }
+.popup-main-content { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--spacing); padding: var(--spacing); flex-grow: 1; overflow: hidden; }
+.popup-visual-area { }
+.popup-visual { width: 100%; aspect-ratio: 1 / 1; background-color: var(--background-dark); border-radius: 5px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color-light); overflow: hidden; }
 .popup-visual img.card-art-image { display: block; width: 100%; height: 100%; object-fit: cover; }
 .popup-visual i.card-visual-placeholder { font-size: 3em; color: #ccc; }
-.popup-info-area { overflow-y: auto; /* Allow info area to scroll if needed */ padding-right: 5px; }
+.popup-info-area { overflow-y: auto; padding-right: 5px; }
 .popup-section { margin-bottom: 15px; }
-.popup-section h4 { font-size: 1.1em; margin-bottom: 8px; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 4px; }
-.popup-resonance-gauge-section { background-color: rgba(0,0,0,0.02); padding: 10px; border-radius: 4px; }
-#popupResonanceGaugeContainer { width: 100%; height: 18px; background-color: #e9ecef; border-radius: 9px; overflow: hidden; position: relative; margin-bottom: 5px; border: 1px solid var(--border-color-light); }
+.popup-section h4 { font-size: 1.1em; margin-bottom: 8px; border-bottom: 1px dashed var(--border-color-light); padding-bottom: 4px; color: var(--primary-color); }
+.popup-resonance-gauge-section { background-color: var(--background-medium); padding: 10px; border-radius: 4px; }
+#popupResonanceGaugeContainer { width: 100%; height: 18px; background-color: var(--background-dark); border-radius: 9px; overflow: hidden; position: relative; margin-bottom: 5px; border: 1px solid var(--border-color-light); }
 #popupResonanceGaugeBar { height: 100%; transition: width 0.4s ease; border-radius: 9px; }
 .popup-resonance-gauge-bar.resonance-high { background-color: var(--success-color); }
 .popup-resonance-gauge-bar.resonance-medium { background-color: var(--warning-color); }
 .popup-resonance-gauge-bar.resonance-low { background-color: var(--danger-color); }
 .popup-resonance-gauge-label { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 0.75em; font-weight: bold; color: white; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
-.popup-resonance-gauge-label.resonance-low { color: #fff; } /* Ensure contrast */
+.popup-resonance-gauge-label.resonance-low { color: #fff; }
 #popupResonanceGaugeText { font-size: 0.85em; text-align: center; color: var(--text-muted-color); margin-top: 3px; }
 .related-concepts-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.related-concept-tag { background-color: var(--secondary-color); color: var(--primary-color); padding: 3px 8px; border-radius: 12px; font-size: 0.85em; }
-.popup-collapsible-area { padding: 10px var(--spacing); border-top: 1px solid var(--border-color-light); background-color: rgba(0,0,0,0.02); flex-shrink: 0; }
+.related-concept-tag { background-color: var(--secondary-color); color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.85em; }
+.popup-collapsible-area { padding: 10px var(--spacing); border-top: 1px solid var(--border-color-light); background-color: var(--background-medium); flex-shrink: 0; }
 details.collapsible-popup-section { margin-bottom: 10px; }
-details.collapsible-popup-section summary { font-weight: bold; color: var(--link-color); cursor: pointer; list-style: none; /* Remove default marker */ position: relative; padding-left: 20px; }
-details.collapsible-popup-section summary::-webkit-details-marker { display: none; } /* Hide marker */
+details.collapsible-popup-section summary { font-weight: bold; color: var(--primary-color); cursor: pointer; list-style: none; position: relative; padding-left: 20px; }
+details.collapsible-popup-section summary::-webkit-details-marker { display: none; }
 details.collapsible-popup-section summary::before { content: '▶'; position: absolute; left: 0; top: 1px; transition: transform 0.2s; font-size: 0.8em; }
 details[open].collapsible-popup-section > summary::before { transform: rotate(90deg); }
 .collapsible-content { padding: 10px 0 5px 20px; font-size: 0.95em; }
@@ -1033,79 +514,81 @@ details[open].collapsible-popup-section > summary::before { transform: rotate(90
 .profile-column { flex: 1; }
 .profile-column h5 { font-size: 0.9em; text-align: left; border: none; padding: 0; margin-bottom: 8px; }
 .profile-column div div { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.9em; }
-.profile-column .score-bar-container { width: 80px; height: 5px; margin-left: 5px; }
-.my-notes-section textarea { width: 100%; margin-bottom: 8px; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); border-radius: 4px; font-family: var(--font-main); font-size: 0.95em; box-sizing: border-box; }
+.profile-column .score-bar-container { width: 80px; height: 5px; margin-left: 5px; background-color: var(--background-dark); border: 1px solid var(--border-color-light);}
+.my-notes-section textarea { width: 100%; margin-bottom: 8px; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); border-radius: 4px; font-family: var(--font-family); font-size: 0.95em; box-sizing: border-box; color: var(--text-color); }
 .note-status { margin-left: 10px; font-size: 0.85em; font-style: italic; }
 .note-status.error { color: var(--danger-color); }
-.popup-actions { padding: 15px var(--spacing); border-top: 1px solid var(--border-color-light); text-align: right; flex-shrink: 0; background-color: #f5f0e1; }
+.popup-actions { padding: 15px var(--spacing); border-top: 1px solid var(--border-color-light); text-align: right; flex-shrink: 0; background-color: var(--background-medium); }
 .popup-actions .button { margin-left: 10px; }
 .popup-actions .button.hidden { display: none; }
 
-/* --- Concept Card --- */
-.concept-card { background-color: #fff; border: 1px solid var(--border-color-light); border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.07); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; overflow: hidden; }
-.concept-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+/* --- Concept Card Styling (Adapted) --- */
+/* Reusing .card styles for base, adding specifics */
+.concept-card {
+  background-color: var(--background-light);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
+  position: relative;
+  overflow: hidden;
+}
+.concept-card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
 .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--border-color-light); }
 .card-type-icon-area { font-size: 1.1em; color: var(--primary-color); flex-shrink: 0; }
-.card-name { font-weight: bold; font-size: 1.05em; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-name { font-weight: bold; font-size: 1.05em; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-color); }
 .card-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .card-rarity { font-size: 0.75em; padding: 2px 6px; border-radius: 10px; color: #fff; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
 .rarity-indicator-common { background-color: #6c757d; }
-.rarity-indicator-uncommon { background-color: #17a2b8; }
-.rarity-indicator-rare { background-color: #8a2be2; }
+.rarity-indicator-uncommon { background-color: var(--info-color); }
+.rarity-indicator-rare { background-color: var(--cognitive-color); /* Keep rare distinct */ }
 .card-stamps { display: flex; gap: 4px; font-size: 0.9em; }
-.focus-indicator, .lore-indicator { color: var(--accent-color); text-shadow: 1px 1px 1px rgba(0,0,0,0.3); }
-.card-visual { width: 100%; aspect-ratio: 16 / 10; background-color: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; }
+.focus-indicator, .lore-indicator { color: var(--accent-color); /* Keep accent */ text-shadow: 1px 1px 1px rgba(0,0,0,0.3); }
+.card-visual { width: 100%; aspect-ratio: 16 / 10; background-color: var(--background-dark); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; }
 .card-visual img.card-art-image { display: block; width: 100%; height: 100%; object-fit: cover; }
 .card-visual i.card-visual-placeholder { font-size: 2em; color: #ccc; }
-.card-footer { margin-top: auto; } /* Push footer content down */
+.card-footer { margin-top: auto; }
 .card-affinities { margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
 .primary-element-display { font-size: 0.8em; padding: 2px 7px; border-radius: 10px; border: 1px solid; font-weight: 500; }
 .primary-element-display i { margin-right: 3px; }
-.card-brief-desc { font-size: 0.88em; color: var(--text-muted-color); margin-bottom: 10px; line-height: 1.4; min-height: calc(1.4em * 2); /* Ensure min height for 2 lines */ overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding-top: 8px; border-top: 1px solid #eee; }
+.card-brief-desc { font-size: 0.88em; color: var(--text-muted-color); margin-bottom: 10px; line-height: 1.4; min-height: calc(1.4em * 2); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.card-actions { display: flex; justify-content: flex-end; gap: 6px; padding-top: 8px; border-top: 1px solid var(--border-color-light); }
 .card-focus-button i.fa-star { color: var(--accent-color); }
 .card-focus-button i.fa-regular.fa-star { color: inherit; }
-.card-focus-button.marked i.fa-regular.fa-star { display: none; } /* Hide empty star if marked */
-.card-focus-button:not(.marked) i.fa-star { display: none; } /* Hide filled star if not marked */
-
+.card-focus-button.marked i.fa-regular.fa-star { display: none; }
+.card-focus-button:not(.marked) i.fa-star { display: none; }
 /* Category Color Overrides */
 .concept-card.category-wantToTry { border-left: 4px solid var(--category-wantToTry-border); background-color: var(--category-wantToTry-bg); }
 .concept-card.category-liked { border-left: 4px solid var(--category-liked-border); background-color: var(--category-liked-bg); }
 .concept-card.category-dislikedLimit { border-left: 4px solid var(--category-dislikedLimit-border); background-color: var(--category-dislikedLimit-bg); }
 .concept-card.category-coreIdentity { border-left: 4px solid var(--category-coreIdentity-border); background-color: var(--category-coreIdentity-bg); }
-.concept-card.category-uncategorized { /* Default border is fine */ }
 
-
-/* --- Other Popups --- */
-.research-results-popup .popup-main-content, /* Alias for consistency */
-.research-popup-content { padding: var(--spacing); max-height: 60vh; overflow-y: auto; flex-grow: 1; }
+/* --- Other Popups (Adapted) --- */
+.research-results-popup .research-popup-content { padding: var(--spacing); max-height: 60vh; overflow-y: auto; flex-grow: 1; }
 .research-result-item { display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color-light); position: relative; }
-.research-result-item .concept-card { margin: 0; box-shadow: none; grid-column: 1 / 2; }
+.research-result-item .concept-card { margin: 0; box-shadow: none; grid-column: 1 / 2; background-color: var(--background-light); /* Ensure card bg */ }
 .research-result-item .card-actions { grid-column: 2 / 3; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0; border: none; }
 .research-result-item .card-actions .button { width: 100px; text-align: center; }
 .research-result-item .action-feedback { font-size: 0.85em; font-weight: bold; margin-top: 5px; }
 .research-result-item:last-child { border-bottom: none; }
 .research-result-item[data-processed="true"] { opacity: 0.7; }
-.research-result-item.choice-made::after { /* Make feedback more prominent */ content: attr(data-choice-made); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 2em; color: rgba(0,0,0,0.2); border: 4px double rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 8px; pointer-events: none; font-weight: bold; text-transform: uppercase; z-index: 1; }
-.duplicate-insight-info { text-align: center; font-style: italic; color: var(--link-color); padding: 10px; background-color: rgba(255,215,0,0.1); border-radius: 4px; margin-top: 10px; }
+.research-result-item.choice-made::after { content: attr(data-choice-made); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 2em; color: rgba(0,0,0,0.2); border: 4px double rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 8px; pointer-events: none; font-weight: bold; text-transform: uppercase; z-index: 1; }
+.duplicate-insight-info { text-align: center; font-style: italic; color: var(--primary-color); padding: 10px; background-color: rgba(30, 144, 255, 0.1); border-radius: 4px; margin-top: 10px; }
 .research-popup-actions { text-align: center; padding: 15px var(--spacing); }
 .research-popup-actions small { display: block; margin-bottom: 10px; color: var(--text-muted-color); font-size: 0.9em; }
-.reflection-modal .popup-content, /* Alias */
-.settings-popup .popup-content,   /* Alias */
-.info-popup .popup-content {     /* Alias */
-    padding: var(--spacing);
-    flex-grow: 1;
-}
+.reflection-modal .popup-content, .settings-popup .settings-content, .info-popup .popup-content { padding: var(--spacing); flex-grow: 1; } /* Added content class */
 .reflection-modal p { margin-bottom: 12px; }
-.prompt-text { font-style: italic; background-color: rgba(0,0,0,0.03); padding: 12px; border-radius: 4px; border-left: 3px solid var(--primary-color); }
+.prompt-text { font-style: italic; background-color: var(--background-medium); padding: 12px; border-radius: 4px; border-left: 3px solid var(--primary-color); }
 .reflection-confirm { margin: 15px 0; text-align: center; }
 .reflection-confirm label { margin-left: 8px; font-size: 0.95em; }
 .score-nudge-label { display: block; margin-top: 10px; font-size: 0.9em; color: var(--text-muted-color); }
 .settings-popup .button { margin: 8px; }
 .reset-warning { font-size: 0.9em; color: var(--danger-color); margin-top: 15px; }
 .info-popup h3 { text-align: left; }
-.resonance-chamber-modal .popup-content, /* Alias */
-.resonance-chamber-content { padding: 0; display: flex; flex-direction: column; flex-grow: 1; }
+.resonance-chamber-modal .resonance-chamber-content { padding: 0; display: flex; flex-direction: column; flex-grow: 1; }
 .resonance-chamber-summary { padding: var(--spacing); border-bottom: 1px solid var(--border-color-light); }
 .resonance-chamber-summary h4 { margin-bottom: 8px; }
 .focused-concepts-icons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -1115,40 +598,54 @@ details[open].collapsible-popup-section > summary::before { transform: rotate(90
 .aspects-navigation h4 { margin-bottom: 10px; text-align: center; }
 .aspects-navigation .button { width: 100%; text-align: left; padding: 8px 12px; justify-content: flex-start; }
 .aspects-navigation .button i:first-child { margin-right: 8px; width: 1.2em; text-align: center; }
-.aspects-navigation .button.active { background-color: var(--accent-color); color: var(--primary-color); border-color: var(--primary-color); }
+.aspects-navigation .button.active { background-color: var(--accent-color); color: white; border: none; } /* Style active node */
 .aspect-node .insight-icon { font-size: 0.9em; margin-left: 2px; }
-.insight-scroll-panel { overflow-y: auto; padding: 5px; background-color: rgba(0,0,0,0.02); border-radius: 4px; }
+.insight-scroll-panel { overflow-y: auto; padding: 5px var(--spacing); background-color: var(--background-medium); border-radius: 4px; }
 .insight-scroll-panel h4 { margin-top: 0; margin-bottom: 10px; }
 .insight-scroll-panel p { margin-bottom: 8px; font-size: 0.95em; }
 .insight-scroll-panel ul { padding-left: 18px; margin-top: 5px; }
-.dilemmaModal .popup-content { padding: var(--spacing); }
+.dilemmaModal .popup-content { padding: var(--spacing); } /* Align naming */
 .dilemmaModal .slider-container { max-width: 95% !important; } /* Override inline */
 
+/* Form Group styling */
+.form-group { margin-bottom: var(--spacing); }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group textarea {
+  width: 100%; padding: 10px; border: 1px solid var(--input-border);
+  border-radius: 5px; font-size: 1rem; line-height: 1.5;
+  background-color: var(--input-bg); color: var(--text-color);
+  box-sizing: border-box;
+}
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+
 /* --- Alerts & Toasts --- */
-.milestone-alert { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--accent-color); color: var(--primary-color); padding: 12px 20px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1010; display: flex; align-items: center; gap: 15px; transition: opacity 0.3s, transform 0.3s; }
+.milestone-alert { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--accent-color); color: white; padding: 12px 20px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1010; display: flex; align-items: center; gap: 15px; transition: opacity 0.3s, transform 0.3s; }
 .milestone-alert.hidden { opacity: 0; transform: translate(-50%, 20px); pointer-events: none; }
-.milestone-alert button { background: none; border: none; font-size: 1.2em; color: var(--primary-color); cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+.milestone-alert button { background: none; border: none; font-size: 1.2em; color: white; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
 .milestone-alert button:hover { opacity: 1; }
-.toast { position: fixed; bottom: 20px; right: 20px; background-color: rgba(50, 50, 50, 0.9); color: white; padding: 10px 18px; border-radius: 5px; font-size: 0.9em; z-index: 1020; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(15px); }
+.toast { position: fixed; bottom: 20px; right: 20px; background-color: rgba(51, 51, 51, 0.9); color: white; padding: 10px 18px; border-radius: 5px; font-size: 0.9em; z-index: 1020; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(15px); }
 .toast.visible { opacity: 1; transform: translateY(0); }
-.toast.guidance-toast { background-color: rgba(70, 130, 180, 0.9); } /* Steel blue for guidance */
+.toast.guidance-toast { background-color: rgba(30, 144, 255, 0.9); } /* Blue for guidance */
 
 /* --- Onboarding Styles --- */
 #onboardingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 1050; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease-in-out; }
 #onboardingOverlay.visible { opacity: 1; }
-.onboarding-popup { background: var(--background-light); padding: 25px; border-radius: 10px; border: 2px solid var(--primary-color); box-shadow: 0 5px 20px rgba(0,0,0,0.3); max-width: 550px; width: 90%; text-align: center; position: relative; z-index: 1051; }
-.onboarding-popup h2 { font-family: var(--font-heading); color: var(--primary-color); margin-bottom: 15px; }
+.onboarding-popup { background: var(--background-light); padding: 25px; border-radius: var(--border-radius); border: 2px solid var(--primary-color); box-shadow: 0 5px 20px rgba(0,0,0,0.3); max-width: 550px; width: 90%; text-align: center; position: relative; z-index: 1051; }
+.onboarding-popup h2 { color: var(--primary-color); margin-bottom: 15px; }
 .onboarding-popup p { color: var(--text-muted-color); margin-bottom: 15px; text-align: center; line-height: 1.5; }
 .onboarding-popup strong { color: var(--primary-color); font-weight: bold; }
-.onboarding-highlight { position: fixed; border: 3px dashed var(--accent-color); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 216, 0, 0.7); pointer-events: none; z-index: 1049; transition: all 0.3s ease-in-out; display: none; }
+.onboarding-highlight { position: fixed; border: 3px dashed var(--accent-color); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 99, 71, 0.7); pointer-events: none; z-index: 1049; transition: all 0.3s ease-in-out; display: none; }
 .onboarding-progress { font-size: 0.85em; color: var(--text-muted-color); margin-bottom: 15px; }
 .onboarding-nav { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
 .onboarding-nav .skip-button { background: none; border: none; color: var(--text-muted-color); text-decoration: underline; cursor: pointer; font-size: 0.9em; }
 .onboarding-nav .skip-button:hover { color: var(--primary-color); }
 
 /* --- Insight Log Styles --- */
-#insightLogContainer { margin-top: 15px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color-light); border-radius: 4px; padding: 8px 12px; background-color: rgba(255, 255, 255, 0.5); font-size: 0.85em; }
-.insight-log-entry { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dotted #eee; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; }
+#insightLogContainer { margin-top: 15px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color-light); border-radius: 4px; padding: 8px 12px; background-color: var(--background-medium); font-size: 0.85em; }
+.insight-log-entry { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dotted var(--border-color-light); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; }
 .insight-log-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 .insight-log-entry .log-timestamp { color: var(--text-muted-color); font-size: 0.9em; white-space: nowrap; }
 .insight-log-entry .log-source { flex-grow: 1; text-align: left; margin-left: 10px; color: var(--text-color); }
@@ -1156,170 +653,172 @@ details[open].collapsible-popup-section > summary::before { transform: rotate(90
 .insight-log-entry .log-amount-gain { color: var(--success-color); }
 .insight-log-entry .log-amount-loss { color: var(--danger-color); }
 
-
-/* --- Dark Mode Palette (from bundle) --- */
+/* ---------- 7. Dark‑mode palette ----------------------- */
+/* Using :root.dark selector from bundle */
 :root.dark {
-  --background-light: #1d1b19;
-  --background-medium: #272521;
-  --background-dark: #1a1816;
-  --text-color: #f5f0e1;
-  --text-muted-color: #b8ae9c;
-  --border-color-light: #3a352e;
-  --border-color-dark: #5a534a; /* Adjusted dark border */
-  --primary-color: #c28c51; /* Lighter brown for primary */
-  --secondary-color: #5a534a; /* Darker tan/grey */
-  --link-color: #e0c79c;
-  --panel-divider-color: #3a352e;
-  --popup-gradient: linear-gradient(to bottom, #2c2a27, #272521);
-  --popup-border: var(--border-color-dark);
-  --popup-header-bg: #3a352e;
-  --popup-header-border: var(--primary-color);
-  --input-bg: #2c2a27;
-  --input-border: var(--border-color-dark);
-  --research-area-bg: rgba(44, 42, 39, 0.6);
-  --library-area-bg: rgba(26, 24, 22, 0.7);
-  --background-medium-rgb: 39, 37, 33; /* For questionnaire header background */
-  color-scheme: dark;
+    /* New Dark Mode Palette */
+    --primary-color: #4da6ff;      /* Lighter Blue */
+    --secondary-color: #57e357;    /* Lighter Green */
+    --accent-color: #ff7a5f;       /* Lighter Tomato */
+    --background-color: #2a2a2a;   /* Darker Grey */
+    --background-light: #404040;   /* Medium Grey */
+    --background-medium: #333333;  /* Dark Grey */
+    --background-dark: #1e1e1e;    /* Very Dark Grey */
+    --text-color: #e0e0e0;         /* Light Grey Text */
+    --text-muted-color: #a0a0a0;   /* Medium Grey Text */
+    --link-color: var(--primary-color);
+    --border-color-light: #555;
+    --border-color-dark: #777;
+    --input-bg: #505050;
+    --input-border: var(--border-color-dark);
+    --box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    --popup-gradient: linear-gradient(to bottom, #444444, #333333);
+    --popup-border: var(--border-color-dark);
+    --popup-header-bg: #505050;
+    --popup-header-border: var(--primary-color);
+    --overlay-bg: rgba(0, 0, 0, 0.75);
+    /* Element colors remain the same, ensure contrast if needed */
+    /* Category colors need dark adaptation */
+    --category-wantToTry-bg: rgba(77, 166, 255, 0.15);
+    --category-wantToTry-border: #4da6ff;
+    --category-liked-bg: rgba(87, 227, 87, 0.15);
+    --category-liked-border: #57e357;
+    --category-dislikedLimit-bg: rgba(255, 122, 95, 0.15);
+    --category-dislikedLimit-border: #ff7a5f;
+    --category-coreIdentity-bg: rgba(255, 215, 0, 0.15); /* Keep gold accent */
+    --category-coreIdentity-border: #ffd700;
+    color-scheme: dark;
 }
 /* Dark Mode Specific Adjustments */
-:root.dark body { background-color: #1a1816; }
-:root.dark .app-container { background: linear-gradient(to bottom, var(--background-medium), var(--background-dark)); border-color: var(--border-color-dark); }
-:root.dark h1 { color: #e8d8c0; }
-:root.dark h2 { color: var(--primary-color); border-color: var(--border-color-light); }
-:root.dark .button { background-color: var(--primary-color); color: var(--background-dark); text-shadow: none; border-color: #a0733f; }
-:root.dark .button:hover:not(:disabled) { background-color: #d4a06a; }
-:root.dark .back-button { background-color: #5a534a; border-color: #4a453d; color: var(--text-color); }
-:root.dark .back-button:hover:not(:disabled) { background-color: #6a635a; }
-:root.dark .secondary-button { background-color: #7a746a; border-color: #6a635a; color: var(--text-color); }
-:root.dark .secondary-button:hover:not(:disabled) { background-color: #8a847a; }
+:root.dark body { background-color: var(--background-dark); color: var(--text-color); }
+:root.dark .app-container { background: var(--background-medium); border-color: var(--border-color-dark); }
+:root.dark h1, :root.dark h2, :root.dark h3, :root.dark h4 { color: var(--primary-color); }
+:root.dark .button, :root.dark .btn { background-color: var(--primary-color); color: var(--background-dark); box-shadow: var(--box-shadow); }
+:root.dark .button:hover:not(:disabled), :root.dark .btn:hover:not(:disabled) { background-color: var(--accent-color); }
+:root.dark .back-button { background-color: #6c757d; color: var(--text-color); }
+:root.dark .back-button:hover:not(:disabled) { background-color: #5a6268; }
+:root.dark .secondary-button { background-color: var(--secondary-color); color: var(--background-dark); }
+:root.dark .secondary-button:hover:not(:disabled) { background-color: #46b446; }
 :root.dark .main-nav { background: var(--background-light); border-color: var(--border-color-dark); }
 :root.dark .nav-button { color: var(--link-color); }
 :root.dark .nav-button:hover:not(.active) { background: var(--accent-color); color: var(--background-dark); }
 :root.dark .nav-button.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
-:root.dark #questionnaireScreen header { background: rgba(var(--background-medium-rgb), 0.98); border-color: var(--border-color-light); }
-:root.dark #elementProgressHeader { background-color: rgba(0,0,0,0.2); border-color: var(--border-color-dark); }
+:root.dark #questionnaireScreen header { background: rgba(51, 51, 51, 0.98); } /* Use dark bg */
+:root.dark #elementProgressHeader { background-color: rgba(255,255,255,0.1); border-color: var(--border-color-dark); }
 :root.dark #elementProgressHeader .step { color: var(--text-muted-color); }
-:root.dark #elementProgressHeader .step::before { background: var(--secondary-color); color: var(--text-color); }
+:root.dark #elementProgressHeader .step::before { background: #555; }
 :root.dark #elementProgressHeader .step.active { color: var(--accent-color); }
 :root.dark #elementProgressHeader .step.active::before { background: var(--primary-color); box-shadow: 0 0 0 3px var(--accent-color); }
 :root.dark #elementProgressHeader .step.completed::before { background: var(--accent-color); color: var(--background-dark); }
-:root.dark .element-intro { background-color: #2c2a27; border-left-color: var(--primary-color); }
-:root.dark .element-intro p { color: #ccc; }
-:root.dark .element-intro p em { color: #d4a06a; }
-:root.dark .question-block { background-color: #272521; border-color: #3a352e; }
-:root.dark .question-title { color: var(--text-color); }
-:root.dark .slider { background: var(--border-color-dark); border-color: #5a534a; }
-:root.dark .slider::-webkit-slider-thumb { background: #d4a06a; border-color: var(--background-light); }
-:root.dark .slider::-moz-range-thumb { background: #d4a06a; border-color: var(--background-light); }
+:root.dark .card, :root.dark .workshop-section, :root.dark .repository-section { background-color: var(--background-light); border-color: var(--border-color-dark); box-shadow: var(--box-shadow); }
+:root.dark .element-intro, :root.dark .question-block { background-color: var(--background-medium); border-color: var(--border-color-light); }
+:root.dark .slider { background: var(--border-color-dark); border-color: #777; }
+:root.dark .slider::-webkit-slider-thumb { background: var(--primary-color); border-color: var(--background-light); }
+:root.dark .slider::-moz-range-thumb { background: var(--primary-color); border-color: var(--background-light); }
 :root.dark .slider-feedback { background-color: var(--background-medium); border-color: var(--border-color-light); color: var(--link-color); }
 :root.dark .radio-options label, :root.dark .checkbox-options label { background-color: var(--background-medium); border-color: var(--border-color-light); }
-:root.dark .radio-options input[type="radio"]:checked + label, :root.dark .checkbox-options input[type="checkbox"]:checked + label { background-color: #4a392c; border-color: var(--accent-color); color: var(--accent-color); }
-:root.dark .workshop-section { background-color: rgba(39, 37, 33, 0.6); border-color: var(--border-color-dark); }
-:root.dark .workshop-insight-display { background-color: rgba(44, 42, 39, 0.85); border-color: var(--primary-color); }
-:root.dark .element-research-buttons-grid .initial-discovery-element { background-color: rgba(29, 27, 25, 0.95); border-color: var(--border-color-light); }
-:root.dark .element-research-buttons-grid .initial-discovery-element.disabled { background-color: #3a352e; border-color: #4a453d; }
-:root.dark .library-area .grimoire-controls { background-color: rgba(29, 27, 25, 0.4); border-color: var(--border-color-dark); }
+:root.dark .radio-options input[type="radio"]:checked + label, :root.dark .checkbox-options input[type="checkbox"]:checked + label { background-color: var(--secondary-color); border-color: #46b446; color: var(--background-dark); }
+:root.dark .workshop-insight-display { background-color: rgba(64, 64, 64, 0.85); border-color: var(--primary-color); color: var(--primary-color); }
+:root.dark .element-research-buttons-grid .initial-discovery-element { background-color: var(--background-medium); border-color: var(--border-color-light); }
+:root.dark .element-research-buttons-grid .initial-discovery-element.disabled { background-color: #444; border-color: #555; }
+:root.dark .library-area .grimoire-controls { background-color: rgba(64, 64, 64, 0.4); border-color: var(--border-color-dark); }
+:root.dark .library-area .grimoire-controls label { color: var(--primary-color); }
 :root.dark .library-area .grimoire-controls select, :root.dark .library-area .grimoire-controls input[type="text"] { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-color); }
 :root.dark .library-area .grimoire-shelves-area { background: linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.05)); border-color: var(--border-color-dark); }
-:root.dark .library-area .grimoire-shelf { background: linear-gradient(to bottom, #2c2a27, #272521); border-color: var(--border-color-light); }
+:root.dark .library-area .grimoire-shelf { background: linear-gradient(to bottom, #444, #333); border-color: var(--border-color-light); }
 :root.dark .library-area .grimoire-shelf h4 { color: var(--link-color); }
-:root.dark .library-area .grimoire-shelf.active-shelf:not(.show-all-shelf) { border-color: var(--primary-color); background: #3a352e; }
-:root.dark .show-all-shelf { background: #3a352e; border-color: #4a453d; }
-:root.dark .show-all-shelf:hover { background-color: #4a453d; }
-:root.dark .show-all-shelf.active-shelf { background-color: #4a392c; border-color: var(--primary-color); }
-:root.dark #grimoire-grid-workshop { background-color: rgba(26, 24, 22, 0.85); border-color: var(--border-color-light); }
-:root.dark .concept-card { background-color: #272521; border-color: var(--border-color-light); }
+:root.dark .library-area .grimoire-shelf.active-shelf:not(.show-all-shelf) { border-color: var(--primary-color); background: #505050; }
+:root.dark .show-all-shelf { background: #505050; border-color: #666; }
+:root.dark .show-all-shelf:hover { background-color: #606060; }
+:root.dark .show-all-shelf.active-shelf { background-color: #555; border-color: var(--primary-color); }
+:root.dark #grimoire-grid-workshop { background-color: var(--background-medium); border-color: var(--border-color-light); }
+:root.dark .concept-card { background-color: #404040; border-color: var(--border-color-dark); } /* Darker card bg */
 :root.dark .card-header { border-color: var(--border-color-light); }
 :root.dark .card-name { color: var(--text-color); }
 :root.dark .card-type-icon-area { color: var(--primary-color); }
 :root.dark .card-brief-desc { color: var(--text-muted-color); }
-:root.dark .card-actions { border-color: #3a352e; }
+:root.dark .card-actions { border-color: var(--border-color-light); }
 :root.dark .related-concept-tag { background-color: var(--secondary-color); color: var(--background-dark); }
 :root.dark .popup { background: var(--popup-gradient); border-color: var(--popup-border); }
-:root.dark .close-button { color: #7a746a; }
-:root.dark .close-button:hover { color: var(--primary-color); }
+:root.dark .close-button { color: #aaa; }
+:root.dark .close-button:hover { color: var(--accent-color); }
 :root.dark .popup-header { background-color: var(--popup-header-bg); border-color: var(--popup-header-border); }
+:root.dark .popup-header h3 { color: var(--primary-color); }
 :root.dark .popup-header .card-type-icon { color: var(--primary-color); }
-:root.dark .popup-visual { background-color: #3a352e; border-color: var(--border-color-light); }
-:root.dark .popup-visual i.card-visual-placeholder { color: #555; }
-:root.dark .popup-resonance-gauge-section { background-color: rgba(255,255,255,0.02); }
-:root.dark #popupResonanceGaugeContainer { background-color: #4a453d; border-color: var(--border-color-light); }
-:root.dark .popup-collapsible-area { background-color: rgba(255,255,255,0.02); border-color: var(--border-color-light); }
-:root.dark .popup-actions { background-color: #2c2a27; border-color: var(--border-color-light); }
+:root.dark .popup-visual { background-color: #505050; border-color: var(--border-color-light); }
+:root.dark .popup-visual i.card-visual-placeholder { color: #777; }
+:root.dark .popup-resonance-gauge-section { background-color: rgba(255,255,255,0.05); }
+:root.dark #popupResonanceGaugeContainer { background-color: #555; border-color: var(--border-color-light); }
+:root.dark .popup-collapsible-area { background-color: rgba(255,255,255,0.05); border-color: var(--border-color-light); }
+:root.dark .popup-actions { background-color: #444; border-color: var(--border-color-light); }
 :root.dark .my-notes-section textarea { background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-color); }
-:root.dark .insight-log-entry { border-color: #3a352e; }
+:root.dark .insight-log-entry { border-color: var(--border-color-light); }
 :root.dark .insight-log-entry .log-source { color: var(--text-color); }
 :root.dark .milestone-alert { background-color: var(--accent-color); color: var(--background-dark); }
 :root.dark .milestone-alert button { color: var(--background-dark); }
 :root.dark .toast { background-color: rgba(220, 220, 220, 0.9); color: #111; }
-:root.dark .toast.guidance-toast { background-color: rgba(173, 216, 230, 0.9); /* Lighter blue */ }
+:root.dark .toast.guidance-toast { background-color: rgba(77, 166, 255, 0.9); }
 :root.dark .onboarding-popup { background: var(--background-light); border-color: var(--primary-color); }
 :root.dark .onboarding-popup h2 { color: var(--primary-color); }
 :root.dark .onboarding-popup p { color: var(--text-muted-color); }
 :root.dark .onboarding-popup strong { color: var(--primary-color); }
 :root.dark .onboarding-nav .skip-button { color: var(--text-muted-color); }
 :root.dark .onboarding-nav .skip-button:hover { color: var(--primary-color); }
-:root.dark .chart-container { background-color: rgba(44, 42, 39, 0.7); }
-:root.dark .chartjs-render-monitor { /* May need more specific selectors */ filter: brightness(0.8) contrast(1.2); }
-:root.dark canvas#personaScoreChartCanvas { background-color: transparent !important; /* Ensure canvas itself is transparent */ }
-:root.dark .repo-list li, :root.dark .repo-list .repository-item { background-color: rgba(29, 27, 25, 0.4); border-left-color: var(--secondary-color); }
-:root.dark .repo-list .completed, :root.dark .repository-item.completed { border-left-color: var(--success-color); background-color: rgba(40, 167, 69, 0.1); }
+:root.dark .chart-container { background-color: rgba(64, 64, 64, 0.7); }
+:root.dark canvas#personaScoreChartCanvas { /* Inherits container background */ }
+:root.dark .chartjs-render-monitor { filter: brightness(0.9) contrast(1.1); } /* Adjust chart appearance */
+:root.dark .repo-list li, :root.dark .repo-list .repository-item { background-color: var(--background-light); border-left-color: var(--secondary-color); }
+:root.dark .repo-list .completed, :root.dark .repository-item.completed { border-left-color: var(--success-color); background-color: rgba(87, 227, 87, 0.1); }
 :root.dark .repo-insight-text { border-left-color: var(--cognitive-color); }
-:root.dark #dailyRitualsDisplayRepo li.focus-ritual { border-left-color: var(--accent-color); background-color: rgba(255, 215, 0, 0.08); }
-:root.dark #milestonesDisplay li.milestone-achieved::before { color: #90ee90; /* Lighter green for dark mode */ }
+:root.dark #dailyRitualsDisplayRepo li.focus-ritual { border-left-color: var(--accent-color); background-color: rgba(255, 122, 95, 0.1); }
+:root.dark #milestonesDisplay li.milestone-achieved::before { color: #57e357; }
 :root.dark .aspects-navigation { border-color: var(--border-color-light); }
-:root.dark .insight-scroll-panel { background-color: rgba(255,255,255,0.02); }
-:root.dark .aspects-navigation .button.active { background-color: var(--accent-color); color: var(--background-dark); border-color: var(--background-dark); }
+:root.dark .insight-scroll-panel { background-color: rgba(255,255,255,0.05); }
+:root.dark .aspects-navigation .button.active { background-color: var(--accent-color); color: var(--background-dark); border: none; }
+:root.dark .element-elaboration summary { color: var(--link-color); }
 
-
-/* --- Reduced Motion Preferences (from bundle) --- */
+/* ---------- 8. Reduced‑motion respect ------------------ */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
+  * { animation: none !important; transition: none !important; }
   .onboarding-highlight { transition: none !important; }
 }
 
 /* --- Responsiveness --- */
-@media (max-width: 900px) { /* Adjusted breakpoint */
-    .persona-overview { grid-template-columns: 1fr; } /* Stack columns on smaller screens */
+@media (max-width: 900px) {
+    .persona-overview { grid-template-columns: 1fr; }
+    .concept-grid { column-count: 2; } /* Masonry adjustment */
 }
 @media (max-width: 767px) {
-    /* Existing mobile styles */
     .app-container { margin: 5px; border-radius: 5px;}
-    .screen { padding: var(--spacing) * 1.5; } /* Use fluid spacing */
-    .popup { width: 95%; max-height: 90vh; }
-    .popup-main-content { grid-template-columns: 1fr; } /* Stack popup content */
-    .popup-visual-area { max-width: 250px; margin: 0 auto var(--spacing); } /* Center visual */
-
-    /* Workshop specific mobile adjustments */
+    .screen { padding: var(--spacing); height: calc(100dvh - var(--nav-height, 45px)); } /* Adjust nav height maybe */
+    :root { --nav-height: 45px; } /* Adjust nav height variable */
+    .popup { width: 95%; max-height: 90dvh; }
+    .popup-main-content { grid-template-columns: 1fr; }
+    .popup-visual-area { max-width: 250px; margin: 0 auto var(--spacing); }
     .library-area .grimoire-controls { flex-direction: column; align-items: stretch; }
-    .element-research-buttons-grid { grid-template-columns: 1fr; } /* Stack research buttons */
-
-    /* Onboarding popup adjustments */
+    .element-research-buttons-grid { grid-template-columns: 1fr; }
     .onboarding-popup { padding: 20px; }
     .onboarding-nav { flex-direction: column-reverse; gap: 10px; }
-    .main-nav { gap: .2rem; padding: .3rem .4rem; } /* Tighter nav spacing */
+    .main-nav { gap: .2rem; padding: .3rem .4rem; }
     .nav-button { padding: 8px 9px; font-size: 0.9em; }
     .theme-toggle { font-size: 1.1rem; }
+    .resonance-chamber-main { grid-template-columns: 1fr; } /* Stack deep dive nav */
+    .aspects-navigation { border-right: none; border-bottom: 1px solid var(--border-color-light); padding-right: 0; padding-bottom: var(--spacing); margin-bottom: var(--spacing); flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .aspects-navigation h4 { width: 100%; }
 }
-
 @media (max-width: 480px) {
-     /* Existing small mobile styles */
     body { font-size: 15px; }
-    h1 { font-size: clamp(1.5rem, 5vw, 1.8rem); } /* Fluid H1 */
-    h2 { font-size: clamp(1.15rem, 4vw, 1.35rem); } /* Fluid H2 */
+    h1 { font-size: clamp(1.5rem, 5vw, 1.8rem); }
+    h2 { font-size: clamp(1.15rem, 4vw, 1.35rem); }
     h3 { font-size: 1.1em; }
-
-    /* Workshop specific small mobile adjustments */
-    .library-area .grimoire-controls .filter-controls { grid-template-columns: 1fr; }
-
-    /* Onboarding small mobile adjustments */
+    .concept-grid { column-count: 1; } /* Masonry adjustment */
+    .library-area .grimoire-controls .filter-controls { display: grid; grid-template-columns: 1fr; gap: 8px; } /* Stack filters */
+    .library-area .grimoire-controls input[type="text"] { width: auto; }
     .onboarding-popup h2 { font-size: 1.4em; }
     .onboarding-popup p { font-size: 0.95em; }
-    .focus-concepts-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .focus-concepts-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; } /* Smaller focus cards */
+    .research-result-item { grid-template-columns: 1fr; } /* Stack research results */
+    .research-result-item .card-actions { grid-column: 1 / -1; flex-direction: row; justify-content: space-around; }
 }
 
-
-/* --- END OF COMPLETE style.css --- */
+/* --- END OF FILE style.css (Merged & Restyled) --- */
