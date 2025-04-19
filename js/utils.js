@@ -1,93 +1,46 @@
-// --- START OF CORRECTED utils.js (v4.8 - Consistent Keying) ---
+// js/utils.js - Utility Functions
+import { elementDetails, elementKeyToFullName, elementNameToKey } from '../data.js'; // data.js is now in parent directory
 
-// js/utils.js - Utility Functions (Enhanced for 7 Elements + v4)
-
-// Import elementDetails (for getElementShortName) and elementKeyToFullName (for reverse lookup)
-import { elementDetails, elementKeyToFullName } from '../data.js';
-
-console.log("utils.js loading... (Enhanced v4.8 - Consistent Keying)");
+console.log("utils.js loading...");
 
 /**
  * Returns a descriptive label for a score (0-10).
  * @param {number} score - The score value.
- * @returns {string} The descriptive label (e.g., "High", "Very Low").
+ * @returns {string} The descriptive label (e.g., "High", "Low").
  */
 export function getScoreLabel(score) {
     if (typeof score !== 'number' || isNaN(score)) return "N/A";
     if (score >= 9) return "Very High";
     if (score >= 7) return "High";
-    if (score >= 4) return "Moderate";
-    if (score >= 2) return "Low";
+    if (score >= 5) return "Moderate";
+    if (score >= 3) return "Low";
     return "Very Low";
 }
 
 /**
- * Returns a simple affinity level (High/Moderate) for concept cards based on Resonance score.
+ * Returns a simple affinity level (High/Moderate) for concept cards.
  * Returns null if score is below Moderate threshold.
- * @param {number} score - The score value (typically 0-10).
+ * @param {number} score - The score value.
  * @returns {string|null} "High", "Moderate", or null.
  */
 export function getAffinityLevel(score) {
     if (typeof score !== 'number' || isNaN(score)) return null;
     if (score >= 8) return "High";
     if (score >= 5) return "Moderate";
-    return null;
+    return null; // Scores below 5 don't show an affinity badge on cards
 }
 
 /**
- * Gets the short display name (e.g., "Attraction") from various possible inputs.
- * @param {string} nameOrKey - Can be short name key ("Attraction"), full descriptive name ("Attraction Focus: ..."), or single letter key ('A').
- * @returns {string} The short display name or the original input if lookup fails.
- */
-export function getElementShortName(nameOrKey) {
-    if (!nameOrKey) return "Unknown";
-
-    // 1. Check if it's a single letter key ('A', 'I', etc.)
-    if (nameOrKey.length === 1 && elementKeyToFullName[nameOrKey]) {
-        const shortNameKey = elementKeyToFullName[nameOrKey]; // "Attraction"
-        return elementDetails[shortNameKey]?.name?.split(':')[0] || shortNameKey;
-    }
-
-    // 2. Check if it's already the short name key ("Attraction", etc.)
-    if (elementDetails[nameOrKey]?.name) {
-        return elementDetails[nameOrKey].name.split(':')[0];
-    }
-
-    // 3. Check if it's a full descriptive name ("Attraction Focus: ...")
-    if (nameOrKey.includes(':')) {
-        return nameOrKey.split(':')[0];
-    }
-
-    // 4. Final fallback
-    console.warn(`Could not determine short name for: ${nameOrKey}`);
-    return nameOrKey;
-}
-
-
-/**
- * Gets the color associated with an element.
- * Expects the short name key ("Attraction", "Interaction", etc.) as input.
- * @param {string} elementNameKey - The short name key of the element (e.g., "Attraction", "RoleFocus").
+ * Gets the color associated with an element name.
+ * @param {string} elementName - The full name of the element (e.g., "Attraction").
  * @returns {string} The hex color code.
  */
-export function getElementColor(elementNameKey) {
-    // Colors keyed by the short name ("Attraction", etc.)
-    const fallbackColors = {
-        "Attraction": '#FF6347',
-        "Interaction": '#4682B4',
-        "Sensory": '#32CD32',
-        "Psychological": '#FFD700',
-        "Cognitive": '#8A2BE2',
-        "Relational": '#FF8C00',
-        "RoleFocus": '#40E0D0'
-    };
-     if (fallbackColors[elementNameKey]) {
-         return fallbackColors[elementNameKey];
-     }
-    console.warn(`Utils: Color not found for element key: ${elementNameKey}`);
-    return '#CCCCCC'; // Default grey
+export function getElementColor(elementName) {
+    // Using fallback colors directly for simplicity now.
+    // TODO: Potentially read from elementDetails if defined there later.
+    const fallbackColors = { Attraction: '#FF6347', Interaction: '#4682B4', Sensory: '#32CD32', Psychological: '#FFD700', Cognitive: '#8A2BE2', Relational: '#FF8C00' };
+    return fallbackColors[elementName] || '#CCCCCC'; // Default grey
 }
-
 
 /**
  * Converts a HEX color code to an RGBA string.
@@ -96,17 +49,15 @@ export function getElementColor(elementNameKey) {
  * @returns {string} The RGBA color string.
  */
 export function hexToRgba(hex, alpha = 1) {
-    if (!hex || typeof hex !== 'string') return `rgba(128,128,128, ${alpha})`;
+    if (!hex || typeof hex !== 'string') return `rgba(128,128,128, ${alpha})`; // Default grey on invalid input
     hex = hex.replace('#', '');
-    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-    if (hex.length !== 6) return `rgba(128,128,128, ${alpha})`;
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; // Expand shorthand hex
     const bigint = parseInt(hex, 16);
-    if (isNaN(bigint)) return `rgba(128,128,128, ${alpha})`;
+    if (isNaN(bigint)) return `rgba(128,128,128, ${alpha})`; // Default grey if parsing fails
     const r = (bigint >> 16) & 255;
     const g = (bigint >> 8) & 255;
     const b = bigint & 255;
-    const validAlpha = Math.max(0, Math.min(1, alpha));
-    return `rgba(${r},${g},${b},${validAlpha})`;
+    return `rgba(${r},${g},${b},${alpha})`;
 }
 
 /**
@@ -121,118 +72,84 @@ export function getCardTypeIcon(cardType) {
          case "Practice/Kink": return "fa-solid fa-gear";
          case "Psychological/Goal": return "fa-solid fa-brain";
          case "Relationship Style": return "fa-solid fa-heart";
-         default: return "fa-solid fa-question-circle";
+         default: return "fa-solid fa-question-circle"; // Fallback icon
      }
 }
 
 /**
- * Gets the Font Awesome icon class for a given element.
- * Expects the short name key ("Attraction", "Interaction", etc.) as input.
- * @param {string} elementNameKey - The short name key of the element (e.g., "Attraction").
+ * Gets the Font Awesome icon class for a given element name.
+ * @param {string} elementName - The full name of the element.
  * @returns {string} The Font Awesome class string.
  */
-export function getElementIcon(elementNameKey) {
-     switch (elementNameKey) {
+export function getElementIcon(elementName) {
+     // Using fallback icons directly for now.
+     // TODO: Potentially read from elementDetails if defined there later.
+     switch (elementName) {
          case "Attraction": return "fa-solid fa-magnet";
-         case "Interaction": return "fa-solid fa-people-arrows";
+         case "Interaction": return "fa-solid fa-users";
          case "Sensory": return "fa-solid fa-hand-sparkles";
-         case "Psychological": return "fa-solid fa-comment-dots";
+         case "Psychological": return "fa-solid fa-comment-dots"; // Changed from brain (used by CardType)
          case "Cognitive": return "fa-solid fa-lightbulb";
          case "Relational": return "fa-solid fa-link";
-         case "RoleFocus": return "fa-solid fa-gauge-high";
-         default:
-             console.warn(`Utils: Icon not found for element key: ${elementNameKey}`);
-             return "fa-solid fa-atom";
+         default: return "fa-solid fa-atom"; // Generic fallback
      }
 }
 
 /**
  * Calculates the Euclidean distance between two score objects.
- * @param {object} userScoresObj - The user's score object (expected to have 7 keys: A, I, S, P, C, R, RF).
- * @param {object} conceptScoresObj - The concept's score object (expected to have 7 keys).
- * @param {string} [conceptName='Unknown Concept'] - Optional name for debugging.
+ * Assumes objects use the same keys (A, I, S, P, C, R).
+ * @param {object} userScoresObj - The user's score object.
+ * @param {object} conceptScoresObj - The concept's score object.
  * @returns {number} The calculated Euclidean distance, or Infinity if inputs are invalid/incompatible.
  */
-export function euclideanDistance(userScoresObj, conceptScoresObj, conceptName = 'Unknown Concept') {
+export function euclideanDistance(userScoresObj, conceptScoresObj) {
      let sumOfSquares = 0;
      let validDimensions = 0;
 
+     // Basic validation
      if (!userScoresObj || typeof userScoresObj !== 'object' || !conceptScoresObj || typeof conceptScoresObj !== 'object') {
-         console.warn(`Invalid input for euclideanDistance (Concept: ${conceptName})`, userScoresObj, conceptScoresObj);
+         console.warn("Invalid input for euclideanDistance", userScoresObj, conceptScoresObj);
          return Infinity;
      }
 
-     const keysToCompare = Object.keys(userScoresObj); // Should be ['A', 'I', 'S', 'P', 'C', 'R', 'RF']
+     // Determine keys to compare. Use elementKeyToFullName if available to ensure consistency,
+     // otherwise fallback to keys from user scores.
+     const keysToCompare = elementNameToKey ? Object.values(elementNameToKey) : Object.keys(userScoresObj);
 
      if (keysToCompare.length === 0) {
-         console.warn(`Could not determine keys for comparison in euclideanDistance (Concept: ${conceptName}, userScoresObj is empty?)`);
+         console.warn("Could not determine keys for comparison in euclideanDistance");
          return Infinity;
      }
 
-     for (const key of keysToCompare) { // key is 'A', 'I', etc.
+     for (const key of keysToCompare) {
          const s1 = userScoresObj[key];
          const s2 = conceptScoresObj[key];
 
+         // Check if both scores are valid numbers for this dimension
          const s1Valid = typeof s1 === 'number' && !isNaN(s1);
+         // Check if the concept actually has this score and it's valid
          const s2Valid = conceptScoresObj.hasOwnProperty(key) && typeof s2 === 'number' && !isNaN(s2);
 
          if (s1Valid && s2Valid) {
              sumOfSquares += Math.pow(s1 - s2, 2);
              validDimensions++;
          } else {
-              if (!s2Valid) { console.debug(`DistCalc Warning (Concept: ${conceptName}): Skipping dimension ${key} - Concept Score Invalid/Missing: ${s2}. User Score: ${s1}`); }
-              else if (!s1Valid) { console.debug(`DistCalc Warning (Concept: ${conceptName}): Skipping dimension ${key} - User Score Invalid: ${s1}. Concept Score: ${s2}`); }
+             // Optionally log missing/invalid dimensions for debugging
+             // console.debug(`Skipping dimension ${key} in distance calc (s1Valid: ${s1Valid}, s2Valid: ${s2Valid})`);
          }
      }
 
-     if (validDimensions < keysToCompare.length - 1) {
-         console.warn(`Potentially inaccurate distance for Concept: ${conceptName}. Only ${validDimensions}/${keysToCompare.length} dimensions compared. Check concept's elementScores in data.js.`);
-         if (validDimensions === 0) return Infinity;
+     // If no dimensions could be compared, distance is undefined (Infinity)
+     if (validDimensions === 0) {
+         console.warn("No valid dimensions found for comparison in euclideanDistance");
+         return Infinity;
      }
+
+     // If only some dimensions were valid, should we normalize?
+     // For now, just calculate based on valid dimensions. Could adjust later if needed.
+     // Example normalization: return Math.sqrt(sumOfSquares / validDimensions) * Math.sqrt(keysToCompare.length);
 
      return Math.sqrt(sumOfSquares);
 }
 
-/**
- * Debounce function: Limits the rate at which a function can fire.
- * @param {Function} func - The function to debounce.
- * @param {number} delay - The delay in milliseconds.
- * @returns {Function} The debounced function.
- */
-export function debounce(func, delay) {
-    let timeoutId;
-    return function(...args) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-}
-
-/**
- * Formats a timestamp into a readable date/time string.
- * @param {number} timestamp - The Unix timestamp in milliseconds.
- * @returns {string} Formatted date/time string (e.g., "YYYY-MM-DD HH:MM") or "Invalid Date".
- */
-export function formatTimestamp(timestamp) {
-    if (!timestamp || typeof timestamp !== 'number') return "Invalid Date";
-    try {
-        const date = new Date(timestamp);
-        if (isNaN(date.getTime())) return "Invalid Date"; // Check if the date object is valid
-
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
-    } catch (e) {
-        console.error("Error formatting timestamp:", e);
-        return "Invalid Date";
-    }
-}
-
-
 console.log("utils.js loaded.");
-// --- END OF CORRECTED utils.js ---
