@@ -12,7 +12,7 @@
    onboardingRepositoryIntro,
    elementKeyToFullName, // Keep other necessary imports
    elementDetails, // Ensure elementDetails is imported if needed by getTourForScreen (it is)
- } from '../data.js'; // data.js is at the root (same level as main.js)
+ } from './data.js'; // data.js is at the root (same level as main.js)
 
 console.log("main.js loading... (Enhanced v4.1 + Drawer - Fixed v2 + Onboarding Tours)");
 
