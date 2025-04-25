@@ -1730,7 +1730,8 @@ const reflectionPrompts = {
         { id: "pRF3", text: "If you identify as a Switch, what often triggers the desire to shift from one energetic pole (Dominant/submissive) to the other? Is it internal, external, or a combination? What's enjoyable about the shift itself?" },
         { id: "pRF4", text: "How does your preferred Role Focus (Dominant, submissive, Switch, or perhaps neutral/egalitarian) interact with your other elemental scores? For example, does a high RF score pair with high Control [I] or Cognitive [C] engagement for you? Does a low RF score often link with seeking Comfort [P] or specific Sensations [S]?" }
     ],
-    
+        "Dissonance": [
+        { id: "pD1", text: "Okay, this Concept feels a bit like static compared to your usual frequency! Acknowledge the discomfort, then lean in with curiosity: What specific *part* of it, even if it feels weird or 'not you,' makes you tilt your head and go 'Huh, that's... unexpectedly interesting...'?" },
         { id: "pD2", text: "Exploring the unfamiliar edges of the map can be wild! Even if this concept feels challenging or pushes buttons, what *potential* new insight, understanding, or even unexpected pleasure might it offer if you hypothetically leaned into it just a tiny, safe bit in thought or fantasy?" },
         { id: "pD3", text: "Sometimes the things we instinctively push away hold a mirror to something within us. Does this concept perhaps poke at an underlying fear, a societal taboo you've internalized, or even a hidden desire or need you haven't fully acknowledged or explored yet?" },
         { id: "pD4", text: "How could simply *understanding* this different perspective on desire or intimacy, even if it remains firmly 'not for you' in practice, broaden your appreciation for your own awesome complexity or the sheer, dazzling variety of the human erotic landscape?" }
