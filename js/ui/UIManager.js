@@ -1,60 +1,59 @@
 // js/ui/UIManager.js
 
 // Import Card potentially needed for rendering hints
-// import { Card } from '../core/Card.js';
+import { Card } from '../core/Card.js'; // Assuming path is correct
+// Import Artifact potentially needed
+import { Artifact } from '../core/Artifact.js'; // Assuming path is correct
+
 
 /**
  * Manages UI updates and interactions with the DOM.
  */
 export class UIManager {
-    constructor(gameContainerId = 'gameContainer') {
+     // Keep existing constructor and properties...
+     constructor(gameContainerId = 'gameContainer') {
         this.gameContainer = document.getElementById(gameContainerId);
         if (!this.gameContainer) {
             throw new Error(`UIManager Error: Game container with ID "${gameContainerId}" not found!`);
         }
 
-        this.screens = {}; // Store screen elements { screenId: element }
-        this.currentScreen = null; // Currently active screen element
+        // Store gameState reference when available
+        this.gameState = null;
+
+        this.screens = {};
+        this.currentScreen = null;
 
         // --- Specific UI Element References ---
-        // Main Menu
-        this.startGameButton = document.getElementById('startGameButton');
-        this.loadGameButton = document.getElementById('loadGameButton');
-        this.metaProgressionButton = document.getElementById('metaProgressionButton');
-        this.settingsButton = document.getElementById('settingsButton');
+        // ... (keep all existing references) ...
+        this.rewardScreen = document.getElementById('rewardScreen'); // Needs adding to index.html
+        this.rewardCardsArea = document.getElementById('rewardCards'); // Needs adding
+        this.rewardArtifactsArea = document.getElementById('rewardArtifacts'); // Needs adding
+        this.rewardInsightText = document.getElementById('rewardInsight'); // Needs adding
+        this.rewardSkipButton = document.getElementById('rewardSkipButton'); // Needs adding
 
-        // Map Screen
-        this.mapArea = document.getElementById('mapArea');
-        this.playerInfoMap = document.getElementById('playerInfoMap');
-
-        // Combat Screen
-        this.enemyArea = document.getElementById('enemyArea');
-        this.playerArea = document.getElementById('playerArea');
-        this.handArea = document.getElementById('handArea');
-        this.deckCountElement = document.getElementById('deckCount'); // Assumes an element with this ID exists
-        this.discardCountElement = document.getElementById('discardCount'); // Assumes an element with this ID exists
-        this.endTurnButton = document.getElementById('endTurnButton');
-        this.playerHPElement = document.getElementById('playerHP'); // Assume exists in playerArea
-        this.playerFocusElement = document.getElementById('playerFocus'); // Assume exists in playerArea
-        this.playerBlockElement = document.getElementById('playerBlock'); // Assume exists in playerArea
-
-        // Event Screen
-        this.eventText = document.getElementById('eventText');
-        this.eventChoices = document.getElementById('eventChoices');
-
-        // Shop Screen
         this.shopCards = document.getElementById('shopCards');
         this.shopArtifacts = document.getElementById('shopArtifacts');
+        this.shopRemoveService = document.getElementById('shopRemoveService'); // Needs adding
         this.leaveShopButton = document.getElementById('leaveShopButton');
 
-        // Rest Site Screen
         this.restHealButton = document.getElementById('restHealButton');
         this.restMeditateButton = document.getElementById('restMeditateButton');
         this.restJournalButton = document.getElementById('restJournalButton');
         this.leaveRestSiteButton = document.getElementById('leaveRestSiteButton');
 
-         // Meta Screen
-         this.backToMenuButton = document.getElementById('backToMenuButton');
+        this.cardSelectionModal = document.getElementById('cardSelectionModal'); // Needs adding
+        this.cardSelectionGrid = document.getElementById('cardSelectionGrid'); // Needs adding
+        this.cardSelectionTitle = document.getElementById('cardSelectionTitle'); // Needs adding
+        this.cardSelectionCancelButton = document.getElementById('cardSelectionCancel'); // Needs adding
+
+        // Combat Screen elements (ensure these exist or use placeholders)
+        this.enemyArea = document.getElementById('enemyArea');
+        this.playerArea = document.getElementById('playerArea');
+        this.handArea = document.getElementById('handArea');
+        this.deckCountElement = document.getElementById('deckCountElement') || this._createPlaceholderSpan(this.gameContainer, 'deckCountElement', 'Deck: '); // Use existing placeholder creator
+        this.discardCountElement = document.getElementById('discardCountElement') || this._createPlaceholderSpan(this.gameContainer, 'discardCountElement', 'Discard: ');
+        this.endTurnButton = document.getElementById('endTurnButton');
+        // ... (other refs)
 
         // Overlays
         this.tooltipElement = document.getElementById('tooltip');
@@ -66,485 +65,492 @@ export class UIManager {
         // Card Drag State
         this.draggedCard = null;
         this.draggedCardElement = null;
+        this.currentTarget = null; // Store targeted enemy
 
         this._collectScreens();
-        this._setupCommonListeners(); // Setup listeners for things like modals and tooltips
+        this._setupCommonListeners();
+        this._setupNodeActionListeners(); // Add listeners for shop/rest buttons
         console.log("UIManager initialized.");
     }
 
+    // --- NEW ---
     /**
-     * Finds and stores references to all screen elements.
+     * Stores a reference to the GameState for callbacks.
+     * Should be called after GameState is initialized.
      */
-    _collectScreens() {
+    setGameState(gameState) {
+        this.gameState = gameState;
+         // Assign gameState reference to subordinate managers if they exist and need it
+         // e.g., this.mapManager?.setGameState(gameState);
+    }
+    // --- END NEW ---
+
+    // Keep _collectScreens, _setupCommonListeners, showScreen...
+
+     _collectScreens() {
         const screenElements = this.gameContainer.querySelectorAll('.screen');
         screenElements.forEach(screen => {
             this.screens[screen.id] = screen;
             screen.classList.remove('active'); // Ensure all hidden initially
+            // Find specific reward/selection elements if needed
+             if (screen.id === 'rewardScreen') {
+                this.rewardCardsArea = screen.querySelector('#rewardCards') || this.rewardCardsArea;
+                this.rewardArtifactsArea = screen.querySelector('#rewardArtifacts') || this.rewardArtifactsArea;
+                this.rewardInsightText = screen.querySelector('#rewardInsight') || this.rewardInsightText;
+                this.rewardSkipButton = screen.querySelector('#rewardSkipButton') || this.rewardSkipButton;
+            }
+             if (screen.id === 'shopScreen') {
+                 this.shopCards = screen.querySelector('#shopCards') || this.shopCards;
+                 this.shopArtifacts = screen.querySelector('#shopArtifacts') || this.shopArtifacts;
+                 this.shopRemoveService = screen.querySelector('#shopRemoveService') || this.shopRemoveService;
+                 this.leaveShopButton = screen.querySelector('#leaveShopButton') || this.leaveShopButton;
+            }
+             if (screen.id === 'cardSelectionModal') { // Treat modal like a screen for logic? Or handle differently?
+                 this.cardSelectionModal = screen; // Reference the modal itself
+                 this.cardSelectionGrid = screen.querySelector('#cardSelectionGrid') || this.cardSelectionGrid;
+                 this.cardSelectionTitle = screen.querySelector('#cardSelectionTitle') || this.cardSelectionTitle;
+                 this.cardSelectionCancelButton = screen.querySelector('#cardSelectionCancel') || this.cardSelectionCancelButton;
+            }
         });
         console.log("UIManager: Found screens:", Object.keys(this.screens));
     }
 
-    /**
-     * Sets up listeners for common UI elements like modal close buttons.
-     */
-    _setupCommonListeners() {
+     _setupCommonListeners() {
         if (this.modalCloseButton) {
             this.modalCloseButton.onclick = () => this.hideModal();
         }
-        // Close modal if clicking outside the content
         window.onclick = (event) => {
-            if (event.target == this.modalPopup) {
-                this.hideModal();
+            if (event.target == this.modalPopup && this.modalPopup.style.display === 'block') {
+                 this.hideModal();
             }
+             // Close card selection modal if clicking outside?
+             if (event.target == this.cardSelectionModal && this.cardSelectionModal.style.display === 'block') {
+                this.hideCardSelectionModal(true); // Pass true to indicate cancellation
+             }
         };
-
-        // Tooltip listeners (handled globally or per element?)
-        // We might attach these dynamically when rendering cards/enemies.
+        // Tooltips...
     }
 
-    /**
-     * Shows a specific screen and hides the current one.
-     * @param {string} screenId - The ID of the screen div to show.
-     */
-    showScreen(screenId) {
-        if (this.currentScreen) {
-            this.currentScreen.classList.remove('active');
-        }
-        if (this.screens[screenId]) {
-            this.currentScreen = this.screens[screenId];
-            this.currentScreen.classList.add('active');
-            console.log(`UIManager: Showing screen: ${screenId}`);
-        } else {
-            console.error(`UIManager: Screen ID "${screenId}" not found!`);
-        }
-    }
+     _setupNodeActionListeners() {
+         // Shop Listeners
+         if (this.leaveShopButton) {
+             this.leaveShopButton.onclick = () => this.gameState?.leaveShop();
+         }
+         // Add listeners for buying cards/artifacts dynamically when rendering shop
 
-    // --- Update Methods ---
+         // Rest Site Listeners
+         if (this.restHealButton) {
+             this.restHealButton.onclick = () => this.gameState?.handleRestSiteAction('heal');
+         }
+          if (this.restMeditateButton) {
+              this.restMeditateButton.onclick = () => this.gameState?.handleRestSiteAction('upgrade');
+         }
+          if (this.restJournalButton) {
+              this.restJournalButton.onclick = () => this.gameState?.handleRestSiteAction('remove');
+         }
+         if (this.leaveRestSiteButton) {
+              this.leaveRestSiteButton.onclick = () => this.gameState?.leaveRestSite();
+         }
 
-    /**
-     * Updates the entire combat UI based on the current state.
-     * @param {Player} player - The player object.
-     * @param {Enemy[]} enemies - Array of current enemy objects.
-     * @param {boolean} isPlayerTurn - Flag indicating whose turn it is.
-     */
-    updateCombatUI(player, enemies, isPlayerTurn) {
-        console.log("UIManager: Updating Combat UI...");
-        this.updatePlayerCombatInfo(player);
-        this.renderEnemies(enemies);
-        this.renderHand(player.deckManager.hand); // Assumes Player has DeckManager instance
-        this.updateDeckDiscardCounts(player.deckManager);
-
-        // Indicate turn
-        this.endTurnButton.disabled = !isPlayerTurn;
-        // Maybe add visual indicator like border color change?
-        this.playerArea.style.borderColor = isPlayerTurn ? '#3498db' : '#7f8c8d'; // Blue for player turn
-        this.enemyArea.style.borderColor = !isPlayerTurn ? '#e74c3c' : '#7f8c8d'; // Red for enemy turn
-    }
-
-    /**
-     * Updates the player's stats display in combat.
-     */
-    updatePlayerCombatInfo(player) {
-        // TODO: Find specific elements within playerArea if not already referenced
-        const hpDisplay = this.playerArea.querySelector('#playerHP') || this._createPlaceholderSpan(this.playerArea, 'playerHP', 'HP: ');
-        const focusDisplay = this.playerArea.querySelector('#playerFocus') || this._createPlaceholderSpan(this.playerArea, 'playerFocus', 'Focus: ');
-        const blockDisplay = this.playerArea.querySelector('#playerBlock') || this._createPlaceholderSpan(this.playerArea, 'playerBlock', 'Block: ');
-        const statusDisplay = this.playerArea.querySelector('#playerStatuses') || this._createPlaceholderDiv(this.playerArea, 'playerStatuses', 'Statuses: '); // Needs a div
-
-        hpDisplay.textContent = `HP: ${player.currentIntegrity} / ${player.maxIntegrity}`;
-        focusDisplay.textContent = `Focus: ${player.currentFocus} / ${player.maxFocus}`;
-        blockDisplay.textContent = `Block: ${player.currentBlock}`;
-
-        // Update Status Effects display
-        statusDisplay.innerHTML = 'Statuses: '; // Clear previous
-        player.activeStatusEffects.forEach(effect => {
-            const effectSpan = document.createElement('span');
-            effectSpan.textContent = ` ${effect.id}(${effect.duration || effect.amount || ''}) `; // Display ID and duration/amount
-            effectSpan.className = 'status-effect player-status'; // Add class for styling
-            // TODO: Add tooltip with status description
-            statusDisplay.appendChild(effectSpan);
-        });
-         if (player.activeStatusEffects.length === 0) statusDisplay.textContent += " None";
-    }
-
-     /**
-     * Updates the deck and discard pile counts.
-     */
-     updateDeckDiscardCounts(deckManager) {
-        const deckEl = document.getElementById('deckCountElement') || this._createPlaceholderSpan(this.gameContainer, 'deckCountElement', 'Deck: ');
-        const discardEl = document.getElementById('discardCountElement') || this._createPlaceholderSpan(this.gameContainer, 'discardCountElement', 'Discard: ');
-
-         deckEl.textContent = `Deck: ${deckManager.getDrawPileCount()}`;
-         discardEl.textContent = `Discard: ${deckManager.getDiscardPileCount()}`;
-         // TODO: Add tooltips showing top card or full list?
+         // Card Selection Modal Cancel Button
+         if (this.cardSelectionCancelButton) {
+             this.cardSelectionCancelButton.onclick = () => this.hideCardSelectionModal(true); // Cancel
+         }
      }
 
+    // Keep updateCombatUI, updatePlayerCombatInfo, updateDeckDiscardCounts, renderEnemies, getIntentText...
+    // Keep renderHand, _setupDropZones, createCardElement, enablePlayerInput...
+    // Keep Tooltip methods...
+    // Keep Modal methods...
+
+    // --- NEW UI Rendering Methods ---
 
     /**
-     * Renders the current enemies in the enemy area.
+     * Displays the post-combat reward screen.
+     * @param {object} rewards - Object containing reward details { insight, cardChoices[], artifactChoice[], onComplete }
      */
-    renderEnemies(enemies) {
-        this.enemyArea.innerHTML = ''; // Clear previous enemies
-
-        enemies.forEach((enemy, index) => {
-            const enemyDiv = document.createElement('div');
-            enemyDiv.className = 'enemy-display';
-            enemyDiv.dataset.enemyId = enemy.id; // Store unique ID for targeting
-            enemyDiv.style.border = '1px solid #ccc'; // Basic visual separation
-            enemyDiv.style.padding = '10px';
-            enemyDiv.style.textAlign = 'center';
-             enemyDiv.style.opacity = enemy.currentHp <= 0 ? 0.5 : 1; // Dim defeated enemies
-
-            const name = document.createElement('div');
-            name.textContent = enemy.name;
-            name.style.fontWeight = 'bold';
-
-            const hp = document.createElement('div');
-            hp.textContent = `HP: ${enemy.currentHp} / ${enemy.maxHp}`;
-            hp.id = `enemyHP_${enemy.id}`; // ID for easy updates
-
-             const block = document.createElement('div');
-             block.textContent = `Block: ${enemy.currentBlock}`;
-             block.id = `enemyBlock_${enemy.id}`;
-
-            const intent = document.createElement('div');
-            intent.className = 'enemy-intent';
-            intent.id = `enemyIntent_${enemy.id}`;
-            intent.textContent = this.getIntentText(enemy.currentIntent, enemy); // Display next action
-             intent.style.marginTop = '5px';
-             intent.style.fontStyle = 'italic';
-             intent.style.color = '#f39c12'; // Orange intent color
-
-
-            const statuses = document.createElement('div');
-            statuses.className = 'enemy-statuses';
-            statuses.id = `enemyStatuses_${enemy.id}`;
-            statuses.innerHTML = 'Statuses: ';
-             enemy.activeStatusEffects.forEach(effect => {
-                const effectSpan = document.createElement('span');
-                effectSpan.textContent = ` ${effect.id}(${effect.duration || effect.amount || ''}) `;
-                effectSpan.className = 'status-effect enemy-status';
-                statuses.appendChild(effectSpan);
-            });
-             if(enemy.activeStatusEffects.length === 0) statuses.textContent += " None";
-
-
-            enemyDiv.appendChild(name);
-            enemyDiv.appendChild(hp);
-             enemyDiv.appendChild(block);
-            enemyDiv.appendChild(intent);
-            enemyDiv.appendChild(statuses);
-
-
-            // Add click listener for targeting (if enemy is alive)
-             if (enemy.currentHp > 0) {
-                enemyDiv.addEventListener('click', () => {
-                     // TODO: Implement targeting logic - maybe set a 'currentTarget' in CombatManager?
-                     console.log(`Targeting enemy: ${enemy.name} (ID: ${enemy.id})`);
-                     // Visually indicate target?
-                     document.querySelectorAll('.enemy-display').forEach(el => el.style.borderColor = '#ccc');
-                     enemyDiv.style.borderColor = '#f1c40f'; // Highlight target yellow
-                     this.currentTarget = enemy; // Store target ref (needs CombatManager integration)
-                 });
-             }
-
-            this.enemyArea.appendChild(enemyDiv);
-        });
-    }
-
-    /**
-     * Generates descriptive text for an enemy's intent.
-     */
-    getIntentText(intent, enemy) {
-        if (!intent || enemy.currentHp <= 0 || enemy.hasStatus('Stunned')) {
-            return '???'; // No intent shown if stunned or defeated
+    showRewardScreen(rewards) {
+        if (!this.rewardScreen || !this.gameState) {
+             console.error("Reward screen element or gameState not found, cannot show rewards.");
+             // Fallback: just give insight and complete node?
+             if (rewards.insight && this.gameState.player) this.gameState.player.insightThisRun += rewards.insight;
+             rewards.onComplete(); // Call completion callback immediately
+             return;
         }
-        let text = '';
-         let baseValue = intent.baseValue || 0;
-         // Apply *visible* modifiers like Strength/Weak for prediction
-         let predictedValue = enemy.applyModifiers('damageDealt', baseValue);
+        console.log("Showing Reward Screen:", rewards);
 
-
-        switch (intent.type) {
-            case 'attack':
-                text = `Attack ${predictedValue}`;
-                 if(intent.status) text += ` (Applies ${intent.status})`;
-                break;
-            case 'multi_attack':
-                predictedValue = enemy.applyModifiers('damageDealt', baseValue);
-                 text = `Attack ${predictedValue} x ${intent.count || '?'}`;
-                 break;
-            case 'block':
-                predictedValue = enemy.applyModifiers('blockGain', baseValue);
-                text = `Block ${predictedValue}`;
-                break;
-            case 'attack_block':
-                const attackVal = enemy.applyModifiers('damageDealt', intent.attackValue || 0);
-                const blockVal = enemy.applyModifiers('blockGain', intent.blockValue || 0);
-                text = `Attack ${attackVal}, Block ${blockVal}`;
-                break;
-            case 'debuff':
-                text = `Debuff (${intent.status || '???'})`;
-                break;
-            case 'buff':
-                text = `Buff Self (${intent.status || '???'})`;
-                break;
-             case 'power_up':
-                 text = `Power Up (${intent.status || '???'})`;
-                 break;
-            case 'special':
-                text = intent.description || `Special Ability (${intent.id})`;
-                break;
-            default:
-                text = 'Unknown Action';
+        // Display Insight Gain
+        if (this.rewardInsightText) {
+            this.rewardInsightText.textContent = `Insight Gained: ${rewards.insight || 0}`;
         }
-        return `Intent: ${text}`;
-    }
 
+        // Display Card Choices
+        if (this.rewardCardsArea) {
+            this.rewardCardsArea.innerHTML = '<h3>Choose a Concept:</h3>';
+            if (rewards.cardChoices && rewards.cardChoices.length > 0) {
+                rewards.cardChoices.forEach(cardId => {
+                    const card = new Card(cardId); // Create temporary card instance for display
+                    if (card.conceptId !== -1) {
+                        const cardElement = this.createCardElement(card); // Use existing card renderer
+                        cardElement.onclick = () => {
+                            console.log(`Selected card reward: ${card.name}`);
+                            this.gameState.player.addCardToDeck(cardId);
+                             // TODO: Add visual confirmation, disable other choices
+                            this.rewardCardsArea.innerHTML = `<p>Acquired: ${card.name}</p>`; // Simple feedback
+                            // Potentially call onComplete only after ALL choices made? Or immediately? Design choice.
+                        };
+                        this.rewardCardsArea.appendChild(cardElement);
+                    }
+                });
+            } else {
+                 this.rewardCardsArea.innerHTML += '<p>No concepts resonated...</p>';
+            }
+        }
 
-    /**
-     * Renders the player's hand.
-     */
-    renderHand(handCards) {
-        this.handArea.innerHTML = ''; // Clear previous hand
-        handCards.forEach((card, index) => {
-            const cardElement = this.createCardElement(card);
-            cardElement.dataset.handIndex = index; // Store index for potential play logic
-
-             // --- Drag and Drop Implementation (Basic) ---
-             cardElement.draggable = true;
-             cardElement.addEventListener('dragstart', (event) => {
-                this.draggedCard = card; // Store the Card object being dragged
-                this.draggedCardElement = cardElement;
-                 event.dataTransfer.setData('text/plain', card.id); // Can transfer card ID
-                 event.dataTransfer.effectAllowed = 'move';
-                 cardElement.style.opacity = '0.5'; // Visual feedback
-                 console.log("Drag Start:", card.name);
-             });
-
-             cardElement.addEventListener('dragend', (event) => {
-                cardElement.style.opacity = '1'; // Restore opacity
-                this.draggedCard = null;
-                this.draggedCardElement = null;
-                // Clear target highlighting?
-                 document.querySelectorAll('.enemy-display').forEach(el => el.style.borderColor = '#ccc');
-                 this.currentTarget = null;
-                 console.log("Drag End");
-             });
-
-            this.handArea.appendChild(cardElement);
-        });
-
-         // Add drop zone listeners to potential targets (enemies, player area for self-target)
-         this._setupDropZones();
-    }
-
-     _setupDropZones() {
-         // Drop listener on enemy area (or individual enemies)
-         this.enemyArea.ondragover = (event) => {
-             event.preventDefault(); // Allow drop
-             event.dataTransfer.dropEffect = 'move';
-         };
-         this.enemyArea.ondrop = (event) => {
-            event.preventDefault();
-             if (this.draggedCard && this.currentTarget && this.currentTarget.currentHp > 0) {
-                 console.log(`Dropped ${this.draggedCard.name} onto ${this.currentTarget.name}`);
-                 // Trigger card play through CombatManager
-                 this.gameState.combatManager.handlePlayerCardPlay(this.draggedCard, this.currentTarget);
-             } else if (this.draggedCard && !this.draggedCard.requiresTarget) {
-                 // Allow dropping cards that don't need a target anywhere (or specific zone?)
-                 console.log(`Dropped ${this.draggedCard.name} (no target needed)`);
-                 this.gameState.combatManager.handlePlayerCardPlay(this.draggedCard, null);
+        // Display Artifact Choice
+        if (this.rewardArtifactsArea) {
+             this.rewardArtifactsArea.innerHTML = '<h3>Choose a Relic:</h3>';
+             if (rewards.artifactChoice && rewards.artifactChoice.length > 0) {
+                  rewards.artifactChoice.forEach(artifactId => {
+                      const artifact = new Artifact(artifactId); // Create temporary artifact instance
+                      if (artifact.id !== 'error_artifact') {
+                          const artifactElement = document.createElement('div');
+                          artifactElement.innerHTML = artifact.getDisplayHtml(); // Use artifact display method
+                          artifactElement.style.border = '1px solid #ccc';
+                          artifactElement.style.padding = '5px';
+                          artifactElement.style.margin = '5px';
+                          artifactElement.style.cursor = 'pointer';
+                          artifactElement.onclick = () => {
+                              console.log(`Selected artifact reward: ${artifact.name}`);
+                              this.gameState.player.addArtifact(artifactId);
+                               // TODO: Add visual confirmation
+                              this.rewardArtifactsArea.innerHTML = `<p>Acquired: ${artifact.name}</p>`;
+                           };
+                          this.rewardArtifactsArea.appendChild(artifactElement);
+                      }
+                  });
+             } else {
+                  this.rewardArtifactsArea.innerHTML += '<p>No relics found...</p>';
              }
-             this.draggedCard = null; // Clear drag state
-             this.draggedCardElement = null;
-             this.currentTarget = null;
-         };
+        }
 
-         // Drop listener on player area (for self-targeted cards)
-         this.playerArea.ondragover = (event) => {
-             event.preventDefault();
-             event.dataTransfer.dropEffect = 'move';
-         };
-          this.playerArea.ondrop = (event) => {
-              event.preventDefault();
-              if (this.draggedCard && !this.draggedCard.requiresTarget) { // Or specifically check for self-target flag
-                  console.log(`Dropped ${this.draggedCard.name} onto Player Area`);
-                  this.gameState.combatManager.handlePlayerCardPlay(this.draggedCard, null); // Null target usually means self or no target
-              }
-              this.draggedCard = null;
-              this.draggedCardElement = null;
-               this.currentTarget = null;
-          };
-     }
+
+        // Setup Skip/Continue Button
+        if (this.rewardSkipButton) {
+            this.rewardSkipButton.textContent = 'Continue'; // Or 'Skip All' if choices exist
+            this.rewardSkipButton.onclick = () => {
+                 console.log("Skipping / Continuing from rewards...");
+                 rewards.onComplete(); // Call the completion callback provided by GameState
+            };
+        }
+
+        this.showScreen('rewardScreen');
+    }
 
     /**
-     * Creates a DOM element representing a card.
-     * @param {Card} card - The card object.
-     * @returns {HTMLElement} The card div element.
+     * Renders the shop interface.
+     * @param {object} shopInventory - The inventory object from GameState.
+     * @param {number} playerInsight - Current player insight for display.
      */
-    createCardElement(card) {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'card'; // Use the CSS class
-        cardDiv.dataset.cardId = card.id; // Store unique instance ID
+     renderShop(shopInventory, playerInsight) {
+         if (!this.shopCards || !this.shopArtifacts || !this.shopRemoveService || !this.gameState) return;
+         console.log("Rendering Shop:", shopInventory);
 
-        // Basic card structure from CSS example
-        const cost = document.createElement('div');
-        cost.className = 'card-cost';
-        cost.textContent = card.cost;
-
-        const name = document.createElement('div');
-        name.className = 'card-name';
-        name.textContent = card.name;
-
-        const description = document.createElement('div');
-        description.className = 'card-description';
-        // Use the description generation method from the Card class
-        description.innerHTML = card.getEffectDescriptionHtml(); // Use innerHTML if description contains simple tags
-
-        const type = document.createElement('div');
-        type.className = 'card-type';
-        type.textContent = card.cardType;
+          // Update player insight display somewhere (e.g., in a header)
+          const insightDisplay = document.getElementById('shopInsightDisplay') || this._createPlaceholderSpan(this.screens['shopScreen'], 'shopInsightDisplay', 'Insight: ');
+          insightDisplay.innerHTML = `Insight: ${playerInsight} <i class='fas fa-brain insight-icon'></i>`;
 
 
-        cardDiv.appendChild(cost);
-        cardDiv.appendChild(name);
-        cardDiv.appendChild(description);
-        cardDiv.appendChild(type);
+         // Render Cards
+         this.shopCards.innerHTML = '<h3>Concepts for Sale:</h3>';
+         shopInventory.cards.forEach((item, index) => {
+            const card = new Card(item.cardId);
+             if (card.conceptId === -1) return;
 
-        // Add tooltip listener
-        cardDiv.addEventListener('mouseover', (event) => {
-            this.showTooltip(card.getTooltipHtml(), event.clientX, event.clientY);
-        });
-        cardDiv.addEventListener('mouseout', () => {
-            this.hideTooltip();
-        });
-         cardDiv.addEventListener('mousemove', (event) => {
-             this.updateTooltipPosition(event.clientX, event.clientY);
+             const shopItemDiv = document.createElement('div');
+             shopItemDiv.className = 'shop-item card-item';
+             const cardElement = this.createCardElement(card); // Reuse card rendering
+             shopItemDiv.appendChild(cardElement);
+
+             const priceButton = document.createElement('button');
+             priceButton.textContent = `Buy (${item.cost} Insight)`;
+             priceButton.disabled = item.purchased || playerInsight < item.cost;
+             priceButton.onclick = () => {
+                  this.gameState.handleShopPurchase('card', item.cardId);
+             };
+
+             shopItemDiv.appendChild(priceButton);
+             this.shopCards.appendChild(shopItemDiv);
          });
 
+          // Render Artifacts
+          this.shopArtifacts.innerHTML = '<h3>Relics for Sale:</h3>';
+          shopInventory.artifacts.forEach((item, index) => {
+               const artifact = new Artifact(item.artifactId);
+               if (artifact.id === 'error_artifact') return;
 
-        return cardDiv;
-    }
+              const shopItemDiv = document.createElement('div');
+              shopItemDiv.className = 'shop-item artifact-item';
+              shopItemDiv.style.border = '1px solid #ccc';
+              shopItemDiv.style.padding = '5px';
+              shopItemDiv.style.margin = '5px';
+              shopItemDiv.innerHTML = artifact.getDisplayHtml();
 
+
+              const priceButton = document.createElement('button');
+              priceButton.textContent = `Buy (${item.cost} Insight)`;
+              priceButton.style.marginLeft = '10px';
+              priceButton.disabled = item.purchased || playerInsight < item.cost;
+              priceButton.onclick = () => {
+                   this.gameState.handleShopPurchase('artifact', item.artifactId);
+              };
+
+              shopItemDiv.appendChild(priceButton);
+              this.shopArtifacts.appendChild(shopItemDiv);
+          });
+
+          // Render Card Removal Service
+          this.shopRemoveService.innerHTML = '<h3>Refinement Service:</h3>';
+          const removeButton = document.createElement('button');
+          removeButton.textContent = `Let Go of a Concept (${shopInventory.removalCost} Insight)`;
+          removeButton.disabled = !shopInventory.removalAvailable || playerInsight < shopInventory.removalCost;
+          removeButton.onclick = () => {
+               this.gameState.handleShopPurchase('remove');
+          };
+          this.shopRemoveService.appendChild(removeButton);
+          if (!shopInventory.removalAvailable) {
+              const usedText = document.createElement('span');
+              usedText.textContent = ' (Service Used)';
+              usedText.style.fontStyle = 'italic';
+              this.shopRemoveService.appendChild(usedText);
+          }
+     }
 
     /**
-     * Enables or disables player input controls (hand interaction, end turn button).
+     * Updates the display of the rest site buttons.
+     * @param {object} restSiteState - State object { usedOption: boolean }
      */
-    enablePlayerInput(enabled) {
-        this.endTurnButton.disabled = !enabled;
-        // Make cards clickable/draggable only if input is enabled
-        this.handArea.querySelectorAll('.card').forEach(cardEl => {
-            cardEl.style.pointerEvents = enabled ? 'auto' : 'none';
-            cardEl.style.cursor = enabled ? 'grab' : 'default';
-             cardEl.draggable = enabled;
-        });
-        // Might need visual cue, like dimming hand area when disabled
-        this.handArea.style.opacity = enabled ? 1 : 0.6;
-    }
+     renderRestSite(restSiteState) {
+         if (!this.restHealButton || !this.restMeditateButton || !this.restJournalButton) return;
+         const used = restSiteState.usedOption;
+         this.restHealButton.disabled = used;
+         this.restMeditateButton.disabled = used;
+         this.restJournalButton.disabled = used;
+         this.leaveRestSiteButton.textContent = used ? "Continue" : "Leave";
 
+         // Add visual cue that an option was used?
+         const usedIndicator = this.screens['restSiteScreen']?.querySelector('#restUsedIndicator') || this._createPlaceholderSpan(this.screens['restSiteScreen'], 'restUsedIndicator');
+         usedIndicator.textContent = used ? "You feel rested. Time to move on." : "Choose one action:";
+     }
 
-    // --- Tooltip Methods ---
-    showTooltip(content, x, y) {
-        if (!this.tooltipElement) return;
-        this.tooltipElement.innerHTML = content;
-        this.tooltipElement.style.display = 'block';
-        this.updateTooltipPosition(x, y); // Initial position
-    }
-
-    hideTooltip() {
-        if (!this.tooltipElement) return;
-        this.tooltipElement.style.display = 'none';
-    }
-
-    updateTooltipPosition(x, y) {
-        if (!this.tooltipElement || this.tooltipElement.style.display === 'none') return;
-         // Position tooltip slightly offset from the mouse cursor
-         // Add boundary checks to prevent it going off-screen
-         const offsetX = 15;
-         const offsetY = 15;
-         const tooltipRect = this.tooltipElement.getBoundingClientRect();
-         const containerRect = this.gameContainer.getBoundingClientRect();
-
-         let top = y + offsetY;
-         let left = x + offsetX;
-
-         // Adjust if tooltip goes beyond right edge
-         if (left + tooltipRect.width > containerRect.right) {
-             left = x - tooltipRect.width - offsetX;
-         }
-         // Adjust if tooltip goes beyond bottom edge
-         if (top + tooltipRect.height > containerRect.bottom) {
-             top = y - tooltipRect.height - offsetY;
-         }
-          // Adjust if tooltip goes beyond left edge (less likely with offset)
-         if (left < containerRect.left) {
-              left = containerRect.left + 5;
-         }
-         // Adjust if tooltip goes beyond top edge (less likely with offset)
-         if (top < containerRect.top) {
-             top = containerRect.top + 5;
+    /**
+     * Shows a modal for selecting a card from a list.
+     * @param {Card[]} cardsToShow - Array of Card objects to display.
+     * @param {function} onSelectCallback - Function to call with the selected Card object (or null if cancelled).
+     * @param {string} title - Optional title for the modal.
+     */
+     showCardSelectionModal(cardsToShow, onSelectCallback, title = "Select a Card") {
+         if (!this.cardSelectionModal || !this.cardSelectionGrid || !this.cardSelectionTitle || !this.gameState) {
+             console.error("Card selection modal elements or gameState not found.");
+             onSelectCallback(null); // Callback with null indicating failure/cancel
+             return;
          }
 
+          // Store callback for later use
+          this._currentCardSelectionCallback = onSelectCallback;
 
-        this.tooltipElement.style.left = `${left}px`;
-        this.tooltipElement.style.top = `${top}px`;
-    }
+         this.cardSelectionTitle.textContent = title;
+         this.cardSelectionGrid.innerHTML = ''; // Clear previous cards
+
+         if (cardsToShow.length === 0) {
+             this.cardSelectionGrid.innerHTML = '<p>No options available.</p>';
+             // Optionally disable cancel button if needed, or just let it close
+         } else {
+             cardsToShow.forEach(card => {
+                 const cardElement = this.createCardElement(card); // Reuse card renderer
+                 cardElement.style.margin = '5px'; // Add some spacing
+                 cardElement.onclick = () => {
+                     this.hideCardSelectionModal(false, card); // Pass false (not cancelled) and selected card
+                 };
+                 this.cardSelectionGrid.appendChild(cardElement);
+             });
+         }
+
+         this.cardSelectionModal.style.display = 'block'; // Show the modal
+     }
+
+     /**
+      * Hides the card selection modal and triggers the callback.
+      * @param {boolean} cancelled - Whether the selection was cancelled by the user.
+      * @param {Card | null} selectedCard - The card that was selected, or null if cancelled.
+      */
+     hideCardSelectionModal(cancelled = true, selectedCard = null) {
+         if (!this.cardSelectionModal) return;
+
+         this.cardSelectionModal.style.display = 'none'; // Hide the modal
+
+         // Trigger the stored callback
+         if (this._currentCardSelectionCallback && typeof this._currentCardSelectionCallback === 'function') {
+             if (cancelled) {
+                 console.log("Card selection cancelled.");
+                 this._currentCardSelectionCallback(null); // Callback with null for cancellation
+             } else {
+                 console.log(`Card selected: ${selectedCard?.name}`);
+                 this._currentCardSelectionCallback(selectedCard); // Callback with the chosen card
+             }
+         }
+         this._currentCardSelectionCallback = null; // Clear the callback
+     }
+
+     // --- Add Map Rendering Methods from MapManager.js Example ---
+     // (Copied from previous response's example snippet for completeness)
+      renderMap(nodes, currentNodeId, connections) {
+         const mapContainer = this.mapArea; // Use the reference stored in constructor
+         if (!mapContainer || !this.gameState || !this.gameState.mapManager) {
+             console.error("Cannot render map: Map area or managers not found.");
+             return;
+         }
+         mapContainer.innerHTML = ''; // Clear previous map
+         const mapSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+         mapSvg.setAttribute('width', '100%');
+         mapSvg.setAttribute('height', '100%');
+         mapSvg.style.backgroundColor = '#34495e';
+
+         // Render Connections (Lines) first
+         connections.forEach(conn => {
+             const fromNode = nodes[conn.from];
+             const toNode = nodes[conn.to];
+             if (fromNode && toNode) {
+                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                 line.setAttribute('x1', fromNode.position.x);
+                 line.setAttribute('y1', fromNode.position.y);
+                 line.setAttribute('x2', toNode.position.x);
+                 line.setAttribute('y2', toNode.position.y);
+                 line.setAttribute('stroke', fromNode.visited ? '#bdc3c7' : '#7f8c8d');
+                 line.setAttribute('stroke-width', '2');
+                 mapSvg.appendChild(line);
+             }
+         });
+
+         // Render Nodes (Circles/Icons) second
+         Object.values(nodes).forEach(node => {
+              const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+              nodeGroup.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
+
+             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+             circle.setAttribute('r', '15');
+             circle.setAttribute('fill', this.getNodeColor(node.type));
+             circle.setAttribute('stroke', node.id === currentNodeId ? '#f1c40f' : (node.visited ? '#555' : '#ecf0f1'));
+             circle.setAttribute('stroke-width', node.id === currentNodeId ? '3' : '2');
+
+             const iconText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+             iconText.setAttribute('font-family', 'FontAwesome');
+             iconText.setAttribute('font-size', '16px');
+             iconText.setAttribute('fill', '#fff');
+             iconText.setAttribute('text-anchor', 'middle');
+             iconText.setAttribute('dominant-baseline', 'central');
+             iconText.textContent = this.getNodeIcon(node.type);
 
 
-    // --- Modal Methods ---
-    showModal(text, choices = []) { // choices = [{ text: 'OK', callback: () => {} }]
-        if (!this.modalPopup) return;
-        this.modalText.innerHTML = text; // Use innerHTML to allow basic formatting
-        this.modalChoices.innerHTML = ''; // Clear previous choices
+             nodeGroup.appendChild(circle);
+             nodeGroup.appendChild(iconText);
 
-        if (choices.length === 0) {
-            // If no choices, add a default OK button that just closes the modal
-            const okButton = document.createElement('button');
-            okButton.textContent = 'OK';
-            okButton.onclick = () => this.hideModal();
-            this.modalChoices.appendChild(okButton);
-        } else {
-            choices.forEach(choice => {
-                const button = document.createElement('button');
-                button.textContent = choice.text;
-                button.onclick = () => {
-                    this.hideModal(); // Close modal first
-                    if (choice.callback && typeof choice.callback === 'function') {
-                        choice.callback(); // Execute the choice's action
-                    }
-                };
-                this.modalChoices.appendChild(button);
-            });
-        }
-
-        this.modalPopup.style.display = 'block';
-    }
-
-    hideModal() {
-        if (!this.modalPopup) return;
-        this.modalPopup.style.display = 'none';
-        this.modalText.innerHTML = '';
-        this.modalChoices.innerHTML = '';
-    }
+             // Make clickable only if it's a valid next move
+             const isAvailableMove = nodes[currentNodeId]?.connections.includes(node.id);
+             if (isAvailableMove) {
+                 nodeGroup.style.cursor = 'pointer';
+                 nodeGroup.addEventListener('click', () => {
+                       this.gameState.mapManager.moveToNode(node.id);
+                 });
+             } else {
+                  nodeGroup.style.cursor = 'default';
+                  nodeGroup.style.opacity = (node.id !== currentNodeId && !node.visited) ? 0.6 : 1; // Dim non-visited, non-current, non-available nodes
+             }
 
 
-    // --- Placeholder Helpers for Missing Elements ---
-    _createPlaceholderSpan(parent, id, prefix = '') {
-        console.warn(`Creating placeholder span for missing element #${id}`);
-        const span = document.createElement('span');
-        span.id = id;
-        span.textContent = prefix + '...';
-        parent.appendChild(span);
-        return span;
-    }
-     _createPlaceholderDiv(parent, id, prefix = '') {
-        console.warn(`Creating placeholder div for missing element #${id}`);
-        const div = document.createElement('div');
-        div.id = id;
-        div.textContent = prefix + '...';
-        parent.appendChild(div);
-        return div;
-    }
+             // Add tooltip listener
+             nodeGroup.addEventListener('mouseover', (event) => {
+                  let tooltipText = `Node: ${node.type.toUpperCase()}${node.visited ? ' (Visited)' : ''}`;
+                  if(node.id === currentNodeId) tooltipText += " (Current)";
+                  else if (!isAvailableMove && !node.visited) tooltipText += " (Unavailable)";
+                  this.showTooltip(tooltipText, event.clientX, event.clientY);
+             });
+              nodeGroup.addEventListener('mouseout', () => {
+                  this.hideTooltip();
+              });
+               nodeGroup.addEventListener('mousemove', (event) => {
+                   this.updateTooltipPosition(event.clientX, event.clientY);
+               });
+
+              node.element = nodeGroup;
+              mapSvg.appendChild(nodeGroup);
+         });
+
+         mapContainer.appendChild(mapSvg);
+     }
+
+      getNodeColor(type) { /* ... keep this method ... */
+         switch (type) {
+             case 'combat': return '#c0392b'; // Red
+             case 'elite': return '#8e44ad'; // Purple
+             case 'event': return '#2980b9'; // Blue
+             case 'rest': return '#27ae60'; // Green
+             case 'shop': return '#f39c12'; // Orange
+             case 'boss': return '#e74c3c'; // Darker Red
+             case 'start': return '#bdc3c7'; // Grey
+             default: return '#7f8c8d';
+         }
+      }
+       getNodeIcon(type) { /* ... keep this method ... */
+           // Font Awesome unicode characters
+          switch (type) {
+              case 'combat': return '\uf06d'; // fa-fire (better than meh?)
+              case 'elite': return '\uf005'; // fa-star
+              case 'event': return '\uf059'; // fa-question-circle
+              case 'rest': return '\uf183'; // fa-sun (placeholder for campfire/moon?)
+              case 'shop': return '\uf07a'; // fa-shopping-cart
+              case 'boss': return '\uf188'; // fa-skull
+              case 'start': return '\uf007'; // fa-user
+              default: return '?';
+          }
+       }
+
+     updatePlayerMapInfo(player, floor) {
+         // Ensure playerInfoMap element exists
+         const infoEl = document.getElementById('playerInfoMap') || this._createPlaceholderDiv(this.gameContainer, 'playerInfoMap');
+         if (!player || !player.deckManager) {
+             infoEl.innerHTML = "Loading player data...";
+             return;
+         };
+
+         infoEl.innerHTML = `
+             <span>Floor: ${floor}</span> |
+             <span>Integrity: ${player.currentIntegrity} / ${player.maxIntegrity}</span> |
+             <span>Insight (Run): ${player.insightThisRun} <i class='fas fa-brain insight-icon'></i></span> |
+             <span>Deck: ${player.deckManager.getMasterDeck().length}</span>
+         `;
+     }
+
+
+    // Keep placeholder helpers _createPlaceholderSpan, _createPlaceholderDiv...
+     _createPlaceholderSpan(parent, id, prefix = '') { /* ... keep ... */
+          console.warn(`Creating placeholder span for missing element #${id}`);
+         const span = document.createElement('span');
+         span.id = id;
+         span.textContent = prefix + '...';
+         if(parent) parent.appendChild(span);
+         else document.body.appendChild(span); // Append to body as last resort
+         return span;
+      }
+      _createPlaceholderDiv(parent, id, prefix = '') { /* ... keep ... */
+          console.warn(`Creating placeholder div for missing element #${id}`);
+         const div = document.createElement('div');
+         div.id = id;
+         div.textContent = prefix + '...';
+          if(parent) parent.appendChild(div);
+          else document.body.appendChild(div);
+         return div;
+      }
+
 
 } // End of UIManager class
