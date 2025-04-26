@@ -1,11 +1,13 @@
 // js/meta/MetaProgression.js
 
-import * as Data from '../data.js';
+// Import data - needs access to milestones, concepts, artifacts etc. for initialization
+import * as Data from '../data.js'; // Corrected Path: Go UP one directory from 'meta' to 'js'
+
 // Import artifact definitions to potentially unlock specific ones via milestones
-import { ARTIFACT_TEMPLATES } from '../core/ArtifactDefinitions.js';
+import { ARTIFACT_TEMPLATES } from '../core/ArtifactDefinitions.js'; // Corrected Path: Go UP from 'meta', then DOWN into 'core'
 
 // --- Constants ---
-const SAVE_KEY = 'personaLabyrinth_metaProgress_v1.1'; // Increment version if structure changes significantly
+const SAVE_KEY = 'personaLabyrinth_metaProgress_v1.1'; // Key for localStorage
 const MAX_ASCENSION = 10; // Example max difficulty
 
 /**
