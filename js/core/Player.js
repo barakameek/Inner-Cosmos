@@ -3,7 +3,7 @@
 // js/core/Player.js
 
 import { DeckManager } from './DeckManager.js';
-import {unements) {
+import (unements) {
                  // Access nested attunementBonus correctly
                  const bonus = metaProgression.getStartingBonus(`attunementBonus.${key}`);
                  if (bonus) {
