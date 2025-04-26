@@ -1,66 +1,41 @@
 // js/combat/Enemy.js
 
-// Import status effect logic if needed (or handle it within CombatManager/Player)
-// import { applyStatus, tickStatusEffects, hasStatus } from './StatusEffects.js'; // Example
-
-// --- Enemy Definitions (Simplified) ---
-// In a larger game, this might be loaded from a separate data file (e.g., enemies.js)
+// Assume templates are defined here or imported
+// Example using internal definition for now:
 const ENEMY_TEMPLATES = {
     'doubt_whisper': {
-        name: "Whispering Doubt",
-        maxHp: 25,
-        sprite: 'assets/images/enemies/doubt_whisper.png', // Placeholder path
-        intentions: [ // Pattern of actions
-            { type: 'attack', baseValue: 4, status: null },
-            { type: 'debuff', status: 'Confusion', duration: 1, target: 'player' }, // Add 'Confusion' card
-            { type: 'attack', baseValue: 5, status: null },
+        name: "Whispering Doubt", maxHp: 25, sprite: 'assets/images/enemies/doubt_whisper.png',
+        intentions: [
+            { type: 'attack', baseValue: 4 },
+            { type: 'debuff', status: 'Confusion', duration: 1, target: 'player', description: "Add Confused Card" }, // Add description for intent UI
+            { type: 'attack', baseValue: 5 },
         ],
-        resistances: { // Example: Higher resistance to Psychological effects
-            Psychological: 0.5, // Takes 50% less effect from P-based statuses?
-        },
-        weaknesses: { // Example: Takes more damage from Cognitive attacks
-            Cognitive: 1.5,
-        },
-        aiBehavior: 'sequential_intent', // How it chooses intents
-        onDeathAction: null, // Special effect on death?
+        resistances: { Psychological: 0.75 }, weaknesses: { Cognitive: 1.25 }, aiBehavior: 'sequential_intent',
     },
     'rigid_perfectionism': {
-        name: "Rigid Perfectionism",
-        maxHp: 60,
-        sprite: 'assets/images/enemies/perfectionism.png', // Placeholder path
+        name: "Rigid Perfectionism", maxHp: 60, sprite: 'assets/images/enemies/perfectionism.png',
         intentions: [
             { type: 'block', baseValue: 10 },
-            { type: 'attack', baseValue: 8, status: null },
-            { type: 'attack_block', attackValue: 6, blockValue: 6 }, // Attack and block
-            { type: 'power_up', status: 'Strength', duration: 1, amount: 2, condition: 'player_damaged_last_turn'}, // Conditional power up
+            { type: 'attack', baseValue: 8 },
+            { type: 'attack_block', attackValue: 6, blockValue: 6 },
+            { type: 'power_up', status: 'Strength', duration: 99, amount: 2, condition: 'wasDamagedLastTurn', description: "Gain Strength if Damaged" }, // Permanent Strength stack
         ],
-         resistances: {
-             Interaction: 0.75, // Harder to control/debuff
-         },
-        weaknesses: {
-             Psychological: 1.25, // Self-acceptance hurts it
-         },
-        aiBehavior: 'reactive_pattern',
-         onDeathAction: null,
+         resistances: { Interaction: 0.75 }, weaknesses: { Psychological: 1.25 }, aiBehavior: 'reactive_pattern',
     },
-    'shadow_aspect_interaction': { // Example Boss
-        name: "Shadow of Unseen Influence",
-        maxHp: 150,
-        sprite: 'assets/images/enemies/shadow_interaction.png',
-        intentions: [ // More complex pool
+    'shadow_aspect_interaction': {
+        name: "Shadow of Unseen Influence", maxHp: 150, sprite: 'assets/images/enemies/shadow_interaction.png',
+        intentions: [
             { type: 'attack', baseValue: 10, status: 'Weak', statusDuration: 1 },
             { type: 'multi_attack', baseValue: 4, count: 2},
             { type: 'debuff', status: 'Vulnerable', duration: 2, target: 'player' },
             { type: 'block', baseValue: 15 },
-            { type: 'special', id: 'mind_twist', description: "Applies Confusion and Dazed" }, // Custom ability
+            { type: 'special', id: 'mind_twist', description: "Applies Confusion & Dazed" },
         ],
-        resistances: {},
-        weaknesses: {}, // Bosses might have phased weaknesses
-        aiBehavior: 'random_weighted', // More unpredictable
-        onDeathAction: { type: 'reward', insight: 50, artifactId: 'ARTIFACT_ShadowInsight' }
+        resistances: {}, weaknesses: {}, aiBehavior: 'random_weighted', // Needs actual weights in template
+        onDeathAction: { type: 'reward', insight: 50, artifactId: 'ARTIFACT_ShadowInsight' } // Example specific drop
     }
-    // Add more enemy types here
 };
+
 
 /**
  * Represents an enemy combatant.
@@ -69,285 +44,322 @@ export class Enemy {
     constructor(enemyId, instanceId) {
         const template = ENEMY_TEMPLATES[enemyId];
         if (!template) {
-            console.error(`Enemy Error: Template not found for ID: ${enemyId}`);
-            // Return a default error enemy?
-            this.id = `enemy_error_${instanceId}`;
-            this.enemyType = 'error';
-            this.name = "Lost Fragment";
-            this.maxHp = 1;
-            this.currentHp = 1;
-            this.sprite = 'assets/images/enemies/error.png';
-            this.intentions = [{ type: 'attack', baseValue: 1 }];
-            this.currentIntent = null;
-            this.currentBlock = 0;
-            this.activeStatusEffects = [];
-            this.resistances = {};
-            this.weaknesses = {};
-            this.aiBehavior = 'sequential_intent';
-            this.intentCycleIndex = 0;
-            this.onDeathAction = null;
+            // ... (keep error handling constructor from previous version) ...
+            this.id = `enemy_error_${instanceId}`; this.enemyType = 'error'; this.name = "Lost Fragment";
+            this.maxHp = 1; this.currentHp = 1; this.sprite = 'assets/images/enemies/error.png';
+            this.intentions = [{ type: 'attack', baseValue: 1 }]; this.currentIntent = null; this.currentBlock = 0;
+            this.activeStatusEffects = []; this.resistances = {}; this.weaknesses = {};
+            this.aiBehavior = 'sequential_intent'; this.intentCycleIndex = 0; this.onDeathAction = null;
+             console.error(`Enemy Error: Template not found for ID: ${enemyId}`);
             return;
         }
 
-        this.id = `enemy_${enemyId}_${instanceId}`; // Unique ID for this instance in combat
+        this.id = `enemy_${enemyId}_${instanceId}`;
         this.enemyType = enemyId;
         this.name = template.name;
         this.maxHp = template.maxHp;
         this.currentHp = template.maxHp;
-        this.sprite = template.sprite; // Path to image asset
-        this.intentions = template.intentions; // Array of possible actions/intents
-        this.currentIntent = null; // The action planned for the next turn
+        this.sprite = template.sprite;
+        // Deep copy intentions array to prevent modifications affecting template
+        this.intentions = JSON.parse(JSON.stringify(template.intentions));
+        this.currentIntent = null;
         this.currentBlock = 0;
-        this.activeStatusEffects = []; // { id: 'vulnerable', duration: 1 }
+        this.activeStatusEffects = [];
         this.resistances = { ...(template.resistances || {}) };
         this.weaknesses = { ...(template.weaknesses || {}) };
         this.aiBehavior = template.aiBehavior || 'sequential_intent';
-        this.intentCycleIndex = 0; // For sequential AI
-        this.onDeathAction = template.onDeathAction || null;
+        this.intentCycleIndex = 0;
+        this.onDeathAction = template.onDeathAction ? { ...template.onDeathAction } : null;
 
-        // Internal state flags
-        this.wasDamagedLastTurn = false; // For reactive AI
+        this.wasDamagedLastTurn = false; // Reset flag
 
         console.log(`Enemy created: ${this.name} (ID: ${this.id})`);
-        this.determineNextIntent(); // Determine initial intent
+        this.determineNextIntent(); // Determine initial intent immediately on creation
     }
 
     /**
      * Determines the enemy's action for the upcoming turn based on its AI behavior.
-     * Stores the chosen intent in `this.currentIntent`.
+     * Stores the chosen intent in `this.currentIntent`. Should be called AFTER the enemy acts.
      */
     determineNextIntent() {
-        this.currentBlock = 0; // Block typically resets unless specified otherwise
-        // Tick status effects that happen at intent determination? (Uncommon)
-
-        switch (this.aiBehavior) {
-            case 'sequential_intent':
-                this.currentIntent = this.intentions[this.intentCycleIndex];
-                this.intentCycleIndex = (this.intentCycleIndex + 1) % this.intentions.length;
-                break;
-
-            case 'random_intent':
-                const randomIndex = Math.floor(Math.random() * this.intentions.length);
-                this.currentIntent = this.intentions[randomIndex];
-                break;
-
-            case 'random_weighted': // More complex: needs weights on intentions
-                 // Placeholder: act like random for now
-                 const randomIndexW = Math.floor(Math.random() * this.intentions.length);
-                 this.currentIntent = this.intentions[randomIndexW];
-                 break;
-
-            case 'reactive_pattern':
-                // Example: Check conditions before picking from pattern
-                 const powerUpIntent = this.intentions.find(intent => intent.condition === 'player_damaged_last_turn');
-                 if (powerUpIntent && this.wasDamagedLastTurn) { // Need game state flag for this
-                     this.currentIntent = powerUpIntent;
-                 } else {
-                    // Default to sequential if condition not met
-                    // Filter out conditional intents if their condition isn't met?
-                    const nonConditionalIntents = this.intentions.filter(i => !i.condition);
-                    if (nonConditionalIntents.length > 0) {
-                        this.currentIntent = nonConditionalIntents[this.intentCycleIndex % nonConditionalIntents.length];
-                        this.intentCycleIndex = (this.intentCycleIndex + 1); // Only advance if using pattern part
-                    } else {
-                         this.currentIntent = this.intentions[0]; // Fallback if only conditional intents exist
-                    }
-                 }
-                this.wasDamagedLastTurn = false; // Reset flag after using it
-                break;
-
-            default:
-                console.warn(`Unknown AI behavior: ${this.aiBehavior} for ${this.name}. Defaulting to sequential.`);
-                this.currentIntent = this.intentions[this.intentCycleIndex];
-                this.intentCycleIndex = (this.intentCycleIndex + 1) % this.intentions.length;
+        if (this.currentHp <= 0) {
+            this.currentIntent = null; // No intent if defeated
+            return;
         }
 
-        console.log(`${this.name} determined next intent:`, this.currentIntent);
-        // TODO: Update Enemy UI to show intent
+        // Reset block only when determining next intent, AFTER the previous turn's block was used.
+        // Exception: Some enemies might retain block. Add a flag in template?
+        if (!this.currentIntent?.keepsBlock) { // Example flag check
+             this.currentBlock = 0;
+        }
+
+
+        let chosenIntent = null;
+        // Filter out conditional intents whose conditions aren't met FIRST
+        const possibleIntents = this.intentions.filter(intent => {
+             if (intent.condition === 'wasDamagedLastTurn') return this.wasDamagedLastTurn;
+             if (intent.condition === 'hpBelow50') return this.currentHp < this.maxHp * 0.5;
+             // Add more conditions here
+             return !intent.condition; // Include intents with no condition
+        });
+
+        if (possibleIntents.length === 0) {
+             console.warn(`${this.name} has no valid intents this turn. Defaulting.`);
+             // Fallback to first non-conditional intent from original list?
+             chosenIntent = this.intentions.find(i => !i.condition) || this.intentions[0];
+        } else {
+            // --- Apply AI Behavior to *filtered* possible intents ---
+            switch (this.aiBehavior) {
+                case 'sequential_intent':
+                     // Cycle through the *original* list, but pick from *possible* intents
+                     // This is tricky. Maybe just cycle through possibleIntents?
+                     chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length];
+                     this.intentCycleIndex = (this.intentCycleIndex + 1); // Always advance cycle index? Or only when using non-conditional? Design choice. Let's always advance for simplicity.
+                    break;
+
+                case 'random_intent':
+                case 'random_weighted': // Needs weights in template for true weighted random
+                    const randomIndex = Math.floor(Math.random() * possibleIntents.length);
+                    chosenIntent = possibleIntents[randomIndex];
+                    break;
+
+                case 'reactive_pattern': // Condition check is now done via filter above
+                    // Default to cycling through the *possible* intents if conditions met
+                     chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length];
+                     this.intentCycleIndex = (this.intentCycleIndex + 1);
+                    break;
+
+                default:
+                    console.warn(`Unknown AI behavior: ${this.aiBehavior}. Defaulting.`);
+                    chosenIntent = possibleIntents[0]; // Default to first possible
+            }
+        }
+
+        // Reset flags used for conditions *after* choosing intent
+        this.wasDamagedLastTurn = false;
+
+        this.currentIntent = chosenIntent;
+        // console.log(`${this.name} determined next intent:`, this.currentIntent); // Can be noisy
+        // UI update is handled by CombatManager calling UIManager AFTER all enemies have acted and determined next intent.
     }
 
     /**
-     * Executes the enemy's planned action (`this.currentIntent`).
-     * Needs access to the player object to apply effects.
+     * Executes the enemy's planned action (`this.currentIntent`) for the *current* turn.
+     * Needs access to the player object. Determines *next* intent at the end.
      * @param {Player} player - The player object.
      * @param {GameState} gameState - The current game state (for context).
      */
     executeTurn(player, gameState) {
         if (!this.currentIntent || this.currentHp <= 0) {
-            console.log(`${this.name} cannot act (no intent or defeated).`);
-            return; // Cannot act if no intent or defeated
+            // console.log(`${this.name} cannot act (no intent or defeated).`);
+             // Still need to determine next intent even if defeated, to clear it
+             if(this.currentHp <= 0) this.determineNextIntent();
+            return;
         }
-        if (this.hasStatus('Stunned')) { // Example status check
+        if (this.hasStatus('Stunned')) {
              console.log(`${this.name} is Stunned and cannot act.`);
-             this.removeStatus('Stunned'); // Typically remove stun after skipping turn
-             this.determineNextIntent(); // Need a new intent for next turn
+             this.tickStatusEffects('start'); // Tick statuses even if stunned
+             this.removeStatus('Stunned'); // Stun removed after missing turn
+             this.tickStatusEffects('end'); // Tick end effects
+             this.determineNextIntent(); // Determine next intent
              return;
         }
 
-
         console.log(`${this.name} executing intent: ${this.currentIntent.type}`);
-        this.tickStatusEffects('start'); // Apply start-of-turn effects
+        this.tickStatusEffects('start'); // Apply start-of-turn effects (like poison)
 
-        // --- Execute Action based on Intent Type ---
-        let baseValue = this.currentIntent.baseValue || 0;
-        let modifiedValue = this.applyModifiers('damageDealt', baseValue); // Apply Strength/Weak
+        // --- Execute Action based on currentIntent ---
+        const intent = this.currentIntent; // Use current intent
+        let baseValue = intent.baseValue || 0;
+        let modifiedValue = this.applyModifiers('damageDealt', baseValue);
 
-        switch (this.currentIntent.type) {
-            case 'attack':
-                player.takeDamage(modifiedValue);
-                break;
-            case 'multi_attack':
-                const count = this.currentIntent.count || 1;
-                 modifiedValue = this.applyModifiers('damageDealt', baseValue); // Apply Strength/Weak to each hit
-                for(let i=0; i < count; i++) {
-                    player.takeDamage(modifiedValue);
-                }
-                break;
-            case 'block':
-                this.gainBlock(this.applyModifiers('blockGain', baseValue)); // Block can also be modified
-                break;
-            case 'attack_block':
-                const attackVal = this.applyModifiers('damageDealt', this.currentIntent.attackValue || 0);
-                const blockVal = this.applyModifiers('blockGain', this.currentIntent.blockValue || 0);
-                player.takeDamage(attackVal);
-                this.gainBlock(blockVal);
-                break;
-            case 'debuff':
-                if (this.currentIntent.status && this.currentIntent.target === 'player') {
-                    player.applyStatus(this.currentIntent.status, this.currentIntent.duration || 1, this.id);
-                } else {
-                    console.warn(`Invalid debuff intent for ${this.name}:`, this.currentIntent);
-                }
-                break;
-             case 'buff': // Buff self
-                if (this.currentIntent.status) {
-                    this.applyStatus(this.currentIntent.status, this.currentIntent.duration || 1);
-                }
-                 break;
-             case 'power_up': // Often conditional buffs
-                 if (this.currentIntent.status) {
-                    this.applyStatus(this.currentIntent.status, this.currentIntent.duration || 1, this.currentIntent.amount || 1); // Pass amount if stacking (like Strength)
-                 }
-                 break;
-            case 'special':
-                // Handle custom logic based on intent id
-                this.executeSpecialAbility(this.currentIntent.id, player, gameState);
-                break;
-            default:
-                console.warn(`Unknown intent type: ${this.currentIntent.type} for ${this.name}`);
+        try { // Add try-catch around execution
+            switch (intent.type) {
+                case 'attack':
+                    if (player) player.takeDamage(modifiedValue);
+                    if (intent.status && player) player.applyStatus(intent.status, intent.statusDuration || 1, this.id);
+                    break;
+                case 'multi_attack':
+                    const count = intent.count || 1;
+                    modifiedValue = this.applyModifiers('damageDealt', baseValue); // Recalc for multi-hit
+                    for(let i=0; i < count; i++) {
+                        if (player) player.takeDamage(modifiedValue);
+                         // Apply status per hit? Optional rule.
+                         // if (intent.status && player) player.applyStatus(intent.status, intent.statusDuration || 1, this.id);
+                    }
+                     // Or apply status once after all hits?
+                    if (intent.status && player && intent.applyStatusOnce) player.applyStatus(intent.status, intent.statusDuration || 1, this.id);
+                    break;
+                case 'block':
+                    this.gainBlock(this.applyModifiers('blockGain', baseValue));
+                    break;
+                case 'attack_block':
+                    const attackVal = this.applyModifiers('damageDealt', intent.attackValue || 0);
+                    const blockVal = this.applyModifiers('blockGain', intent.blockValue || 0);
+                    if (player) player.takeDamage(attackVal);
+                    this.gainBlock(blockVal);
+                    break;
+                case 'debuff':
+                    if (intent.status && intent.target === 'player' && player) {
+                        player.applyStatus(intent.status, intent.duration || 1, this.id);
+                    } else {
+                        console.warn(`Invalid debuff intent for ${this.name}:`, intent);
+                    }
+                    break;
+                case 'buff': // Buff self
+                    if (intent.status) {
+                        this.applyStatus(intent.status, intent.duration || 1, intent.amount); // Pass amount if needed
+                    }
+                    break;
+                case 'power_up': // Usually conditional buff self
+                    if (intent.status) {
+                       this.applyStatus(intent.status, intent.duration || 99, intent.amount || 1); // Default long duration, pass amount
+                    }
+                    break;
+                case 'special':
+                    this.executeSpecialAbility(intent.id, player, gameState);
+                    break;
+                default:
+                    console.warn(`Unknown intent type executed: ${intent.type} for ${this.name}`);
+            }
+        } catch (error) {
+            console.error(`Error executing intent for ${this.name}:`, error, intent);
         }
 
-         this.tickStatusEffects('end'); // Apply end-of-turn effects
-         this.wasDamagedLastTurn = false; // Reset damage flag for next turn's AI decision (will be set by player actions)
 
+         // --- Post-Action ---
+         this.tickStatusEffects('end'); // Apply end-of-turn effects AFTER action completes
 
-        // Determine intent for the *next* turn immediately after acting
-        this.determineNextIntent();
+         // --- Determine NEXT turn's intent ---
+         this.determineNextIntent(); // <<<< MOVED HERE
     }
 
-     /**
-      * Handles custom special ability logic.
-      */
+    /** Handles custom special ability logic. */
      executeSpecialAbility(abilityId, player, gameState) {
          console.log(`${this.name} using special ability: ${abilityId}`);
-         switch (abilityId) {
-             case 'mind_twist':
-                 player.applyStatus('Confusion', 1, this.id);
-                 player.applyStatus('Dazed', 1, this.id); // Dazed = Add Dazed status card to discard pile
-                 // TODO: Implement adding status cards logic
-                 console.log("TODO: Add Dazed card to player discard");
-                 break;
-             // Add more special abilities here
-             default:
-                 console.warn(`Unknown special ability ID: ${abilityId}`);
+         if (!player) return; // Need player target usually
+         try {
+             switch (abilityId) {
+                 case 'mind_twist': // Example from template
+                     player.applyStatus('Confusion', 1, this.id); // Confused card added by status system potentially
+                     // Dazed: Need mechanism to add status cards to player draw/discard
+                     gameState?.addStatusCardToPlayerDeck('Dazed', 'discard'); // Example call to GameState helper
+                     console.log("Applied Confusion & Dazed effect.");
+                     break;
+                 // Add more special abilities here based on enemy designs
+                 default:
+                     console.warn(`Unknown special ability ID executed: ${abilityId}`);
+             }
+         } catch (error) {
+             console.error(`Error executing special ability ${abilityId} for ${this.name}:`, error);
          }
      }
 
 
-    /**
-     * Applies damage to the enemy, considering block.
-     * @param {number} amount - The raw amount of damage dealt by the player.
-     * @param {string | null} damageElement - Optional element type of the damage for weaknesses/resistances.
-     */
+    /** Applies damage to the enemy, considering block and modifiers. */
     takeDamage(amount, damageElement = null) {
         if (amount <= 0 || this.currentHp <= 0) return;
 
         let modifiedAmount = amount;
 
-        // Apply Vulnerable status effect
+        // Apply Vulnerable status first
         if (this.hasStatus('Vulnerable')) {
-            modifiedAmount = Math.floor(modifiedAmount * 1.5); // Example: 50% more damage
+            modifiedAmount = Math.floor(modifiedAmount * 1.5);
+        }
+        // Apply Intangible? (Reduce all damage to 1)
+        if (this.hasStatus('Intangible')) {
+             modifiedAmount = Math.min(modifiedAmount, 1); // Cap damage at 1
         }
 
          // Apply Weakness/Resistance based on damage element
-         if (damageElement && this.weaknesses[damageElement]) {
-            modifiedAmount = Math.floor(modifiedAmount * this.weaknesses[damageElement]);
-             console.log(`${this.name} Weakness triggered! (${damageElement})`);
-         }
-         if (damageElement && this.resistances[damageElement]) {
-            modifiedAmount = Math.floor(modifiedAmount * this.resistances[damageElement]);
-             console.log(`${this.name} Resistance triggered! (${damageElement})`);
+         if (damageElement) {
+             const weaknessMultiplier = this.weaknesses[damageElement] || 1.0;
+             const resistanceMultiplier = this.resistances[damageElement] || 1.0;
+             modifiedAmount *= weaknessMultiplier;
+             modifiedAmount *= resistanceMultiplier; // Apply both
+             if(weaknessMultiplier > 1.0) console.log(`${this.name} Weakness triggered! (${damageElement})`);
+             if(resistanceMultiplier < 1.0) console.log(`${this.name} Resistance triggered! (${damageElement})`);
+             modifiedAmount = Math.floor(modifiedAmount); // Floor after multipliers
          }
 
+        if (modifiedAmount <= 0) {
+             console.log(`${this.name} damage negated after modifiers.`);
+             return; // Stop if damage reduced to 0 or less
+        }
 
         console.log(`${this.name} attempting to take ${modifiedAmount} damage...`);
 
-        const damageAfterBlock = Math.max(0, modifiedAmount - this.currentBlock);
-        const blockConsumed = modifiedAmount - damageAfterBlock;
+        const blockConsumed = Math.min(this.currentBlock, modifiedAmount);
+        const damageAfterBlock = modifiedAmount - blockConsumed;
 
-        this.currentBlock -= blockConsumed;
-        this.currentHp -= damageAfterBlock;
-        this.wasDamagedLastTurn = true; // Set flag for AI
+        if (blockConsumed > 0) {
+            this.currentBlock -= blockConsumed;
+            console.log(`${this.name}: Block absorbed ${blockConsumed}.`);
+            // Trigger onBlockBroken effects? (Less common for enemies)
+        }
 
-        console.log(`${this.name}: Block absorbed ${blockConsumed}. Took ${damageAfterBlock} damage.`);
+        if (damageAfterBlock > 0) {
+            this.currentHp -= damageAfterBlock;
+            console.log(`${this.name}: Took ${damageAfterBlock} damage.`);
+            this.wasDamagedLastTurn = true; // Set flag for AI reaction next turn
+            // Trigger onDamageTaken effects?
+        }
+
         console.log(`${this.name}: HP: ${this.currentHp}/${this.maxHp}, Block: ${this.currentBlock}`);
 
         if (this.currentHp <= 0) {
             this.currentHp = 0;
             console.log(`${this.name} has been defeated!`);
-            // Trigger onDeath effects (handled by CombatManager potentially)
+            this.currentIntent = null; // Clear intent on death
+             // CombatManager checks for win condition; onDeathAction applied via GameState.handleCombatEnd potentially
         }
-        // TODO: Update Enemy UI (HP bar, damage numbers)
+        // UI update handled by CombatManager calling UIManager
     }
 
-    /**
-     * Adds block to the enemy.
-     * @param {number} amount - The amount of block to gain.
-     */
+    /** Adds block to the enemy. */
     gainBlock(amount) {
         if (amount <= 0) return;
-        // Block gain can also be modified by statuses (e.g., 'Fragile')
          const modifiedAmount = this.applyModifiers('blockGain', amount);
+         if (modifiedAmount <=0) return; // Stop if block gain negated
         this.currentBlock += modifiedAmount;
         console.log(`${this.name}: Gained ${modifiedAmount} Block. Total: ${this.currentBlock}`);
-        // TODO: Update Enemy UI
+        // UI update handled by CombatManager
     }
 
-     // --- Status Effects (Simplified, mirrors Player somewhat) ---
-     applyStatus(statusId, duration, amount = 1, source = null) {
-        // Check Resistance?
+     // --- Status Effects ---
+     applyStatus(statusId, duration, amount = 1, sourceElement = null) { // Allow passing source element for resistance check
+        // Check Resistance based on source element?
         let effectiveDuration = duration;
-         if(this.resistances[source?.primaryElement]) { // If source is a card/player with element
-             effectiveDuration = Math.ceil(duration * this.resistances[source.primaryElement]); // Reduce duration
+        let effectiveAmount = amount;
+         if(sourceElement && this.resistances[sourceElement]) {
+             const multiplier = this.resistances[sourceElement];
+             effectiveDuration = Math.max(1, Math.floor(duration * multiplier)); // Don't reduce below 1 turn?
+             effectiveAmount = Math.max(1, Math.floor(amount * multiplier));
+              console.log(`${this.name} resistance to ${sourceElement} modified status ${statusId}. Duration: ${duration}->${effectiveDuration}, Amount: ${amount}->${effectiveAmount}`);
          }
-
+         if (effectiveDuration <= 0 && effectiveAmount <= 0 && !['Strength', 'Dexterity'].includes(statusId)) return; // Don't apply zero effect non-stacking status
 
         const existingStatus = this.activeStatusEffects.find(s => s.id === statusId);
         if (existingStatus) {
-            existingStatus.duration += effectiveDuration; // Or Math.max? Depends.
-            existingStatus.amount = (existingStatus.amount || 0) + amount; // Stacking amount for things like Strength
+            existingStatus.duration = Math.max(existingStatus.duration, effectiveDuration); // Refresh to max duration? Or add? Max is simpler.
+            existingStatus.amount = (existingStatus.amount || 0) + effectiveAmount; // Always stack amount
             console.log(`${this.name}: Refreshed status ${statusId} to duration ${existingStatus.duration}, amount ${existingStatus.amount}`);
         } else {
-            this.activeStatusEffects.push({ id: statusId, duration: effectiveDuration, source: source?.id, amount: amount });
-            console.log(`${this.name}: Applied status ${statusId} for ${effectiveDuration} turns, amount ${amount}`);
+            // Amount only matters for stacking effects initially
+            let initialAmount = (['Strength', 'Dexterity', 'Poison'].includes(statusId)) ? effectiveAmount : 1;
+            this.activeStatusEffects.push({ id: statusId, duration: effectiveDuration, source: sourceElement, amount: initialAmount });
+            console.log(`${this.name}: Applied status ${statusId} for ${effectiveDuration} turns, amount ${initialAmount}`);
         }
-         // TODO: Update Enemy Status UI
+         // UI update handled by CombatManager
     }
 
      removeStatus(statusId) {
+         const initialLength = this.activeStatusEffects.length;
         this.activeStatusEffects = this.activeStatusEffects.filter(s => s.id !== statusId);
-        console.log(`${this.name}: Removed status ${statusId}`);
-         // TODO: Update Enemy Status UI
+        if(this.activeStatusEffects.length < initialLength) {
+            console.log(`${this.name}: Removed status ${statusId}`);
+             // UI update handled by CombatManager
+        }
     }
 
     hasStatus(statusId) {
@@ -356,24 +368,30 @@ export class Enemy {
 
      getStatusAmount(statusId) {
         const status = this.activeStatusEffects.find(s => s.id === statusId);
-        return status ? (status.amount || (status.duration > 0 ? 1: 0)) : 0; // Return amount if exists, else 1 if duration > 0, else 0
+        return status ? (status.amount || (status.duration > 0 ? 1 : 0)) : 0;
     }
 
-
      tickStatusEffects(phase) { // phase = 'start' or 'end'
-        // console.log(`${this.name}: Ticking ${phase}-of-turn status effects...`);
          const effectsToRemove = [];
-        this.activeStatusEffects.forEach(effect => {
-            // TODO: Implement enemy-specific status effects (e.g. applying poison to player)
-            if (effect.id === 'Poison' && phase === 'start') {
-                 this.takeDamage(effect.amount || 1); // Poison deals damage
-                 effect.amount = (effect.amount || 1) -1; // Poison typically reduces stack
-                 if(effect.amount <= 0) effectsToRemove.push(effect.id); // Remove if stack reaches 0
-            }
+         const statusesAtStartOfTick = [...this.activeStatusEffects];
 
+        statusesAtStartOfTick.forEach(effect => {
+            if (!this.activeStatusEffects.includes(effect)) return; // Skip if already removed by another tick
 
-             // Decrement duration (usually at end of turn)
-             if (phase === 'end' && !['Strength','Dexterity'].includes(effect.id)) { // Don't decrement duration for passive buffs like str/dex? Or handle differently? Design decision.
+             // Apply start-of-turn damage/effects
+             if (phase === 'start') {
+                 if (effect.id === 'Poison' && effect.amount > 0) {
+                     console.log(`${this.name} takes ${effect.amount} poison damage.`);
+                     this.takeDamage(effect.amount, 'Poison'); // Poison has an element? Optional.
+                     effect.amount--; // Reduce stack amount
+                     if (effect.amount <= 0) effectsToRemove.push(effect.id);
+                 }
+                 // Add other start-of-turn effects like Burn, etc.
+             }
+
+             // Decrement duration at end of turn
+             const isPassiveStack = ['Strength', 'Dexterity', /* Add others like Metallicize? */].includes(effect.id);
+             if (phase === 'end' && effect.duration !== 99 && !isPassiveStack) {
                  effect.duration--;
                  if (effect.duration <= 0 && !effectsToRemove.includes(effect.id)) {
                       effectsToRemove.push(effect.id);
@@ -382,15 +400,14 @@ export class Enemy {
         });
 
         if (effectsToRemove.length > 0) {
-            // console.log(`   - Removing expired effects on ${this.name}: ${effectsToRemove.join(', ')}`);
             this.activeStatusEffects = this.activeStatusEffects.filter(
                 effect => !effectsToRemove.includes(effect.id)
             );
         }
-         // TODO: Update Enemy Status UI
+          // UI update handled by CombatManager
     }
 
-    // --- Modifiers (Simplified) ---
+    // --- Modifiers ---
      applyModifiers(modifierType, baseValue) {
         let modifiedValue = baseValue;
         if (modifierType === 'damageDealt' && this.hasStatus('Weak')) {
@@ -402,9 +419,12 @@ export class Enemy {
          if (modifierType === 'blockGain' && this.hasStatus('Dexterity')) {
              modifiedValue += this.getStatusAmount('Dexterity');
          }
-        // Add checks for other relevant enemy statuses
-        return modifiedValue;
-    }
+         if (modifierType === 'blockGain' && this.hasStatus('Frail')) {
+            modifiedValue = Math.floor(modifiedValue * 0.75);
+        }
+        // Add other status checks...
 
+         return Math.max(0, Math.floor(modifiedValue)); // Ensure non-negative
+     }
 
 } // End of Enemy class
