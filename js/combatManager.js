@@ -13,7 +13,6 @@ const CombatState = {
     DILEMMA: 'Dilemma',
     GAME_OVER: 'GameOver',
 };
-
 class CombatManager {
     /**
      * @param {Player} player - Reference to the player instance.
