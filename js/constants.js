@@ -6,8 +6,8 @@ const CANVAS_HEIGHT = 720;
 
 // --- Core Gameplay ---
 const MAX_LAYERS = 3; // Number of map layers per run
-const MIN_NODES_PER_LAYER = 8;
-const MAX_NODES_PER_LAYER = 12;
+const MIN_NODES_PER_LAYER = 8; // MapGen uses its own config, but keep for reference
+const MAX_NODES_PER_LAYER = 12; // MapGen uses its own config, but keep for reference
 const STARTING_DECK_DRAFT_POOL_SIZE = 30; // Ideal size from Grimoire
 const STARTING_DECK_SIZE = 10; // Cards player drafts
 const INITIAL_INSIGHT_SHARDS = 50; // Starting run currency
@@ -26,7 +26,8 @@ const CardRarity = {
     COMMON: 'Common',
     UNCOMMON: 'Uncommon',
     RARE: 'Rare',
-    SPECIAL: 'Special' // For curses or specific event rewards
+    SPECIAL: 'Special', // For curses or specific event rewards
+    BOSS: 'Boss'       // Rarity for Boss relics (used in relicData.js)
 };
 
 const Elements = {
@@ -52,8 +53,8 @@ const ElementColors = {
 const BASE_PLAYER_HP = 80; // Or "Composure"
 const BASE_PLAYER_INSIGHT = 3; // Energy per turn
 const MAX_PLAYER_INSIGHT = 10;
-const STARTING_HAND_SIZE = 5;
-const CARDS_PER_TURN_DRAW = 5;
+const STARTING_HAND_SIZE = 5; // Initial draw at combat start
+const CARDS_PER_TURN_DRAW = 5; // Cards drawn each turn start
 const MAX_CARDS_PER_TURN_PLAY = 3; // Specific hook from design doc
 const MAX_RELIC_SLOTS = 3; // Initial value
 const BASE_MOMENTUM_RESET_THRESHOLD = 0; // Resets when chain broken
@@ -62,18 +63,20 @@ const RESONANCE_DECAY_PER_TURN = 1; // How much resonance fades
 // --- Keywords / Status Effects ---
 // Using simple strings, could be objects if they need more data later
 const StatusEffects = {
-    BRUISE: 'Bruise',         // Damage over time
+    BRUISE: 'Bruise',         // Damage over time (placeholder, handled by direct damage for now)
     GUARD: 'Guard',           // Temporary HP
     VULNERABLE: 'Vulnerable', // Takes more damage
     WEAK: 'Weak',             // Deals less damage
-    GLOW: 'Glow',             // Next card of element is stronger
-    FREEZE: 'Freeze',         // Cannot play cards of element
+    GLOW: 'Glow',             // Next card of element is stronger (Not implemented yet)
+    FREEZE: 'Freeze',         // Cannot play cards of element (Needs specific handling like `FREEZE_Cognitive`)
     RETAIN: 'Retain',         // Card stays in hand
     EXHAUST: 'Exhaust',       // Card removed from combat
     ETHEREAL: 'Ethereal',     // Card exhausts if not played
     STATIC: 'Static',         // Unplayable curse card
-    DISSONANCE: 'Dissonance', // Debuff/Curse effect base name
-    RESONANCE: 'Resonance'    // Buff for hitting weakness
+    DISSONANCE: 'Dissonance', // Debuff/Curse effect base name (Used conceptually)
+    RESONANCE: 'Resonance',    // Buff for hitting weakness (Managed as numerical value per element)
+    STRENGTH: 'Strength'      // Generic damage increase (Enemies use this now)
+    // Add other statuses as needed: 'CardPlayLimit', 'InsightDown', etc.
 };
 
 // --- Node Types (Map) ---
