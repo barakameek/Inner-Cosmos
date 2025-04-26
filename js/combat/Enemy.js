@@ -2,6 +2,7 @@
 
 // Assuming ENEMY_TEMPLATES are defined directly in this file for now
 export const ENEMY_TEMPLATES = {
+
     // --- Floor 1 Enemies ---
     'doubt_whisper': {
         name: "Whispering Doubt", maxHp: 25, sprite: 'assets/images/enemies/doubt_whisper.png',
@@ -22,25 +23,37 @@ export const ENEMY_TEMPLATES = {
             { type: 'special', id: 'fade_away', description: "Become Intangible (1 Turn)"},
         ],
         resistances: { Attraction: 0.5 }, weaknesses: { Relational: 1.5 }, aiBehavior: 'random_weighted',
-        specialAbilities: {
-             fade_away: (self, player, gameState) => self.applyStatus('Intangible', 1, 1) // Duration 1, Amount 1
-         }
+        specialAbilities: { fade_away: (self) => self.applyStatus('Intangible', 1, 1) }
+    },
+     'anxious_tremor': { // NEW Floor 1 Enemy
+        name: "Anxious Tremor", maxHp: 38, sprite: 'assets/images/enemies/anxious_tremor.png',
+        intentions: [
+            { type: 'block', baseValue: 5, description: "Defensive Twitch" },
+            { type: 'attack', baseValue: 6, description: "Nervous Strike" },
+            { type: 'block', baseValue: 5, description: "Defensive Twitch" },
+            { type: 'multi_attack', count: 3, baseValue: 2, description: "Flurry of Worry"},
+             { type: 'debuff', status: 'Vulnerable', duration: 1, target: 'player', description: "Expose Fear (-Vuln)" },
+        ],
+        resistances: { Sensory: 0.8 }, // Less affected by raw sensation?
+        weaknesses: { Psychological: 1.3 }, // Vulnerable to calming/assurance?
+        aiBehavior: 'sequential_intent',
     },
     'rigid_perfectionism': { // Floor 1 Elite
         name: "Rigid Perfectionism", maxHp: 65, sprite: 'assets/images/enemies/perfectionism.png',
-        intentions: [
+        intentions: [ /* ... keep existing ... */
             { type: 'block', baseValue: 12, description: "Reinforce Standards" },
             { type: 'attack', baseValue: 9, description: "Critical Strike" },
             { type: 'attack_block', attackValue: 7, blockValue: 7, description: "Measured Assault" },
             { type: 'power_up', status: 'Strength', duration: 99, amount: 1, condition: 'wasDamagedUnblockedLastTurn', description: "Punish Imperfection (+1 Str)" },
-            { type: 'debuff', status: 'Frail', duration: 1, target: 'player', condition: 'playerHasHighBlock', description: "Inflict Frail" }
+            { type: 'debuff', status: 'Frail', duration: 1, target: 'player', condition: 'playerHasHighBlock', description: "Critique Defense (Apply Frail)" }
         ],
          resistances: { Interaction: 0.75, Cognitive: 0.8 }, weaknesses: { Psychological: 1.25 }, aiBehavior: 'reactive_pattern',
     },
+
     // --- Floor 2 Enemies ---
     'inner_critic': {
         name: "Inner Critic", maxHp: 45, sprite: 'assets/images/enemies/inner_critic.png',
-        intentions: [
+        intentions: [ /* ... keep existing ... */
              { type: 'multi_attack', baseValue: 3, count: 2, description: "Harsh Words"},
              { type: 'debuff', status: 'Vulnerable', duration: 2, target: 'player', description: "Expose Flaw"},
              { type: 'attack', baseValue: 7, status: 'Weak', statusDuration: 1, applyStatusOnce: true, description: "Belittle (-Weak)"},
@@ -50,93 +63,101 @@ export const ENEMY_TEMPLATES = {
     },
     'unmet_need': {
          name: "Unmet Need (Craving)", maxHp: 55, sprite: 'assets/images/enemies/unmet_need.png',
-         intentions: [
+         intentions: [ /* ... keep existing ... */
               { type: 'attack', baseValue: 9, description: "Lashing Out"},
               { type: 'special', id: 'drain_focus', amount: 1, description: "Drain Focus"},
               { type: 'power_up', status: 'Strength', duration: 99, amount: 1, condition: 'hpBelow50', description: "Grow Desperate (+1 Str)"},
-              { type: 'debuff', status: 'Entangle', duration: 1, target: 'player', amount: 1, description: "Cling (+1 Card Cost)"}, // Entangle defined as increasing cost
+              { type: 'debuff', status: 'Entangle', duration: 1, target: 'player', amount: 1, description: "Cling (+1 Card Cost)"},
          ],
          resistances: {}, weaknesses: { Psychological: 1.5, Relational: 1.25 }, aiBehavior: 'reactive_pattern',
-         specialAbilities: {
-              drain_focus: (self, player, gameState) => {
-                  if (player?.currentFocus > 0) {
-                      const amount = self.currentIntent?.amount || 1;
-                      player.spendFocus(amount); // Player function handles min 0
-                       console.log(`${self.name} drains ${amount} Focus.`);
-                       self.heal(amount); // Heal self slightly when draining
-                  } else { console.log(`${self.name} tries to drain Focus, but Player has none.`); }
-              }
-         }
+         specialAbilities: { drain_focus: (self, player) => { if (player?.currentFocus > 0) { player.spendFocus(self.currentIntent?.amount || 1); self.heal(self.currentIntent?.amount || 1); } } }
+    },
+     'resentment_globule': { // NEW Floor 2 Enemy
+        name: "Resentment Globule", maxHp: 60, sprite: 'assets/images/enemies/resentment_globule.png',
+        intentions: [
+            { type: 'block', baseValue: 10, description: "Harden Grudge" },
+            { type: 'attack', baseValue: 8, description: "Bitter Lash" },
+            { type: 'special', id: 'fester', description: "Apply Poison"}, // Applies stacking poison
+            { type: 'attack', baseValue: 8, description: "Bitter Lash" },
+        ],
+        resistances: { Psychological: 0.8, Sensory: 0.8 }, // Hard to affect emotionally or physically initially
+        weaknesses: { Interaction: 1.25 }, // Vulnerable to direct interaction/confrontation?
+        aiBehavior: 'sequential_intent',
+        specialAbilities: {
+             fester: (self, player, gameState) => {
+                 if (player) player.applyStatus('Poison', 99, 3, self.enemyType); // Apply 3 Poison stacks
+             }
+        }
     },
      'compulsive_habit': { // Floor 2 Elite
          name: "Compulsive Habit", maxHp: 80, sprite: 'assets/images/enemies/compulsive_habit.png',
-         intentions: [
+         intentions: [ /* ... keep existing ... */
              { type: 'attack', baseValue: 6, description: "Recurring Thought" },
              { type: 'block', baseValue: 6, description: "Routine Defense" },
              { type: 'multi_attack', baseValue: 3, count: 3, description: "Rapid Fixation" },
-             { type: 'special', id: 'cycle_strength', description: "Strengthens Cycle" }
+             { type: 'special', id: 'cycle_strength', description: "Strengthens Cycle (+Str)" }
          ],
          resistances: { Cognitive: 0.7 }, weaknesses: { Interaction: 1.3 }, aiBehavior: 'sequential_cycle_powerup',
-         internalCounters: { cycle: 0, strengthBonus: 0 }, // AI state
-         specialAbilities: {
-              cycle_strength: (self, player, gameState) => {
-                 self.internalCounters.strengthBonus += 1;
-                 // Apply temporary strength buff based on cycle count
-                 self.applyStatus('Strength', 1, self.internalCounters.strengthBonus); // Strength lasts 1 turn
-                  console.log(`${self.name} strengthens its cycle (+${self.internalCounters.strengthBonus} Str for next turn).`);
-              }
-         }
+         internalCounters: { cycle: 0, strengthBonus: 0 },
+         specialAbilities: { cycle_strength: (self) => { self.internalCounters.strengthBonus++; self.applyStatus('Strength', 1, self.internalCounters.strengthBonus); } }
      },
-    // --- Bosses ---
-    'shadow_aspect_interaction': {
-        name: "Shadow of Unseen Influence", maxHp: 150, sprite: 'assets/images/enemies/shadow_interaction.png',
+
+
+    // --- Floor 3 Enemies ---
+     'despair_echo': { // NEW Floor 3 Enemy
+        name: "Despair Echo", maxHp: 75, sprite: 'assets/images/enemies/despair_echo.png',
         intentions: [
-            { type: 'attack', baseValue: 10, status: 'Weak', statusDuration: 1, applyStatusOnce: true, description: "Manipulative Strike" },
-            { type: 'multi_attack', baseValue: 4, count: 3, description: "Conflicting Signals"},
-            { type: 'debuff', status: 'Vulnerable', duration: 2, target: 'player', description: "Exploit Insecurity" },
-            { type: 'block', baseValue: 20, description: "Wall of Denial" },
-            { type: 'special', id: 'mind_twist', description: "Applies Confusion & Frail" },
-             { type: 'power_up', status: 'Strength', duration: 99, amount: 2, condition: 'hpBelow50', description: "Desperate Power (+2 Str)"},
-             { type: 'debuff', status: 'Entangle', duration: 2, target: 'player', amount: 1, description: "Suffocating Closeness (+1 Card Cost)"}
+            { type: 'debuff', status: 'Weak', duration: 2, target: 'player', description: "Sap Strength (-Weak)" },
+            { type: 'attack', baseValue: 12, description: "Heavy Blow" },
+            { type: 'debuff', status: 'Frail', duration: 2, target: 'player', description: "Induce Brittleness (-Frail)" },
+            { type: 'block', baseValue: 15, description: "Numbness" },
+             { type: 'attack', baseValue: 12, description: "Heavy Blow" },
         ],
-        resistances: { Sensory: 0.8, Psychological: 0.8 }, weaknesses: { Interaction: 1.25 }, aiBehavior: 'random_weighted',
-        onDeathAction: { type: 'reward', insight: 50, artifactId: 'shadow_insight_artifact' } // Changed ID to match artifact def
-    }
-};
+        resistances: { Psychological: 0.5 }, // Very hard to cheer up
+        weaknesses: { Sensory: 1.4 }, // Strong sensation breaks through?
+        aiBehavior: 'random_weighted', // Favors debuffs?
+    },
+    'fragmented_identity': { // NEW Floor 3 Elite - Multiple weak parts?
+         name: "Fragmented Identity", maxHp: 40, sprite: 'assets/images/enemies/fragment_1.png', // Example: starts as one fragment
+         // This would likely require more complex logic - maybe spawning multiple enemies or having phases
+         // Simple version: Has shifting resistances/weaknesses or intents
+         intentions: [ // Short, random cycle
+             { type: 'attack', baseValue: 10, description: "Assertive Strike" }, // 'Dominant' phase
+             { type: 'block', baseValue: 10, description: "Yielding Guard" }, // 'Submissive' phase
+             { type: 'special', id: 'shift_aspect', description: "Shift Aspect" }, // Changes its own weakness/resistance/intent set maybe?
+         ],
+         resistances: { Interaction: 0.8 }, // Base resistance
+         weaknesses: { Cognitive: 1.2 }, // Base weakness
+         aiBehavior: 'random_intent', // Keeps shifting
+         specialAbilities: {
+             shift_aspect: (self) => {
+                 // Example: Randomly gain Str or Dex for a turn
+                 if (Math.random() < 0.5) self.applyStatus('Strength', 1, 3);
+                 else self.applyStatus('Dexterity', 1, 3);
+                 console.log(`${self.name} shifts its aspect!`);
+             }
+         }
+    },
 
 
 /**
  * Represents an enemy combatant.
  */
 export class Enemy {
+    // --- Constructor ---
     constructor(enemyId, instanceId) {
         const template = ENEMY_TEMPLATES[enemyId];
-        if (!template) {
-             this.id = `enemy_error_${instanceId}`; this.enemyType = 'error'; this.name = "Lost Fragment"; this.maxHp = 1; this.currentHp = 1; this.sprite = 'assets/images/enemies/error.png'; this.intentions = [{ type: 'attack', baseValue: 1 }]; this.currentIntent = null; this.currentBlock = 0; this.activeStatusEffects = []; this.resistances = {}; this.weaknesses = {}; this.aiBehavior = 'sequential_intent'; this.intentCycleIndex = 0; this.onDeathAction = null;
-             console.error(`Enemy Error: Template not found for ID: ${enemyId}`); return;
-        }
-        this.id = `enemy_${enemyId}_${instanceId}`;
-        this.enemyType = enemyId;
-        this.name = template.name;
-        this.maxHp = template.maxHp;
-        this.currentHp = template.maxHp;
-        this.sprite = template.sprite;
-        this.intentions = JSON.parse(JSON.stringify(template.intentions));
-        this.currentIntent = null;
-        this.currentBlock = 0;
-        this.activeStatusEffects = [];
-        this.resistances = { ...(template.resistances || {}) };
-        this.weaknesses = { ...(template.weaknesses || {}) };
-        this.aiBehavior = template.aiBehavior || 'sequential_intent';
-        this.intentCycleIndex = 0;
+        if (!template) { /* ... error handling ... */ return; }
+        this.id = `enemy_${enemyId}_${instanceId}`; this.enemyType = enemyId; this.name = template.name;
+        this.maxHp = template.maxHp; this.currentHp = template.maxHp; this.sprite = template.sprite;
+        this.intentions = JSON.parse(JSON.stringify(template.intentions)); this.currentIntent = null;
+        this.currentBlock = 0; this.activeStatusEffects = [];
+        this.resistances = { ...(template.resistances || {}) }; this.weaknesses = { ...(template.weaknesses || {}) };
+        this.aiBehavior = template.aiBehavior || 'sequential_intent'; this.intentCycleIndex = 0;
         this.onDeathAction = template.onDeathAction ? { ...template.onDeathAction } : null;
         this.specialAbilities = template.specialAbilities || {};
         this.internalCounters = template.internalCounters ? JSON.parse(JSON.stringify(template.internalCounters)) : {};
-        this.wasDamagedLastTurn = false;
-        this.wasDamagedUnblockedLastTurn = false; // Flag if HP damage was taken
-        this.playerRef = null; // Reference for condition checks
-
-        // console.log(`Enemy created: ${this.name} (ID: ${this.id})`); // Noisy
+        this.wasDamagedLastTurn = false; this.wasDamagedUnblockedLastTurn = false; this.playerRef = null;
         this.determineNextIntent(); // Determine initial intent
     }
 
