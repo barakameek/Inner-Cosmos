@@ -1,47 +1,4 @@
-// js/core/Player.js
 
-import { DeckManager } from './DeckManager.js';
-import { Artifact } from './Artifact.js';
-import { Card } from './Card.js'; // Needed if status adds cards
-import * as Data from '../../data.js'; // Keep for defaults if needed
-
-
-// --- Constants ---
-const BASE_FOCUS = 3;
-const BASE_INTEGRITY = 70;
-
-/**
- * Represents the player character during a run.
- */
-export class Player {
-    constructor(playerData = {}, metaProgression = null) {
-        console.log("Creating Player instance...");
-        this.gameStateRef = null; // Will be set by GameState after creation
-
-        // --- Core Stats ---
-        this.name = playerData?.name || "Alchemist";
-        // Apply meta bonuses if metaProgression object is provided
-        const startingIntegrityBonus = metaProgression?.getStartingBonus('maxIntegrityBonus') || 0;
-        const baseIntegrity = metaProgression?.getStartingBonus('baseIntegrity') || BASE_INTEGRITY;
-        this.maxIntegrity = baseIntegrity + startingIntegrityBonus;
-        this.currentIntegrity = this.maxIntegrity;
-
-        // Apply meta bonuses and Cognitive scaling for focus
-        const baseFocus = metaProgression?.getStartingBonus('baseFocus') || BASE_FOCUS;
-        const focusSlotsBonus = metaProgression?.getStartingBonus('focusSlotsBonus') || 0; // Corrected key name maybe? Check MetaProgression
-        this.maxFocus = baseFocus + focusSlotsBonus + Math.floor((playerYou are absolutely,Data?.attunements?.Cognitive || 5) / 3); // Adjusted scaling example
-        this.currentFocus = 100% correct. My apologies again for reverting to snippets – that completely defeats the purpose of providing complete files this.maxFocus;
-
-        // --- Attunements ---
-        // Apply meta bonuses to base attunements
- to avoid errors. Thank you for your patience and for pointing it out immediately.
-
-Let's get this right. Here are        const baseAttunements = this.getDefaultAttunements();
-        this.attunements = { ...baseAttunements };
-        if (metaProgression) {
-            for (const key in this.att the **complete, full code files** for `Player.js` and `Enemy.js`, incorporating the status effect logic and other refinements.
-
-**File 38 (Complete & Unskipped): `js/core/Player.js`**
 
 ```javascript
 // js/core/Player.js
@@ -53,7 +10,7 @@ import {unements) {
                  if (bonus) {
                      this.attunements[key] += Artifact } from './Artifact.js';
 import { Card } from './Card.js'; // Needed if status adds cards
-import * as Data from '../data.js'; // Keep for defaults if needed
+import * as Data from '../../data.js'; // Keep for defaults if needed
 
 
 // --- Constants ---
