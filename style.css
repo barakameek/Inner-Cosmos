@@ -35,3 +35,8 @@ html, body {
 }
 
 /* Add more specific styles for UI elements (buttons, menus, HUD) later */
+
+/* Optional: Hide canvas until script loads/sets size? */
+/* #gameCanvas {
+    visibility: hidden;
+} */
