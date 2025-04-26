@@ -11,26 +11,29 @@ class Card {
      * @param {boolean} [isUpgraded=false] - Whether this instance starts as upgraded.
      */
     constructor(definition, isUpgraded = false) {
-        if (!definition) {
-            console.error("Cannot create Card instance without a valid definition!");
-            // Handle this error appropriately, maybe throw or return null?
-            // For now, log error and create a placeholder to avoid immediate crashes downstream.
+        if (!definition || typeof definition !== 'object' || !definition.id) {
+            console.error("Cannot create Card instance without a valid definition object!", definition);
+            // Create a fallback error card to prevent downstream crashes
             this.instanceId = uuidv4();
-            this.baseDefinition = { id: 'error_card', name: 'Error Card', type: CardType.STATUS, cost: null, description: 'Invalid definition', effects: {}, keywords:[] };
+            this.baseDefinition = new CardDefinition({ id: 'error_card', name: 'Error Card', type: CardType.STATUS, cost: null, rarity: CardRarity.SPECIAL, description: 'Invalid definition passed to constructor.' });
             this.isUpgraded = false;
-            this.currentDefinition = this.baseDefinition;
+             // Deep copy the definition to avoid modifying the base pool accidentally if fallback is used.
+             // However, the main definition reference should NOT be a deep copy.
+            this.currentDefinition = deepCopy(this.baseDefinition); // Fallback uses copy
             this.temporaryMods = { cost: null };
+            console.error(`Created fallback error card instance: ${this.instanceId}`);
             return;
         }
 
         // Generate unique ID for this specific instance
         this.instanceId = uuidv4(); // From utils.js
 
-        // Store the base definition (never changes for this instance)
+        // Store the base definition (reference, DO NOT DEEP COPY - allows checking base props)
         this.baseDefinition = definition;
 
         // Track upgrade status
-        this.isUpgraded = isUpgraded && !!definition.upgrade; // Can only be upgraded if upgrade exists
+        // Can only be upgraded if an upgrade path exists in the base definition
+        this.isUpgraded = isUpgraded && !!this.baseDefinition.upgrade;
 
         // Store temporary modifications (e.g., cost changes for one turn/combat)
         this.temporaryMods = {
@@ -39,13 +42,14 @@ class Card {
         };
 
         // Reference to the definition currently in use (base or upgraded)
-        this.currentDefinition = this.isUpgraded ? definition.upgrade : definition;
+        // This should reference the actual sub-object (baseDefinition or baseDefinition.upgrade)
+        this.currentDefinition = this.isUpgraded ? this.baseDefinition.upgrade : this.baseDefinition;
 
         // --- Sanity check ---
-        if (this.isUpgraded && !definition.upgrade) {
-             console.warn(`Card '${definition.name}' created as upgraded, but base definition lacks an upgrade path. Reverting to base.`);
+        if (isUpgraded && !this.baseDefinition.upgrade) {
+             console.warn(`Card '${this.baseDefinition.name}' created as upgraded, but base definition lacks an upgrade path. Reverting to base.`);
              this.isUpgraded = false;
-             this.currentDefinition = definition;
+             this.currentDefinition = this.baseDefinition; // Point back to base
         }
     }
 
@@ -53,9 +57,18 @@ class Card {
     // These getters automatically refer to the correct definition (base or upgraded)
     // and consider temporary modifications where applicable.
 
-    /** Gets the definition object currently representing the card's state (base or upgrade). */
+    /**
+     * Gets the definition object currently representing the card's state.
+     * IMPORTANT: For accessing current effects/cost/description etc., use the direct getters below.
+     * This getter is mainly for internal reference or complex checks.
+     */
     get definition() {
-        return this.currentDefinition;
+        // If the currentDefinition isn't properly referencing base/upgrade, fix it.
+        // This guards against potential issues if the reference was lost.
+        if (this.isUpgraded && this.baseDefinition.upgrade) {
+            return this.baseDefinition.upgrade;
+        }
+        return this.baseDefinition;
     }
 
     /** Gets the base ID of the card concept (never changes). */
@@ -68,20 +81,19 @@ class Card {
         return this.baseDefinition.name + (this.isUpgraded ? "+" : "");
     }
 
-    /** Gets the card type (Attack, Skill, Power, etc.). */
+    /** Gets the card type (Attack, Skill, Power, etc.). Uses base type, assumes type doesn't change on upgrade. */
     get type() {
-        return this.definition.type;
+        return this.baseDefinition.type;
     }
 
-    /** Gets the card's element. */
+    /** Gets the card's element. Uses base element, assumes element doesn't change. */
     get element() {
-        return this.definition.element;
+        return this.baseDefinition.element;
     }
 
-    /** Gets the card's rarity. */
+    /** Gets the card's rarity. Uses base rarity. */
     get rarity() {
-        // Rarity typically comes from the base definition, but check current just in case
-        return this.definition.rarity || this.baseDefinition.rarity;
+        return this.baseDefinition.rarity;
     }
 
     /**
@@ -91,7 +103,7 @@ class Card {
      */
     get cost() {
         // Unplayable cards always have null cost
-        if (this.definition.cost === null || this.type === CardType.CURSE || this.type === CardType.STATUS) {
+        if (this.baseDefinition.type === CardType.CURSE || this.baseDefinition.type === CardType.STATUS) {
             return null;
         }
         // Check for temporary cost modification
@@ -99,37 +111,57 @@ class Card {
             return Math.max(0, this.temporaryMods.cost); // Ensure cost isn't negative
         }
         // Otherwise, return the cost from the current definition (base or upgraded)
-        return this.definition.cost;
+        const currentCost = this.isUpgraded && this.baseDefinition.upgrade
+                           ? (this.baseDefinition.upgrade.cost ?? this.baseDefinition.cost) // Upgrade inherits cost if not specified
+                           : this.baseDefinition.cost;
+
+        // Check if cost is explicitly null (might be valid for some playable cards?)
+        if (currentCost === null && this.isPlayable()) {
+             console.warn(`Card '${this.name}' is playable but has null cost in definition.`);
+             return 0; // Default to 0 if playable but cost is null? Or keep null? Let's use 0.
+        }
+
+        return currentCost;
     }
 
-    /** Gets the text description of the card's effects. */
+    /** Gets the text description of the card's effects based on current state (upgraded or not). */
     get description() {
-        // Ensure description exists, fallback to base if needed (though shouldn't happen often)
-        return this.definition.description || this.baseDefinition.description || "";
+        const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+        return currentDef.description || this.baseDefinition.description || ""; // Fallback to base description
     }
 
-    /** Gets the structured effects object for the card. */
+    /** Gets the structured effects object for the card based on current state. */
     get effects() {
-        return this.definition.effects || this.baseDefinition.effects || {};
+         const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+        return currentDef.effects || this.baseDefinition.effects || {}; // Fallback to base effects
     }
 
-    /** Gets the structured Momentum bonus effect object, if any. */
+    /** Gets the structured Momentum bonus effect object, if any, based on current state. */
     get momentumEffect() {
-        // Check current def first, then base def as fallback
-        return this.definition.momentumEffect || this.baseDefinition.momentumEffect || null;
+         const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+        return currentDef.momentumEffect || this.baseDefinition.momentumEffect || null;
      }
 
-     /** Gets the structured Resonance bonus effect object, if any. */
+     /** Gets the structured Resonance bonus effect object, if any, based on current state. */
      get resonanceEffect() {
-          return this.definition.resonanceEffect || this.baseDefinition.resonanceEffect || null;
+          const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+         return currentDef.resonanceEffect || this.baseDefinition.resonanceEffect || null;
      }
 
-    /** Gets the list of keywords associated with the card (e.g., Exhaust, Retain). Combines base and upgrade keywords. */
+    /** Gets the list of keywords associated with the card based on current state. */
     get keywords() {
-        // Upgrades might add or remove keywords. Let's use only the current definition's keywords.
-        // If upgrade definition doesn't specify keywords, inherit from base? Let's assume upgrade definition is complete.
-        return this.definition.keywords || [];
+        // Use keywords from the specific definition (base or upgrade)
+         const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+        // If upgrade doesn't define keywords, inherit from base? Let's assume definition is complete.
+        return currentDef.keywords || [];
     }
+
+    /** Gets the triggers object associated with the card based on current state (mainly for Powers). */
+    get triggers() {
+         const currentDef = this.isUpgraded && this.baseDefinition.upgrade ? this.baseDefinition.upgrade : this.baseDefinition;
+        return currentDef.triggers || this.baseDefinition.triggers || null;
+    }
+
 
     /** Gets the art identifier, usually tied to the base card concept. */
     get artId() {
@@ -152,7 +184,8 @@ class Card {
      * @returns {boolean} True if the card can be played.
      */
     isPlayable() {
-        return this.cost !== null && this.type !== CardType.CURSE && this.type !== CardType.STATUS;
+        // Use the getter `this.cost` which handles null for Curse/Status already
+        return this.cost !== null;
     }
 
     // --- Modification Methods ---
@@ -164,8 +197,7 @@ class Card {
     upgrade() {
         if (!this.isUpgraded && this.baseDefinition.upgrade) {
             this.isUpgraded = true;
-            // Update the current definition to the upgrade definition
-            this.currentDefinition = this.baseDefinition.upgrade;
+            // No need to change currentDefinition reference here, getters handle it.
             console.log(`Card '${this.baseDefinition.name}' (Instance: ${this.instanceId}) upgraded.`);
             return true;
         } else if (this.isUpgraded) {
