@@ -22,7 +22,7 @@ class Player {
         this.exhaustPile = [];
 
         // Combat State
-        this.statusEffects = {}; // e.g., { [StatusEffects.GUARD]: 10, [StatusEffects.VULNERABLE]: 1 }
+        this.statusEffects = {}; // e.g., { [StatusEffects.GUARD]: 10, [StatusEffects.VULNERABLE]: {amount:1, duration:1}, Strength: 0 }
         this.powers = {}; // Store active Power card effects { powerId: { definition: CardDefinition, stacks: 1, duration: Infinity } }
         this.momentum = 0;
         this.lastElementPlayed = Elements.NEUTRAL;
@@ -37,873 +37,300 @@ class Player {
     initializeResonance() {
         const res = {};
         Object.values(Elements).forEach(element => {
-            // Neutral doesn't typically have resonance, but maybe needed for effects? Add if required.
-            // For now, only track the 5 core elements.
-            if (element !== Elements.NEUTRAL) {
-                res[element] = 0;
-            }
+            if (element !== Elements.NEUTRAL) { res[element] = 0; }
         });
         return res;
     }
 
     // --- Deck Initialization ---
-
-    /**
-     * Creates Card instances from IDs and populates the master deck and draw pile.
-     * @param {string[]} cardIds - Array of card definition IDs for the starting deck.
-     */
     initializeDeck(cardIds) {
-        this.masterDeck = [];
-        this.drawPile = [];
-        this.hand = [];
-        this.discardPile = [];
-        this.exhaustPile = []; // Ensure all piles are clear
-
+        this.masterDeck = []; this.drawPile = []; this.hand = []; this.discardPile = []; this.exhaustPile = [];
         cardIds.forEach(id => {
             const definition = getCardDefinition(id);
-            if (definition) {
-                // Create a new Card instance using the Card class
-                const cardInstance = new Card(definition);
-                this.masterDeck.push(cardInstance);
-            } else {
-                console.warn(`Could not find card definition for ID '${id}' during deck initialization.`);
-            }
+            if (definition) { this.masterDeck.push(new Card(definition)); }
+            else { console.warn(`Card definition missing for ID '${id}' during deck init.`); }
         });
-        this.drawPile = [...this.masterDeck]; // Populate draw pile with instances
-        shuffleArray(this.drawPile);
+        this.drawPile = [...this.masterDeck]; shuffleArray(this.drawPile);
         console.log(`Player deck initialized with ${this.masterDeck.length} cards.`);
     }
 
-    /**
-     * Adds a specific card instance to the master deck (e.g., from rewards).
-     * The card is usually added to the specified pile.
-     * @param {Card} cardInstance - The Card instance to add.
-     * @param {string} [pile='discard'] - Which pile to add to ('discard', 'draw', 'hand').
-     */
     addCardToDeck(cardInstance, pile = 'discard') {
-        if (!cardInstance || !(cardInstance instanceof Card)) {
-            console.error("Attempted to add invalid/null card instance to deck.");
-            return;
-        }
-        // Add to master list if not already there (e.g., adding a newly created card)
-        // If transforming a card, it might already be in masterDeck, handle that case if needed.
-        if (!this.masterDeck.some(c => c.instanceId === cardInstance.instanceId)) {
-             this.masterDeck.push(cardInstance);
-        }
-
+        if (!cardInstance || !(cardInstance instanceof Card)) { console.error("Invalid card instance added."); return; }
+        if (!this.masterDeck.some(c => c.instanceId === cardInstance.instanceId)) { this.masterDeck.push(cardInstance); }
         switch (pile) {
-            case 'draw':
-                // Add to top or bottom? Usually bottom/random. Let's shuffle in.
-                this.drawPile.push(cardInstance);
-                shuffleArray(this.drawPile); // Shuffle after adding? Or just add to bottom? Add to bottom for now.
-                // this.drawPile.unshift(cardInstance); // Add to top
-                break;
-            case 'hand':
-                // Check hand size limits if implemented?
-                this.hand.push(cardInstance);
-                 // Trigger onDraw effects if any
-                 this.triggerEffects('onCardDraw', null, { card: cardInstance }); // Pass null for gameManager if unavailable contextually? Risky.
-                break;
-            case 'discard':
-            default:
-                this.discardPile.push(cardInstance);
-                break;
+            case 'draw': this.drawPile.push(cardInstance); shuffleArray(this.drawPile); break; // Shuffle in? Or add bottom? Add bottom is simpler: // this.drawPile.unshift(cardInstance);
+            case 'hand': this.hand.push(cardInstance); this.triggerEffects('onCardDraw', null, { card: cardInstance }); break;
+            default: this.discardPile.push(cardInstance); break;
         }
-        console.log(`Added card '${cardInstance.name}' to ${pile} pile. Master deck size: ${this.masterDeck.length}`);
+        // console.log(`Added card '${cardInstance.name}' to ${pile}. Master: ${this.masterDeck.length}`);
     }
 
-    /**
-     * Removes a specific card instance from the master deck and all active piles.
-     * @param {Card} cardInstanceToRemove - The specific Card instance to remove.
-     * @returns {boolean} True if the card was successfully removed, false otherwise.
-     */
     removeCardFromDeck(cardInstanceToRemove) {
         if (!cardInstanceToRemove || !cardInstanceToRemove.instanceId) return false;
-        const instanceId = cardInstanceToRemove.instanceId;
-        let foundAndRemoved = false;
-
-        // Remove from master list
+        const instanceId = cardInstanceToRemove.instanceId; let foundAndRemoved = false;
         const masterIndex = this.masterDeck.findIndex(card => card.instanceId === instanceId);
-        if (masterIndex > -1) {
-            this.masterDeck.splice(masterIndex, 1);
-            foundAndRemoved = true; // Found in master list
-        } else {
-            // If not in master list, it shouldn't be anywhere else, but check anyway.
-            console.warn(`Card instance ${instanceId} ('${cardInstanceToRemove.name}') not found in master deck during removal.`);
-        }
-
-        // Remove from active piles (draw, hand, discard)
+        if (masterIndex > -1) { this.masterDeck.splice(masterIndex, 1); foundAndRemoved = true; }
+        else { console.warn(`Card instance ${instanceId} not in master deck.`); }
         [this.drawPile, this.hand, this.discardPile].forEach(pile => {
             const pileIndex = pile.findIndex(card => card.instanceId === instanceId);
-            if (pileIndex > -1) {
-                pile.splice(pileIndex, 1);
-                foundAndRemoved = true; // Found in at least one pile
-            }
-        });
-        // Don't remove from exhaust pile - exhausted cards are out of the deck cycle.
-
-        if (foundAndRemoved) {
-             console.log(`Removed card '${cardInstanceToRemove.name}' (Instance ID: ${instanceId}). Master deck size: ${this.masterDeck.length}`);
-        } else {
-             console.warn(`Could not find card '${cardInstanceToRemove.name}' (Instance ID: ${instanceId}) in any active pile during removal.`);
-        }
-
+            if (pileIndex > -1) { pile.splice(pileIndex, 1); foundAndRemoved = true; } });
+        if (foundAndRemoved) { console.log(`Removed card '${cardInstanceToRemove.name}'. Master: ${this.masterDeck.length}`); }
+        else { console.warn(`Could not find card '${cardInstanceToRemove.name}' in active piles.`); }
         return foundAndRemoved;
     }
 
-
     // --- Combat Turn Management ---
-
-    startTurn(gameManager) { // Pass gameManager to access relics
-        this.resetTemporaryStatuses(); // Reset guard first
-        this.updateStatusDurations(); // Then decrement durations
-        this.decayResonance();
-
-        // Calculate insight *after* status updates (e.g., InsightDown debuff)
+    startTurn(gameManager) {
+        this.resetTemporaryStatuses(); this.updateStatusDurations(); this.decayResonance();
         this.currentInsight = this.calculateTurnInsightGain(gameManager);
-        this.cardsPlayedThisTurn = 0; // Reset card play counter
-
-        // Trigger start-of-turn effects (Relics, Powers)
+        this.cardsPlayedThisTurn = 0;
         this.triggerEffects('onTurnStart', gameManager);
-
-        this.drawCards(CARDS_PER_TURN_DRAW); // Use constant for draw amount
+        this.drawCards(CARDS_PER_TURN_DRAW);
     }
 
     endTurn(gameManager) {
-         // Trigger end-of-turn effects (Relics, Powers) before discard
-         this.triggerEffects('onTurnEnd', gameManager);
-
-        this.discardHand();
-        this.resetMomentum(); // Reset momentum at end of turn
-
-        // Reset temporary card mods after discarding
+        this.triggerEffects('onTurnEnd', gameManager);
+        this.discardHand(); this.resetMomentum();
         [...this.drawPile, ...this.hand, ...this.discardPile, ...this.exhaustPile].forEach(card => card.resetTemporaryMods());
     }
 
     calculateTurnInsightGain(gameManager) {
         let insightGain = this.baseInsight;
-
-        // Check for effects modifying base insight (e.g., from powers/relics)
-        // 1. Check Relics
-        gameManager.currentRelics.forEach(relic => {
-             if (relic.effects?.modifyStat?.stat === 'baseInsight') {
-                  insightGain += relic.effects.modifyStat.value;
-             }
-        });
-        // 2. Check Powers
-        Object.values(this.powers).forEach(powerData => {
-            // Look for a specific power effect or a generic trigger
-            // Example: if (powerData.definition.id === 'some_insight_power') insightGain += powerData.stacks;
-        });
-
-        // Check for debuffs reducing insight gain (e.g., Heavy Heart curse in hand)
-        this.hand.forEach(card => {
-            if (card.effects?.passiveInHand?.effectId === 'reduceInsightGain') {
-                insightGain -= card.effects.passiveInHand.value || 1;
-            }
-        });
-         // Check statuses on player (e.g., InsightDown)
-         if (this.hasStatus('InsightDown')) {
-              insightGain -= this.getStatus('InsightDown');
-         }
-
-
-        return Math.max(0, insightGain); // Ensure insight gain isn't negative
+        gameManager?.currentRelics.forEach(relic => { if (relic.effects?.modifyStat?.stat === 'baseInsight') { insightGain += relic.effects.modifyStat.value; } });
+        // Check Powers (add specific power logic here if needed)
+        this.hand.forEach(card => { if (card.effects?.passiveInHand?.effectId === 'reduceInsightGain') { insightGain -= card.effects.passiveInHand.value || 1; } });
+        if (this.hasStatus('InsightDown')) { insightGain -= this.getStatus('InsightDown'); }
+        return Math.max(0, insightGain);
     }
 
     resetTemporaryStatuses() {
-        // Reset Guard at start of turn (unless a power/relic prevents it)
-        // TODO: Check for a hypothetical 'Retain Guard' status/power if needed
         this.statusEffects[StatusEffects.GUARD] = 0;
-
-        // Reset card play limit status
         delete this.statusEffects['CardPlayLimit'];
+        delete this.statusEffects['FirstCardFree']; // Clear this status
     }
 
     updateStatusDurations() {
         for (const key in this.statusEffects) {
-            // Check if status value is an object with a duration property
             if (this.statusEffects[key] && typeof this.statusEffects[key] === 'object' && this.statusEffects[key].duration !== undefined) {
                 const status = this.statusEffects[key];
-                if (status.duration !== Infinity) {
-                    status.duration--;
-                    if (status.duration <= 0) {
-                        console.log(`Player status effect '${key}' expired.`);
-                        delete this.statusEffects[key];
-                    }
-                }
-            }
-             // Simple numeric statuses (like Guard) don't have durations managed here
-             // Add specific duration logic for other statuses if needed (e.g., Freeze_Element)
-             if (key.startsWith(StatusEffects.FREEZE + '_')) {
+                if (status.duration !== Infinity) { status.duration--; if (status.duration <= 0) { console.log(`Player status '${key}' expired.`); delete this.statusEffects[key]; } } }
+             else if (key.startsWith(StatusEffects.FREEZE + '_')) { // Handle specific freeze logic
                   const freezeStatus = this.statusEffects[key];
-                  if (freezeStatus && freezeStatus.duration !== Infinity) {
-                       freezeStatus.duration--;
-                        if (freezeStatus.duration <= 0) {
-                           console.log(`Player status effect '${key}' expired.`);
-                           delete this.statusEffects[key];
-                        }
-                  }
-             }
-        }
-        // Also update power durations if they aren't permanent
-         for (const powerId in this.powers) {
+                  if (freezeStatus && freezeStatus.duration !== Infinity) { freezeStatus.duration--; if (freezeStatus.duration <= 0) { console.log(`Player status '${key}' expired.`); delete this.statusEffects[key]; } } } }
+        for (const powerId in this.powers) {
              const power = this.powers[powerId];
-             if (power && power.duration !== undefined && power.duration !== Infinity) {
-                 power.duration--;
-                 if (power.duration <= 0) {
-                     console.log(`Power effect '${powerId}' expired.`);
-                     delete this.powers[powerId];
-                     // Potentially trigger onExpire effects if defined in power triggers
-                     // this.triggerEffects('onPowerExpire', gameManager, { powerId: powerId });
-                 }
-             }
-         }
+             if (power && power.duration !== undefined && power.duration !== Infinity) { power.duration--; if (power.duration <= 0) { console.log(`Power '${powerId}' expired.`); delete this.powers[powerId]; } } }
     }
 
-    decayResonance() {
-        for(const element in this.resonance) {
-            if (this.resonance[element] > 0) {
-                 this.resonance[element] = Math.max(0, this.resonance[element] - RESONANCE_DECAY_PER_TURN);
-            }
-        }
-    }
+    decayResonance() { for(const element in this.resonance) { if (this.resonance[element] > 0) { this.resonance[element] = Math.max(0, this.resonance[element] - RESONANCE_DECAY_PER_TURN); } } }
 
     // --- Card Manipulation ---
-
     drawCards(amount) {
         const drawnCards = [];
         for (let i = 0; i < amount; i++) {
-            if (this.drawPile.length === 0) {
-                if (this.discardPile.length === 0) {
-                    console.log("No cards left in draw or discard pile.");
-                    break; // No more cards to draw
-                }
-                this.shuffleDiscardIntoDraw();
-            }
-            // After shuffle, check draw pile again
+            if (this.drawPile.length === 0) { if (this.discardPile.length === 0) break; this.shuffleDiscardIntoDraw(); }
             if (this.drawPile.length > 0) {
-                const card = this.drawPile.pop(); // Take from end (top) of draw pile
-                if (card) { // Ensure card is valid
-                     this.hand.push(card);
-                     drawnCards.push(card);
-                     // Trigger onDraw effects if any
-                     // Pass gameManager if possible, needed for context (relics etc)
-                     // this.triggerEffects('onCardDraw', gameManager, { card: card });
-                } else {
-                    console.warn("Popped undefined card from draw pile after shuffle check?");
-                }
-            }
-        }
-        console.log(`Drew ${drawnCards.length} cards. Hand size: ${this.hand.length}`);
-        // Check for hand size limit? StS doesn't have one, usually.
-        return drawnCards;
+                const card = this.drawPile.pop();
+                if (card) { this.hand.push(card); drawnCards.push(card); }
+                else { console.warn("Popped undefined card?"); } } }
+        console.log(`Drew ${drawnCards.length}. Hand: ${this.hand.length}`); return drawnCards;
     }
 
     discardHand() {
-        const cardsToDiscard = [];
-        const cardsToKeep = [];
-
-        // Iterate backwards to allow removal while iterating
+        const toDiscard = []; const toKeep = [];
         for (let i = this.hand.length - 1; i >= 0; i--) {
              const card = this.hand[i];
-             if (card.hasKeyword(StatusEffects.RETAIN)) {
-                  cardsToKeep.push(card);
-             } else {
-                  cardsToDiscard.push(card);
-                  this.discardPile.push(card); // Add to discard
-             }
-        }
-        // Reset hand to only retained cards
-        this.hand = cardsToKeep.reverse(); // Keep original order?
-
-        console.log(`Discarded ${cardsToDiscard.length} cards. Kept ${cardsToKeep.length}. Discard size: ${this.discardPile.length}`);
-
-        // Handle Ethereal cards that were *kept* (retained) - they exhaust at end of turn
-        // Iterate backwards again for safe removal
-         for (let i = this.hand.length - 1; i >= 0; i--) {
+             if (card.hasKeyword(StatusEffects.RETAIN)) { toKeep.push(card); }
+             else { toDiscard.push(card); this.discardPile.push(card); } }
+        this.hand = toKeep.reverse();
+        console.log(`Discarded ${toDiscard.length}. Kept ${toKeep.length}. Discard: ${this.discardPile.length}`);
+        for (let i = this.hand.length - 1; i >= 0; i--) {
               const card = this.hand[i];
-              if (card.hasKeyword(StatusEffects.ETHEREAL)) {
-                   this.exhaustCard(card, 'hand'); // Specify source pile
-                   console.log(`Ethereal card '${card.name}' exhausted from hand.`);
-              }
-         }
+              if (card.hasKeyword(StatusEffects.ETHEREAL)) { this.exhaustCard(card, 'hand'); console.log(`Ethereal '${card.name}' exhausted.`); } }
     }
 
-    /**
-     * Moves a specific card instance from hand to a target pile.
-     * @param {Card} cardInstance - The card instance in hand.
-     * @param {Card[]} destinationPile - The array representing the target pile (e.g., this.discardPile, this.exhaustPile).
-     * @returns {boolean} True if successful.
-     */
     moveCardFromHand(cardInstance, destinationPile) {
         const index = this.hand.findIndex(card => card.instanceId === cardInstance.instanceId);
-        if (index > -1) {
-            const card = this.hand.splice(index, 1)[0];
-            destinationPile.push(card);
-            // console.log(`Moved card '${card.name}' from hand to destination pile.`);
-            return true;
-        }
-        console.warn(`Card '${cardInstance.name}' not found in hand for moving.`);
-        return false;
+        if (index > -1) { const card = this.hand.splice(index, 1)[0]; destinationPile.push(card); return true; }
+        console.warn(`Card '${cardInstance.name}' not in hand.`); return false;
     }
 
-    /**
-     * Moves a specific card instance from its current pile (hand, draw, discard) to the exhaust pile.
-     * @param {Card} cardInstance - The card instance to exhaust.
-     * @param {string} [sourceHint=null] - Optional: 'hand', 'draw', 'discard' to optimize search.
-     * @returns {boolean} True if successful.
-     */
     exhaustCard(cardInstance, sourceHint = null) {
-        let found = false;
-        const instanceId = cardInstance.instanceId;
-
-        // Try removing from hint source first
-        if (sourceHint === 'hand') {
-            found = this.moveCardFromHand(cardInstance, this.exhaustPile);
-        } else if (sourceHint === 'draw') {
-            const index = this.drawPile.findIndex(card => card.instanceId === instanceId);
-            if (index > -1) { const card = this.drawPile.splice(index, 1)[0]; this.exhaustPile.push(card); found = true; }
-        } else if (sourceHint === 'discard') {
-            const index = this.discardPile.findIndex(card => card.instanceId === instanceId);
-            if (index > -1) { const card = this.discardPile.splice(index, 1)[0]; this.exhaustPile.push(card); found = true; }
-        }
-
-        // If not found via hint, search all piles
-        if (!found) {
-            if (this.moveCardFromHand(cardInstance, this.exhaustPile)) found = true;
-        }
-        if (!found) {
-             const drawIndex = this.drawPile.findIndex(card => card.instanceId === instanceId);
-             if (drawIndex > -1) { const card = this.drawPile.splice(drawIndex, 1)[0]; this.exhaustPile.push(card); found = true; }
-        }
-         if (!found) {
-              const discardIndex = this.discardPile.findIndex(card => card.instanceId === instanceId);
-              if (discardIndex > -1) { const card = this.discardPile.splice(discardIndex, 1)[0]; this.exhaustPile.push(card); found = true; }
-         }
-
-         if (found) {
-              console.log(`Exhausted card '${cardInstance.name}' (Instance ID: ${instanceId}).`);
-         } else {
-              console.warn(`Card '${cardInstance.name}' not found for exhaustion.`);
-         }
-         return found;
+        let found = false; const instanceId = cardInstance.instanceId;
+        if (sourceHint === 'hand') { found = this.moveCardFromHand(cardInstance, this.exhaustPile); }
+        else if (sourceHint === 'draw') { const i = this.drawPile.findIndex(c => c.instanceId === instanceId); if (i > -1) { this.exhaustPile.push(this.drawPile.splice(i, 1)[0]); found = true; } }
+        else if (sourceHint === 'discard') { const i = this.discardPile.findIndex(c => c.instanceId === instanceId); if (i > -1) { this.exhaustPile.push(this.discardPile.splice(i, 1)[0]); found = true; } }
+        if (!found) { if (this.moveCardFromHand(cardInstance, this.exhaustPile)) found = true; }
+        if (!found) { const i = this.drawPile.findIndex(c => c.instanceId === instanceId); if (i > -1) { this.exhaustPile.push(this.drawPile.splice(i, 1)[0]); found = true; } }
+        if (!found) { const i = this.discardPile.findIndex(c => c.instanceId === instanceId); if (i > -1) { this.exhaustPile.push(this.discardPile.splice(i, 1)[0]); found = true; } }
+        if (found) { console.log(`Exhausted '${cardInstance.name}'.`); } else { console.warn(`Card '${cardInstance.name}' not found for exhaust.`); } return found;
     }
 
     shuffleDiscardIntoDraw() {
-        console.log(`Shuffling ${this.discardPile.length} cards into draw pile.`);
-        this.drawPile.push(...this.discardPile); // Add discard pile contents to draw pile
-        this.discardPile = []; // Empty the discard pile
-        shuffleArray(this.drawPile);
+        console.log(`Shuffling ${this.discardPile.length} cards into draw.`);
+        this.drawPile.push(...this.discardPile); this.discardPile = []; shuffleArray(this.drawPile);
     }
 
-    // --- Resource Management (Insight) ---
+    // --- Resource Management ---
+    canAfford(cost) { const c = (cost === null) ? 0 : cost; return this.currentInsight >= c; }
+    spendInsight(amount) { const a = (amount === null) ? 0 : amount; if (this.canAfford(a)) { this.currentInsight -= a; return true; } return false; }
+    gainInsight(amount) { if(amount <= 0) return; this.currentInsight = Math.min(this.maxInsight, this.currentInsight + amount); console.log(`Gained ${amount} Insight. Current: ${this.currentInsight}`); }
+    loseInsight(amount) { if(amount <= 0) return; this.currentInsight = Math.max(0, this.currentInsight - amount); console.log(`Lost ${amount} Insight. Current: ${this.currentInsight}`); }
 
-    canAfford(cost) {
-        // Cost should be a number, handle null for safety (treat as 0 cost?)
-        const effectiveCost = (cost === null) ? 0 : cost;
-        return this.currentInsight >= effectiveCost;
-    }
-
-    spendInsight(amount) {
-         const effectiveAmount = (amount === null) ? 0 : amount;
-        if (this.canAfford(effectiveAmount)) {
-            this.currentInsight -= effectiveAmount;
-            return true;
-        }
-        return false;
-    }
-
-    gainInsight(amount) {
-        if (amount <= 0) return;
-        this.currentInsight = Math.min(this.maxInsight, this.currentInsight + amount);
-        console.log(`Gained ${amount} Insight. Current: ${this.currentInsight}`);
-    }
-
-    loseInsight(amount) {
-         if (amount <= 0) return;
-         this.currentInsight = Math.max(0, this.currentInsight - amount);
-         console.log(`Lost ${amount} Insight. Current: ${this.currentInsight}`);
-    }
-
-    // --- Health & Guard Management ---
-
-    /**
-     * Takes Bruise damage, considering Guard and Vulnerable status.
-     * @param {number} amount - The amount of incoming Bruise.
-     * @returns {number} The actual HP lost.
-     */
+    // --- Health & Guard ---
     takeBruise(amount) {
-        if (amount <= 0) return 0;
-        let damageToTake = amount;
-
-        // Apply Vulnerable (if present) - Check object structure
-        if (this.hasStatus(StatusEffects.VULNERABLE)) {
-            damageToTake = Math.floor(damageToTake * VULNERABLE_MULTIPLIER);
-            console.log(`Player Vulnerable increased incoming Bruise to ${damageToTake}`);
-        }
-
-        // Apply Guard
-        const guard = this.getStatus(StatusEffects.GUARD); // Guard is a simple number
-        if (guard > 0) {
-            const blockedAmount = Math.min(guard, damageToTake);
-            this.statusEffects[StatusEffects.GUARD] -= blockedAmount; // Directly modify guard
-            damageToTake -= blockedAmount;
-            console.log(`Player blocked ${blockedAmount} Bruise with Guard. Remaining Guard: ${this.getStatus(StatusEffects.GUARD)}`);
-        }
-
-        // Apply damage to HP
-        if (damageToTake > 0) {
-            const actualHpLoss = Math.min(damageToTake, this.currentHp);
-            this.currentHp -= actualHpLoss;
-            console.log(`Player took ${actualHpLoss} Bruise. Current HP: ${this.currentHp}/${this.maxHp}`);
-            // Trigger onHpLoss effects if any needed for player
-            // this.triggerEffects('onHpLoss', gameManager, { amount: actualHpLoss });
-            return actualHpLoss;
-        }
-        return 0; // No HP lost
+        if (amount <= 0) return 0; let damage = amount;
+        if (this.hasStatus(StatusEffects.VULNERABLE)) { damage = Math.floor(damage * VULNERABLE_MULTIPLIER); console.log(`Player Vulnerable -> ${damage} incoming`); }
+        const guard = this.getStatus(StatusEffects.GUARD);
+        if (guard > 0) { const blocked = Math.min(guard, damage); this.statusEffects[StatusEffects.GUARD] -= blocked; damage -= blocked; console.log(`Player blocked ${blocked}. Guard: ${this.getStatus(StatusEffects.GUARD)}`); }
+        if (damage > 0) { const hpLoss = Math.min(damage, this.currentHp); this.currentHp -= hpLoss; console.log(`Player took ${hpLoss} Bruise. HP: ${this.currentHp}/${this.maxHp}`); return hpLoss; }
+        return 0;
     }
-
-    /**
-     * Direct HP loss, bypasses Guard.
-     * @param {number} amount - Amount of HP to lose.
-     */
-    loseHp(amount) {
-         if (amount <= 0) return;
-         const actualHpLoss = Math.min(amount, this.currentHp);
-         this.currentHp -= actualHpLoss;
-         console.log(`Player lost ${actualHpLoss} HP directly. Current HP: ${this.currentHp}`);
-         // Trigger onHpLoss effects?
-         // this.triggerEffects('onHpLoss', gameManager, { amount: actualHpLoss });
-    }
-
-    heal(amount) {
-        if (amount <= 0) return;
-        const maxHeal = this.maxHp - this.currentHp;
-        const healedAmount = Math.min(amount, maxHeal); // Cannot heal above max
-        this.currentHp += healedAmount;
-        if (healedAmount > 0) {
-             console.log(`Player healed ${healedAmount} HP. Current HP: ${this.currentHp}/${this.maxHp}`);
-        }
-        return healedAmount;
-    }
-
-    gainGuard(amount) {
-        if (amount <= 0) return;
-        // Guard is stored as a simple number
-        if (!this.statusEffects[StatusEffects.GUARD]) {
-            this.statusEffects[StatusEffects.GUARD] = 0;
-        }
-        this.statusEffects[StatusEffects.GUARD] += amount;
-        console.log(`Player gained ${amount} Guard. Total: ${this.statusEffects[StatusEffects.GUARD]}`);
-    }
+    loseHp(amount) { if (amount <= 0) return; const hpLoss = Math.min(amount, this.currentHp); this.currentHp -= hpLoss; console.log(`Player lost ${hpLoss} HP. HP: ${this.currentHp}/${this.maxHp}`); }
+    heal(amount) { if (amount <= 0) return 0; const maxHeal = this.maxHp - this.currentHp; const healed = Math.min(amount, maxHeal); this.currentHp += healed; if (healed > 0) console.log(`Player healed ${healed} HP. HP: ${this.currentHp}/${this.maxHp}`); return healed; }
+    gainGuard(amount) { if (amount <= 0) return; if (!this.statusEffects[StatusEffects.GUARD]) { this.statusEffects[StatusEffects.GUARD] = 0; } this.statusEffects[StatusEffects.GUARD] += amount; console.log(`Player gained ${amount} Guard. Total: ${this.statusEffects[StatusEffects.GUARD]}`); }
 
     // --- Status Effect & Power Management ---
-
-    /**
-     * Applies a status effect (buff or debuff).
-     * @param {string} effectId - The StatusEffects constant or custom ID.
-     * @param {number} amount - Stacks or value of the effect.
-     * @param {number} [duration=Infinity] - Turns the effect lasts (Infinity for permanent until removed).
-     */
     applyStatus(effectId, amount, duration = Infinity) {
         if (!effectId) return;
-        // Handle simple numeric, stackable statuses
-        if (effectId === StatusEffects.GUARD || effectId === StatusEffects.STRENGTH /* add others */) {
+        if (effectId === StatusEffects.GUARD || effectId === StatusEffects.STRENGTH) { // Simple numeric statuses
             if (!this.statusEffects[effectId]) this.statusEffects[effectId] = 0;
             this.statusEffects[effectId] += amount;
-            // Clamp Guard if it went negative (e.g. from direct reduction effect)
             if (effectId === StatusEffects.GUARD) this.statusEffects[effectId] = Math.max(0, this.statusEffects[effectId]);
-        }
-        // Handle duration-based statuses (replace or update)
-        else if (duration > 0 || duration === Infinity) {
-            // Check if status already exists
-            const existingStatus = this.statusEffects[effectId];
-            if (existingStatus && typeof existingStatus === 'object') {
-                // If exists, add amount and maybe take longer duration? Or just replace? Replace is simpler.
-                 existingStatus.amount += amount;
-                 existingStatus.duration = duration; // Replace duration
-                 // Ensure amount doesn't go below 1? Or allow 0 to mark for removal? Let's keep >= 1
-                 if (existingStatus.amount <= 0) delete this.statusEffects[effectId];
-
+        } else if (duration > 0 || duration === Infinity) { // Duration-based statuses
+            const existing = this.statusEffects[effectId];
+            if (existing && typeof existing === 'object') {
+                 existing.amount += amount; existing.duration = duration; // Replace/update existing
+                 if (existing.amount <= 0) delete this.statusEffects[effectId]; // Remove if amount drops to 0
             } else if (amount > 0) {
-                 // If not existing or was simple number, create/replace with object
-                 this.statusEffects[effectId] = { amount: amount, duration: duration };
+                 this.statusEffects[effectId] = { amount: amount, duration: duration }; // Create new
             }
-        } else {
-            // If duration is 0 or less, remove the status if it exists
-            delete this.statusEffects[effectId];
-        }
-        console.log(`Player applied status: ${effectId}, Amount: ${amount}, Duration: ${duration}. Current value: ${this.getStatus(effectId)}`);
+        } else { delete this.statusEffects[effectId]; } // Remove if duration <= 0
+        // console.log(`Player status ${effectId}: ${amount} (${duration}t). Current: ${this.getStatus(effectId)}`);
     }
 
-    /**
-     * Gets the current value or amount of a status effect.
-     * @param {string} effectId - The StatusEffects constant or custom ID.
-     * @returns {number} The value/stacks, or 0 if not present or inactive.
-     */
     getStatus(effectId) {
-        const status = this.statusEffects[effectId];
-        if (!status) return 0;
-        // Handle simple numeric values (like Guard, Strength)
+        const status = this.statusEffects[effectId]; if (!status) return 0;
         if (typeof status === 'number') return status;
-        // Handle object-based statuses (Vulnerable, Weak)
-        if (typeof status === 'object' && status.amount !== undefined) {
-            // Check duration if it's not infinite
-             if (status.duration === Infinity || status.duration > 0) {
-                  return status.amount;
-             } else {
-                  return 0; // Expired duration
-             }
-        }
-        return 0; // Default if structure is unexpected or inactive
+        if (typeof status === 'object' && status.amount !== undefined) { return (status.duration === Infinity || status.duration > 0) ? status.amount : 0; } return 0;
     }
+    hasStatus(effectId) { return this.getStatus(effectId) > 0; }
 
-    /**
-     * Checks if the player has a specific status effect active.
-     * @param {string} effectId - The StatusEffects constant or custom ID.
-     * @returns {boolean} True if the status effect is present and has amount > 0 and duration > 0 (or infinite).
-     */
-    hasStatus(effectId) {
-         // Just check if getStatus returns a positive value
-         return this.getStatus(effectId) > 0;
+    addPower(powerDef, stacks = 1, duration = Infinity) {
+        const powerId = powerDef.id;
+        if (!this.powers[powerId]) { this.powers[powerId] = { definition: powerDef, stacks: 0, duration: duration }; }
+        this.powers[powerId].stacks += stacks;
+        if (duration === Infinity || (this.powers[powerId].duration !== Infinity && duration > this.powers[powerId].duration)) { this.powers[powerId].duration = duration; }
+        console.log(`Power ${powerId} updated. Stacks: ${this.powers[powerId].stacks}`);
     }
-
-    /**
-     * Adds or updates an active power.
-     * @param {CardDefinition} powerDefinition - The definition of the power card.
-     * @param {number} [stacks=1] - Number of stacks (for stackable powers).
-     * @param {number} [duration=Infinity] - Duration if the power is temporary.
-     */
-    addPower(powerDefinition, stacks = 1, duration = Infinity) {
-         const powerId = powerDefinition.id;
-         if (!this.powers[powerId]) {
-             this.powers[powerId] = { definition: powerDefinition, stacks: 0, duration: duration };
-             console.log(`Added new power: ${powerId}`);
-         } else {
-              console.log(`Updating existing power: ${powerId}`);
-         }
-         this.powers[powerId].stacks += stacks;
-         // Update duration only if the new duration is longer or permanent? Or always replace? Let's replace.
-         if (duration === Infinity || (this.powers[powerId].duration !== Infinity && duration > this.powers[powerId].duration)) {
-              this.powers[powerId].duration = duration;
-         }
-         console.log(`Power ${powerId} updated. Stacks: ${this.powers[powerId].stacks}, Duration: ${this.powers[powerId].duration}`);
-    }
-
-     hasPower(powerId) {
-         return this.powers.hasOwnProperty(powerId) && this.powers[powerId].stacks > 0 && (this.powers[powerId].duration === Infinity || this.powers[powerId].duration > 0);
-     }
-
-     getPowerStacks(powerId) {
-         return this.hasPower(powerId) ? this.powers[powerId].stacks : 0;
-     }
-
+    hasPower(powerId) { return this.powers.hasOwnProperty(powerId) && this.powers[powerId].stacks > 0 && (this.powers[powerId].duration === Infinity || this.powers[powerId].duration > 0); }
+    getPowerStacks(powerId) { return this.hasPower(powerId) ? this.powers[powerId].stacks : 0; }
 
     // --- Momentum & Resonance ---
-
     generateMomentum(cardElement, gameManager) {
-        if (cardElement === Elements.NEUTRAL) {
-            // Playing neutral card might reset momentum or just not add to it? Reset seems harsher. Let's just not add.
-            // this.resetMomentum();
-            console.log("Played Neutral card, momentum unchanged.");
-            return;
-        }
-
-        let momentumGain = 1;
-        // Check relics/powers for bonus momentum gain
-        gameManager.currentRelics.forEach(relic => {
-             if (relic.effects?.modifyMechanic?.mechanic === 'momentumGain') {
-                 // Check if element matches or if it's a global momentum boost
-                 if (!relic.effects.modifyMechanic.element || relic.effects.modifyMechanic.element === cardElement) {
-                      momentumGain += relic.effects.modifyMechanic.value || 0;
-                 }
-             }
-        });
-        // Check powers too
-
-        if (this.lastElementPlayed === cardElement) {
-            this.momentum += momentumGain;
-            console.log(`Increased Momentum for ${cardElement}: ${this.momentum} (+${momentumGain})`);
-        } else {
-            this.momentum = momentumGain; // Start new chain
-            console.log(`Started new Momentum chain for ${cardElement}: ${this.momentum} (+${momentumGain})`);
-        }
-        this.lastElementPlayed = cardElement;
+        if (cardElement === Elements.NEUTRAL) { /* console.log("Neutral card, momentum unchanged."); */ return; }
+        let gain = 1;
+        gameManager?.currentRelics.forEach(relic => { if (relic.effects?.modifyMechanic?.mechanic === 'momentumGain' && (!relic.effects.modifyMechanic.element || relic.effects.modifyMechanic.element === cardElement)) { gain += relic.effects.modifyMechanic.value || 0; } });
+        if (this.lastElementPlayed === cardElement) { this.momentum += gain; } else { this.momentum = gain; }
+        console.log(`Momentum (${cardElement}): ${this.momentum} (+${gain})`); this.lastElementPlayed = cardElement;
     }
-
-    resetMomentum() {
-        if (this.momentum > BASE_MOMENTUM_RESET_THRESHOLD) {
-            // console.log("Momentum reset."); // Can be noisy
-        }
-        this.momentum = 0;
-        this.lastElementPlayed = Elements.NEUTRAL;
-    }
-
-    triggerResonance(element, amount) {
-        if (this.resonance.hasOwnProperty(element) && amount > 0) {
-            this.resonance[element] += amount;
-            console.log(`Player gained ${amount} Resonance for ${element}. Total: ${this.resonance[element]}`);
-        }
-    }
-
-    getResonance(element) {
-        return this.resonance[element] || 0;
-    }
-
+    resetMomentum() { this.momentum = 0; this.lastElementPlayed = Elements.NEUTRAL; }
+    triggerResonance(element, amount) { if (this.resonance.hasOwnProperty(element) && amount > 0) { this.resonance[element] += amount; console.log(`Player Res(${element}): ${this.resonance[element]} (+${amount})`); } }
+    getResonance(element) { return this.resonance[element] || 0; }
 
     // --- Stat Modification ---
-
-    /**
-     * Modifies a base player stat (like maxHp, baseInsight). Usually from relics or events.
-     * @param {string} statName - The name of the stat to modify ('maxHp', 'baseInsight', 'maxInsight', 'maxCardsPerTurn').
-     * @param {number} value - The amount to add (can be negative).
-     */
     modifyStat(statName, value) {
         switch (statName) {
-            case 'maxHp':
-                const oldMaxHp = this.maxHp;
-                this.maxHp = Math.max(1, this.maxHp + value); // Ensure maxHP doesn't go below 1
-                // Adjust current HP proportionally, or heal/damage? Heal seems more player-friendly.
-                if (value > 0) {
-                     this.heal(value); // Heal by the amount max HP increased
-                } else {
-                    // If max HP decreased, clamp current HP
-                    this.currentHp = Math.min(this.currentHp, this.maxHp);
-                }
-                console.log(`Modified maxHp by ${value}. New maxHp: ${this.maxHp}`);
-                break;
-            case 'baseInsight':
-                this.baseInsight = Math.max(0, this.baseInsight + value); // Ensure base insight isn't negative
-                console.log(`Modified baseInsight by ${value}. New baseInsight: ${this.baseInsight}`);
-                // Also ensure maxInsight is at least baseInsight
-                this.maxInsight = Math.max(this.baseInsight, this.maxInsight);
-                break;
-            case 'maxInsight':
-                 this.maxInsight = Math.max(this.baseInsight, this.maxInsight + value); // Max insight shouldn't be less than base gain
-                 console.log(`Modified maxInsight by ${value}. New maxInsight: ${this.maxInsight}`);
-                 break;
-             case 'maxCardsPerTurn':
-                 this.maxCardsPerTurn = Math.max(1, this.maxCardsPerTurn + value);
-                 console.log(`Modified maxCardsPerTurn by ${value}. New limit: ${this.maxCardsPerTurn}`);
-                 break;
-            // Add other modifiable stats if needed (e.g., starting hand size?)
-            default:
-                console.warn(`Attempted to modify unknown player stat: ${statName}`);
+            case 'maxHp': const oldMax = this.maxHp; this.maxHp = Math.max(1, this.maxHp + value); if (value > 0) { this.heal(value); } else { this.currentHp = Math.min(this.currentHp, this.maxHp); } console.log(`maxHp ${oldMax} -> ${this.maxHp}`); break;
+            case 'baseInsight': this.baseInsight = Math.max(0, this.baseInsight + value); this.maxInsight = Math.max(this.baseInsight, this.maxInsight); console.log(`baseInsight -> ${this.baseInsight}`); break;
+            case 'maxInsight': this.maxInsight = Math.max(this.baseInsight, this.maxInsight + value); console.log(`maxInsight -> ${this.maxInsight}`); break;
+            case 'maxCardsPerTurn': this.maxCardsPerTurn = Math.max(1, this.maxCardsPerTurn + value); console.log(`maxCardsPerTurn -> ${this.maxCardsPerTurn}`); break;
+            default: console.warn(`Unknown stat modify: ${statName}`);
         }
-        // Clamp current values just in case they went out of bounds indirectly
-        this.currentHp = clamp(this.currentHp, 0, this.maxHp);
-        this.currentInsight = clamp(this.currentInsight, 0, this.maxInsight);
+        this.currentHp = clamp(this.currentHp, 0, this.maxHp); this.currentInsight = clamp(this.currentInsight, 0, this.maxInsight);
     }
 
      // --- Effect Triggering ---
-     // Helper to consolidate triggering effects from relics and powers
-     // Context might include { card, target, amount, etc. }
      triggerEffects(triggerType, gameManager, context = {}) {
-         if (!gameManager) {
-              console.warn(`Cannot trigger effects for '${triggerType}': Missing gameManager reference.`);
-              return;
-         }
-
-         // 1. Trigger Relic Effects
-         gameManager.currentRelics.forEach(relic => {
-             // Check simple triggerEffect structure
-             if (relic.effects?.triggerEffect?.trigger === triggerType) {
-                 // Check condition if present
-                 let conditionMet = true;
-                 if (relic.effects.triggerEffect.condition) {
-                      // Implement condition checks (e.g., 'victory')
-                      // This might need info from context or combatManager
-                      if (relic.effects.triggerEffect.condition === 'victory' && context.victory !== true) {
-                          conditionMet = false;
-                      }
-                 }
-                 if (conditionMet) {
-                      this.executeEffect(relic.effects.triggerEffect, 'relic', gameManager, context);
-                 }
-             }
-              // Check for other potential effect structures on relics (e.g., modifyMechanic is handled elsewhere)
-         });
-
-         // 2. Trigger Power Effects
-         Object.values(this.powers).forEach(powerData => {
-             // Power definitions need a standardized way to declare triggers
-             const powerTriggers = powerData.definition?.triggers?.[triggerType];
-             if (powerTriggers && this.hasPower(powerData.definition.id)) { // Check if power is still active
-                 // Execute the effects associated with this trigger
-                  console.log(`Triggering power '${powerData.definition.id}' on ${triggerType}`);
-                  // Execute associated effects - assumes 'effects' is the standard structure
-                   if (powerTriggers.effects) {
-                       this.executeEffect({ ...powerTriggers, action: 'applyEffectsObject', effectsObject: powerTriggers.effects }, 'power', gameManager, { ...context, powerStacks: powerData.stacks });
-                   }
-                   // Handle custom effect IDs if needed
-                   else if (powerTriggers.effectId) {
-                        // Handle specific hardcoded power logic based on ID
-                        this.handleCustomPowerTrigger(powerTriggers.effectId, gameManager, context, powerData);
-                   }
-             }
-         });
+         if (!gameManager) { console.warn(`Cannot trigger effects for '${triggerType}': Missing gameManager.`); return; }
+         // 1. Relic Effects
+         gameManager.currentRelics.forEach(relic => { if (relic.effects?.triggerEffect?.trigger === triggerType) { let conditionMet = true; if (relic.effects.triggerEffect.condition) { /* Implement condition checks */ if (relic.effects.triggerEffect.condition === 'victory' && context.victory !== true) conditionMet = false; } if (conditionMet) { this.executeEffect(relic.effects.triggerEffect, 'relic', gameManager, context); } } });
+         // 2. Power Effects
+         Object.values(this.powers).forEach(powerData => { const triggers = powerData.definition?.triggers?.[triggerType]; if (triggers && this.hasPower(powerData.definition.id)) { /* console.log(`Triggering power '${powerData.definition.id}' on ${triggerType}`); */ if (triggers.effects) { this.executeEffect({ ...triggers, action: 'applyEffectsObject', effectsObject: triggers.effects }, 'power', gameManager, { ...context, powerStacks: powerData.stacks }); } else if (triggers.effectId) { this.handleCustomPowerTrigger(triggers.effectId, gameManager, context, powerData); } } });
      }
 
-    // Helper to execute a specific effect action described in a relic/power trigger
     executeEffect(effect, sourceType, gameManager, context) {
-        // console.log(`Executing ${sourceType} effect for trigger '${effect.trigger || 'direct'}': Action '${effect.action}'`); // Can be noisy
-        const targetPlayer = this; // Most effects target player unless specified otherwise
-        let targetEnemy = context?.target; // Get target enemy from context if available
-
+        const targetPlayer = this; let targetEnemy = context?.target;
         switch (effect.action) {
             case 'gainGuard': targetPlayer.gainGuard(effect.value); break;
             case 'gainInsight': targetPlayer.gainInsight(effect.value); break;
             case 'drawCards': targetPlayer.drawCards(effect.value); break;
             case 'gainResonance': targetPlayer.triggerResonance(effect.element, effect.value); break;
-            case 'gainCurrency':
-                 if (effect.currency === Currency.INSIGHT_SHARDS) {
-                     gameManager.gainInsightShards(effect.value);
-                 } // Add other currencies later
-                 break;
-            case 'applyStatus': // Apply status to player by default
-                 targetPlayer.applyStatus(effect.status, effect.value || 1, effect.duration || Infinity);
-                 break;
-             case 'applyStatusToEnemy': // Specific action for applying to enemy target from context
-                  if (targetEnemy && targetEnemy.currentHp > 0) {
-                       targetEnemy.applyStatus(effect.status, effect.value || 1, effect.duration || Infinity);
-                  } else {
-                       console.warn(`Effect action 'applyStatusToEnemy' failed: No valid enemy target in context.`);
-                  }
-                  break;
-             case 'applyStatusToRandomEnemy':
-                 const livingEnemies = gameManager.combatManager?.enemies.filter(e => e.currentHp > 0) || [];
-                 if (livingEnemies.length > 0) {
-                      const randomEnemy = getRandomElement(livingEnemies);
-                      randomEnemy.applyStatus(effect.status, effect.value || 1, effect.duration || Infinity);
-                 }
-                 break;
-             case 'addCardToDrawPile':
-             case 'addCardToDiscard':
-             case 'addCardToHand':
-                 const cardDef = getCardDefinition(effect.cardId);
-                 if (cardDef) {
-                     const count = effect.count || 1;
-                     for(let i=0; i<count; i++) {
-                        const newCard = new Card(cardDef); // Create new instance
-                        const pile = effect.action.includes('Draw') ? 'draw' : effect.action.includes('Hand') ? 'hand' : 'discard';
-                        targetPlayer.addCardToDeck(newCard, pile); // Add to player's deck
-                     }
-                 } else {
-                      console.warn(`Could not find card definition for '${effect.cardId}' needed by effect action '${effect.action}'.`);
-                 }
-                 break;
-             case 'applyEffectsObject': // Action to execute a nested effects object (used by power triggers)
-                  console.log("Executing nested effects object from power trigger...");
-                  this.executeCardEffects({ effects: effect.effectsObject }, targetEnemy, false, context?.powerStacks || 1); // Pass power stacks?
-                  break;
-            // Add more effect actions as needed (e.g., modifyStat, dealDamage, heal)
-            default: console.warn(`Unhandled effect action in Player.executeEffect: ${effect.action}`);
+            case 'gainCurrency': if (effect.currency === Currency.INSIGHT_SHARDS) { gameManager.gainInsightShards(effect.value); } break;
+            case 'applyStatus': targetPlayer.applyStatus(effect.status, effect.value || 1, effect.duration || Infinity); break;
+            case 'applyStatusToEnemy': if (targetEnemy?.currentHp > 0) { targetEnemy.applyStatus(effect.status, effect.value || 1, effect.duration || Infinity); } break;
+            case 'applyStatusToRandomEnemy': const living = gameManager.combatManager?.enemies.filter(e => e.currentHp > 0) || []; if (living.length > 0) { getRandomElement(living).applyStatus(effect.status, effect.value || 1, effect.duration || Infinity); } break;
+            case 'addCardToDrawPile': case 'addCardToDiscard': case 'addCardToHand':
+                 const cardDef = getCardDefinition(effect.cardId); if (cardDef) { const count = effect.count || 1; const pile = effect.action.includes('Draw') ? 'draw' : effect.action.includes('Hand') ? 'hand' : 'discard'; for(let i=0; i<count; i++) { targetPlayer.addCardToDeck(new Card(cardDef), pile); } } else { console.warn(`Def missing for '${effect.cardId}'`); } break;
+            case 'applyEffectsObject': console.log("Executing nested effects..."); this.executeCardEffects({ effects: effect.effectsObject }, targetEnemy, false, context?.powerStacks || 1, gameManager); break; // Pass gameManager here
+            default: console.warn(`Unhandled effect action: ${effect.action}`);
         }
     }
 
-    // Handle specific power triggers that aren't simple effects
     handleCustomPowerTrigger(effectId, gameManager, context, powerData) {
-        switch (effectId) {
-             case 'first_card_free_setup': // From Relationship Anarchy
-                  // Mark that the first card should be free this turn
-                   console.log("Power Trigger: Setting up 'First Card Free'");
-                   this.applyStatus('FirstCardFree', 1, 1); // Apply temporary status for 1 turn
-                  break;
-             // Add other custom power IDs here
-             default:
-                  console.warn(`Unhandled custom power trigger ID: ${effectId}`);
-        }
+        switch (effectId) { case 'first_card_free_setup': this.applyStatus('FirstCardFree', 1, 1); break; default: console.warn(`Unhandled custom power trigger ID: ${effectId}`); }
     }
 
-     // Simplified version for card effects (might merge with executeEffect later)
-     // Context here is card play context
-     executeCardEffects(cardEffectsObject, targetEnemy, selfTarget, powerStacksContext = 1) {
-         const effects = cardEffectsObject.effects;
-         if (!effects) {
-             console.warn("executeCardEffects called with object lacking 'effects' property:", cardEffectsObject);
-             return;
-         }
-
-         const playerTarget = selfTarget ? this.player : null; // Determine player target
+     // Execute effects specifically from a played card
+     executeCardEffects(cardInstance, targetEnemy, selfTarget, gameManager) { // Added gameManager param
+         if (!cardInstance || !cardInstance.effects) return;
+         const effects = cardInstance.effects; // Use effects from the potentially upgraded card instance
+         const playerTarget = selfTarget ? this : null;
+         const element = cardInstance.element; // Get element from the instance
 
          // --- Primary Effects ---
          if (effects.dealBruise) {
              const effect = effects.dealBruise;
-              // Scale damage by power stacks? Only if effect specifies. Example: { amount: 2, scaleWithPower: true }
-             let baseAmount = effect.amount //* (effect.scaleWithPower ? powerStacksContext : 1);
-             baseAmount += this.getStatus(StatusEffects.STRENGTH); // Add player Strength ONLY IF effect targets enemy? Needs clarity.
-
+             let baseAmount = effect.amount + this.getStatus(StatusEffects.STRENGTH); // Add player strength
              let target = (effect.target === 'enemy' && targetEnemy) ? targetEnemy : null;
-             if (target) {
-                 gameManager.combatManager.applyDamageToEnemy(target, baseAmount, cardEffectsObject.element || Elements.NEUTRAL); // Use CombatManager's helper
-             } else if (effect.target === 'all_enemies') {
-                  gameManager.combatManager.enemies.forEach(enemy => {
-                       if (enemy.currentHp > 0) gameManager.combatManager.applyDamageToEnemy(enemy, baseAmount, cardEffectsObject.element || Elements.NEUTRAL);
-                  });
-             } else if (effect.target === 'player') {
-                  // Should player take Bruise directly or use loseHp? Use takeBruise for consistency.
-                  this.takeBruise(baseAmount);
+             if (target) { gameManager.combatManager.applyDamageToEnemy(target, baseAmount, element); } // Use combatManager helper
+             else if (effect.target === 'all_enemies') { gameManager.combatManager.enemies.forEach(e => { if (e.currentHp > 0) gameManager.combatManager.applyDamageToEnemy(e, baseAmount, element); }); }
+             else if (effect.target === 'player') { this.takeBruise(baseAmount); }
+         }
+         if (effects.gainGuard) { this.gainGuard(effects.gainGuard.amount); }
+         if (effects.drawCards) { this.drawCards(effects.drawCards); }
+         if (effects.gainInsight) { this.gainInsight(effects.gainInsight); }
+         if (effects.applyStatus) {
+             const effect = effects.applyStatus; let target = (effect.target === 'enemy' && targetEnemy) ? targetEnemy : (effect.target === 'player' || selfTarget) ? this : null;
+             if (target) { target.applyStatus(effect.status, effect.amount || 1, effect.duration || 1); }
+             else if (effect.target === 'all_enemies') { gameManager.combatManager.enemies.forEach(e => { if(e.currentHp > 0) e.applyStatus(effect.status, effect.amount || 1, effect.duration || 1); }); }
+             else if (effect.target === 'random_enemy') { const living = gameManager.combatManager?.enemies.filter(e => e.currentHp > 0) || []; if (living.length > 0) { getRandomElement(living).applyStatus(effect.status, effect.amount || 1, effect.duration || 1); } }
+         }
+         if (effects.applyPower) {
+             const powerDef = cardInstance.baseDefinition; // Power effects applied based on the *base* card definition
+             if (powerDef) { this.addPower(powerDef, effects.applyPower.stacks || 1, effects.applyPower.permanent ? Infinity : effects.applyPower.duration || Infinity); }
+             else { console.warn(`Cannot apply power: Definition not found for effectId '${effects.applyPower.effectId}'`); }
+         }
+         if (effects.addCardToDiscard || effects.addCardToHand || effects.addCardToDrawPile) {
+             const effect = effects.addCardToDiscard || effects.addCardToHand || effects.addCardToDrawPile;
+             const pile = effects.addCardToDrawPile ? 'draw' : effects.addCardToHand ? 'hand' : 'discard';
+             const cardDef = getCardDefinition(effect.cardId); if (cardDef) { const count = effect.count || 1; for(let i=0; i<count; i++) { this.addCardToDeck(new Card(cardDef), pile); } } else { console.warn(`Card def missing for '${effect.cardId}'`); }
+         }
+         if (effects.heal) { this.heal(effects.heal.amount); }
+
+        // --- Momentum Effects ---
+        if (cardInstance.momentumEffect && this.momentum >= cardInstance.momentumEffect.threshold) {
+            console.log(`Triggering Momentum effect for ${cardInstance.name}`);
+            this.executeCardEffects({ effects: cardInstance.momentumEffect.effects, element: element }, targetEnemy, selfTarget, gameManager); // Pass element
+        }
+        // --- Resonance Effects ---
+        if (cardInstance.resonanceEffect) {
+             const requiredElement = cardInstance.resonanceEffect.element;
+             if (this.getResonance(requiredElement) > 0) {
+                 console.log(`Triggering Resonance bonus effect for ${cardInstance.name} (requires ${requiredElement})`);
+                  this.executeCardEffects({ effects: cardInstance.resonanceEffect.effects, element: element }, targetEnemy, selfTarget, gameManager); // Pass element
              }
-         }
-         if (effects.gainGuard) {
-              const effect = effects.gainGuard;
-              let amount = effect.amount; // + potential buffs based on resonance/momentum?
-              // Check context for resonance/momentum bonuses if needed
-              this.gainGuard(amount);
-         }
-         if (effects.drawCards) {
-              this.drawCards(effects.drawCards);
-         }
-          if (effects.gainInsight) {
-              this.gainInsight(effects.gainInsight);
-          }
-          if (effects.applyStatus) {
-              const effect = effects.applyStatus;
-              let target = (effect.target === 'enemy' && targetEnemy) ? targetEnemy : (effect.target === 'player' || selfTarget) ? this : null;
-
-              if (target) {
-                   target.applyStatus(effect.status, effect.amount || 1, effect.duration || 1);
-              } else if (effect.target === 'all_enemies') {
-                   gameManager.combatManager.enemies.forEach(enemy => {
-                       if(enemy.currentHp > 0) enemy.applyStatus(effect.status, effect.amount || 1, effect.duration || 1);
-                   });
-              } else if (effect.target === 'random_enemy') {
-                   const livingEnemies = gameManager.combatManager?.enemies.filter(e => e.currentHp > 0) || [];
-                   if (livingEnemies.length > 0) {
-                        const randomEnemy = getRandomElement(livingEnemies);
-                        randomEnemy.applyStatus(effect.status, effect.amount || 1, effect.duration || 1);
-                   }
-              }
-          }
-          if (effects.applyPower) {
-               // Assume power card definition is available in context if needed, or use the played card's def
-               const powerDef = cardEffectsObject.baseDefinition || this.powers[effects.applyPower.effectId]?.definition;
-               if (powerDef) {
-                    this.addPower(powerDef, effects.applyPower.stacks || 1, effects.applyPower.permanent ? Infinity : effects.applyPower.duration || Infinity);
-               } else {
-                    console.warn(`Cannot apply power: Definition not found for effectId '${effects.applyPower.effectId}'`);
-               }
-          }
-           // Add handlers for other effects like addCardToDiscard, heal, loseHp etc.
-            if (effects.addCardToDiscard || effects.addCardToHand || effects.addCardToDrawPile) {
-                const effect = effects.addCardToDiscard || effects.addCardToHand || effects.addCardToDrawPile;
-                const pile = effects.addCardToDrawPile ? 'draw' : effects.addCardToHand ? 'hand' : 'discard';
-                 const cardDef = getCardDefinition(effect.cardId);
-                 if (cardDef) {
-                     const count = effect.count || 1;
-                     for(let i=0; i<count; i++) {
-                        const newCard = new Card(cardDef); // Create new instance
-                        this.addCardToDeck(newCard, pile); // Add to player's deck
-                     }
-                 } else {
-                      console.warn(`Could not find card definition for '${effect.cardId}' needed by card effect.`);
-                 }
-            }
-            if (effects.heal) {
-                 this.heal(effects.heal.amount);
-            }
-
+        }
      }
 
-}
+} // End Player Class
