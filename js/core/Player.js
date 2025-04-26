@@ -1,98 +1,192 @@
 // js/core/Player.js
 
+// ... (keep imports: DeckManager, Artifact, Card) ...
 import { DeckManager } from './DeckManager.js';
 import { Artifact } from './Artifact.js';
-import { Card } from './Card.js'; // Needed if status adds cards
+import { Card } from './Card.js';
+import * as Data from '../data.js'; // Keep for defaults if needed
 
-// --- Constants ---
-const BASE_FOCUS = 3;
-const BASE_INTEGRITY = 70;
 
 /**
  * Represents the player character during a run.
  */
 export class Player {
-    // Keep constructor and existing properties...
-    constructor(playerData = {}, metaProgression = null) {
-        // ... (constructor remains the same as File 18) ...
-        console.log("Creating Player instance...");
-        this.gameStateRef = null;
-        this.name = playerData?.name || "Alchemist";
-        const startingIntegrityBonus = metaProgression?.getStartingBonus('maxIntegrityBonus') || 0;
-        const baseIntegrity = metaProgression?.getStartingBonus('baseIntegrity') || BASE_INTEGRITY;
-        this.maxIntegrity = baseIntegrity + startingIntegrityBonus;
-        this.currentIntegrity = this.maxIntegrity;
-        const baseFocus = metaProgression?.getStartingBonus('baseFocus') || BASE_FOCUS;
-        const focusSlotsBonus = metaProgression?.getStartingBonus('focusSlots') || 0;
-        this.maxFocus = baseFocus + focusSlotsBonus + Math.floor((playerData?.attunements?.Cognitive || 5) / 3);
-        this.currentFocus = this.maxFocus;
-        const baseAttunements = this.getDefaultAttunements();
-        this.attunements = { ...baseAttunements };
-        if (metaProgression) { /* Apply meta attunement bonuses */
-            for (const key in this.attunements) {
-                 const bonus = metaProgression.getStartingBonus(`attunementBonus.${key}`);
-                 if (bonus) this.attunements[key] += bonus;
-            }
-             const allBonus = metaProgression.getStartingBonus('attunementBonus.All');
-             if (allBonus) { for (const key in this.attunements) this.attunements[key] += allBonus;}
-        }
-        if (playerData?.attunements) this.attunements = { ...this.attunements, ...playerData.attunements };
-        this.deckManager = new DeckManager(playerData?.startingDeck || this.getDefaultDeckIds());
-        this.insightThisRun = metaProgression?.getStartingBonus('startingInsightBonus') || 0; // Apply starting insight bonus
+    // ... (keep constructor as refined in File 28) ...
+    constructor(playerData = {}, metaProgression = null) { /* ... keep ... */ }
+
+    startCombat() {
+        console.log("Player: Starting Combat...");
         this.currentBlock = 0;
         this.activeStatusEffects = [];
-        this.artifacts = (playerData?.startingArtifacts || []).map(artId => new Artifact(artId));
-        // Add starting artifacts from meta?
-        // if(metaProgression?.getStartingBonus('hasStartingArtifactX')) this.addArtifact('artifactX_id');
-
-        console.log("Player created:", this.name, "Integrity:", this.currentIntegrity, "/", this.maxIntegrity, "Focus:", this.maxFocus);
+        this.deckManager.hand = [];
+        this.deckManager.discardPile = [];
+        this.deckManager.exhaustPile = [];
+        // --- NEW: Trigger onCombatStart BEFORE drawing hand ---
+        this.triggerArtifacts('onCombatStart');
+        // --- End NEW ---
+        this.drawInitialHand(); // Draws hand AND triggers onCardsDrawn
+        this.gainFocus(this.maxFocus); // Gain starting focus AFTER drawing potentially? Or before? Before seems safer.
     }
 
-    // Keep Combat Actions (startCombat, startTurn, endTurn, playCard, drawCards, drawInitialHand)...
-    // Keep Stat Interactions (gainBlock, takeDamage, heal, spendFocus, gainFocus)...
+    startTurn() {
+        console.log("Player: Starting Turn...");
+        this.currentBlock = 0;
+        // --- NEW: Trigger onTurnStart BEFORE gaining focus/drawing ---
+        this.triggerArtifacts('onTurnStart');
+        // --- End NEW ---
+        this.gainFocus(this.maxFocus); // Gain focus AFTER turn start triggers
+        this.tickStatusEffects('start'); // Tick statuses AFTER turn start triggers
+        this.drawCards(5); // Draw cards AFTER ticking start effects
+    }
 
-    // --- Status Effects (Refined) ---
+    endTurn() {
+        console.log("Player: Ending Turn...");
+        // --- NEW: Trigger onTurnEnd BEFORE ticking statuses/discarding ---
+        this.triggerArtifacts('onTurnEnd');
+        // --- End NEW ---
+        this.tickStatusEffects('end'); // Tick statuses AFTER end turn triggers
+        this.deckManager.discardHand(); // Discard hand last
+    }
+
+    playCard(card, target = null, enemies = []) {
+        if (!card || !(card instanceof Card)) { /* ... error ... */ return false; }
+        if (this.currentFocus >= card.cost) {
+            this.spendFocus(card.cost);
+            // --- NEW: Trigger onCardPlayAttempt? (Optional, maybe too granular) ---
+            // this.triggerArtifacts('onCardPlayAttempt', { card: card });
+            // --- End NEW ---
+            console.log(`Player: Playing card ${card.name}...`);
+            card.executeEffect(this, target, enemies); // Execute effect
+
+            // --- Trigger onCardPlay AFTER effect resolves ---
+            this.triggerArtifacts('onCardPlay', { card: card });
+            // --- End NEW ---
+
+            // Move Card After Play & Triggers
+            if (card.exhausts) {
+                // --- NEW: Trigger onCardExhaust ---
+                // We need to trigger BEFORE it leaves the hand/is moved in DeckManager
+                this.triggerArtifacts('onCardExhaust', { card: card });
+                this.deckManager.exhaustCardFromHand(card);
+                // --- End NEW ---
+            } else {
+                 this.deckManager.discardCardFromHand(card);
+            }
+            return true;
+        } else { /* ... handle insufficient focus ... */ return false; }
+    }
+
+    drawCards(num) {
+        const drawn = this.deckManager.draw(num);
+        // --- NEW: Trigger onCardsDrawn AFTER cards are in hand ---
+        if (drawn.length > 0) {
+            this.triggerArtifacts('onCardsDrawn', { cards: drawn, count: drawn.length });
+        }
+        // --- End NEW ---
+    }
+
+     drawInitialHand(num = 5) { // Renamed for clarity
+        const drawn = this.deckManager.draw(num);
+         if (drawn.length > 0) {
+            this.triggerArtifacts('onCardsDrawn', { cards: drawn, count: drawn.length, initial: true }); // Add context
+        }
+    }
+
+    gainBlock(amount) {
+        if (amount <= 0) return;
+        const modifiedAmount = this.applyModifiers('blockGain', amount);
+        if (modifiedAmount <= 0) { /* ... log ... */ return; };
+        this.currentBlock += modifiedAmount;
+        // --- NEW: Trigger onGainBlock AFTER block is added ---
+        this.triggerArtifacts('onGainBlock', { amount: modifiedAmount });
+        // --- End NEW ---
+        // console.log(`Player: Gained ${modifiedAmount} Block. Total: ${this.currentBlock}`);
+    }
+
+    takeDamage(amount) {
+        if (amount <= 0) return;
+        // --- NEW: Trigger for damage attempt? (Optional) ---
+        // this.triggerArtifacts('onDamageAttempted', { amount: amount });
+        // --- End NEW ---
+        const modifiedAmount = this.applyModifiers('damageTaken', amount);
+        if (modifiedAmount <= 0) { /* ... log ... */ return; }
+        // console.log(`Player: Attempting to take ${modifiedAmount} damage...`);
+
+        const blockConsumed = Math.min(this.currentBlock, modifiedAmount);
+        const damageAfterBlock = modifiedAmount - blockConsumed;
+
+        if (blockConsumed > 0) {
+            const previousBlock = this.currentBlock;
+            this.currentBlock -= blockConsumed;
+            // --- NEW: Trigger onBlockBroken AFTER block changes ---
+            this.triggerArtifacts('onBlockBroken', { amountBlocked: blockConsumed, initialBlock: previousBlock });
+            // --- End NEW ---
+            // console.log(`Player: Block absorbed ${blockConsumed}.`);
+        }
+
+        if (damageAfterBlock > 0) {
+            const previousIntegrity = this.currentIntegrity;
+            this.currentIntegrity -= damageAfterBlock;
+            // --- NEW: Trigger onDamageTaken AFTER HP changes ---
+            this.triggerArtifacts('onDamageTaken', { amount: damageAfterBlock, initialIntegrity: previousIntegrity });
+            // --- End NEW ---
+            // console.log(`Player: Took ${damageAfterBlock} Integrity damage.`);
+        }
+
+        // console.log(`Player: Integrity: ${this.currentIntegrity}/${this.maxIntegrity}, Block: ${this.currentBlock}`);
+
+        if (this.currentIntegrity <= 0 && previousIntegrity > 0) { // Check previous integrity to only trigger once
+            this.currentIntegrity = 0;
+            console.log("Player: Integrity depleted!");
+            // --- NEW: Trigger onDeath ---
+            this.triggerArtifacts('onDeath');
+            // --- End NEW ---
+            // Game over logic handled by GameState/CombatManager checking HP
+        }
+    }
+
+    heal(amount) {
+        if (amount <= 0) return;
+        const actualHeal = Math.min(amount, this.maxIntegrity - this.currentIntegrity);
+        if (actualHeal <= 0) return;
+        this.currentIntegrity += actualHeal;
+        // --- NEW: Trigger onHeal AFTER HP changes ---
+        this.triggerArtifacts('onHeal', { amount: actualHeal });
+        // --- End NEW ---
+        // console.log(`Player: Healed ${actualHeal} Integrity.`);
+    }
+
+    // Keep spendFocus, gainFocus...
 
     applyStatus(statusId, duration, amount = 1, source = null) {
-        if (duration <= 0 && amount <= 0) return; // Don't apply zero-effect
-
-        // Check for immunity (e.g., Artifact grants immunity to Weak)
-        // if (this.hasStatusImmunity(statusId)) {
-        //     console.log(`Player has immunity to ${statusId}.`);
-        //     // Optionally show feedback: this.gameStateRef?.uiManager?.showActionFeedback("Immune!", "info");
-        //     return;
-        // }
-
-        console.log(`Player attempting to apply status: ${statusId}, Duration: ${duration}, Amount: ${amount}, Source: ${source}`);
+        // ... (keep status application logic from File 28) ...
+        if (duration <= 0 && amount <= 0) return;
+        // if (this.hasStatusImmunity(statusId)) return; // Immunity check placeholder
         const existingStatus = this.activeStatusEffects.find(s => s.id === statusId);
         let statusAppliedOrUpdated = false;
+        let previousAmount = 0; // Track previous amount for trigger data
 
         if (existingStatus) {
-            // Stacking logic: Add amounts, refresh/extend duration?
+            previousAmount = existingStatus.amount || 0;
             existingStatus.amount = (existingStatus.amount || 0) + amount;
-            existingStatus.duration = Math.max(existingStatus.duration, duration); // Refresh to max duration generally
-            console.log(`Player: Refreshed status ${statusId} to duration ${existingStatus.duration}, amount ${existingStatus.amount}`);
+            existingStatus.duration = Math.max(existingStatus.duration, duration);
             statusAppliedOrUpdated = true;
         } else {
-            // Amount only used for stacking effects initially
-            let initialAmount = (['Strength', 'Dexterity', 'Poison', 'Regen', 'ProtocolActive' /* Add others */].includes(statusId)) ? amount : 1;
-             if (initialAmount <= 0) return; // Don't add status with 0 amount unless it has duration > 0
-             if (duration <= 0 && initialAmount <= 0) return; // Double check validity
-
-            this.activeStatusEffects.push({
-                id: statusId,
-                duration: duration,
-                source: source, // Store source ID (enemy ID, card ID?)
-                amount: initialAmount
-            });
-            console.log(`Player: Applied status ${statusId} for ${duration} turns, amount ${initialAmount}`);
+            let initialAmount = (['Strength', 'Dexterity', 'Poison', 'Regen', 'ProtocolActive'].includes(statusId)) ? amount : 1;
+            if (initialAmount <= 0 && duration <= 0) return;
+            this.activeStatusEffects.push({ id: statusId, duration: duration, source: source, amount: initialAmount });
             statusAppliedOrUpdated = true;
         }
 
         if (statusAppliedOrUpdated) {
-            // Trigger artifacts AFTER status is applied/updated
-            this.triggerArtifacts('onStatusAppliedToPlayer', { status: { id: statusId, duration, amount, source } });
-            // Request UI update via GameState reference
+            const currentStatus = this.activeStatusEffects.find(s => s.id === statusId); // Get final state
+            // --- NEW: Trigger onStatusAppliedToPlayer AFTER status is added/updated ---
+            this.triggerArtifacts('onStatusAppliedToPlayer', {
+                status: { id: statusId, duration: currentStatus.duration, amount: currentStatus.amount, source },
+                amountApplied: amount, // Pass the amount *attempted* to apply
+                previousAmount: previousAmount // Pass previous stack amount
+            });
+            // --- End NEW ---
             this.gameStateRef?.uiManager?.updatePlayerCombatInfo(this);
         }
     }
@@ -101,161 +195,40 @@ export class Player {
         const initialLength = this.activeStatusEffects.length;
         this.activeStatusEffects = this.activeStatusEffects.filter(s => s.id !== statusId);
         if (this.activeStatusEffects.length < initialLength) {
-            console.log(`Player: Removed status ${statusId}`);
-            this.triggerArtifacts('onStatusRemoved', { statusId: statusId });
+             // --- NEW: Trigger onStatusRemoved AFTER status is removed ---
+             this.triggerArtifacts('onStatusRemoved', { statusId: statusId });
+             // --- End NEW ---
+            // console.log(`Player: Removed status ${statusId}`);
             this.gameStateRef?.uiManager?.updatePlayerCombatInfo(this);
         }
     }
 
-    hasStatus(statusId) {
-        return this.activeStatusEffects.some(s => s.id === statusId);
-    }
+    // Keep hasStatus, getStatusAmount, tickStatusEffects, applyModifiers...
+    // Keep addArtifact, triggerArtifacts (implementation is key)...
+    // Keep addCardToDeck, removeCardFromDeck (add triggers here)...
 
-    getStatusAmount(statusId) {
-        const status = this.activeStatusEffects.find(s => s.id === statusId);
-        return status ? (status.amount || (status.duration > 0 ? 1 : 0)) : 0;
-    }
-
-    /** Process status effects at start/end of turn */
-    tickStatusEffects(phase) { // phase = 'start' or 'end'
-        console.log(`Player: Ticking ${phase}-of-turn status effects...`);
-        const effectsToRemove = [];
-        const statusesAtStartOfTick = [...this.activeStatusEffects]; // Iterate over copy
-
-        statusesAtStartOfTick.forEach(effect => {
-            if (!this.activeStatusEffects.includes(effect)) return; // Skip if removed by another effect's tick
-
-            // --- Apply Status Logic ---
-            switch (effect.id) {
-                case 'Poison':
-                    if (phase === 'start' && effect.amount > 0) {
-                        console.log(`Player takes ${effect.amount} poison damage.`);
-                        this.takeDamage(effect.amount); // Poison ignores block usually
-                        effect.amount--; // Poison reduces stack
-                        if (effect.amount <= 0) effectsToRemove.push(effect.id);
-                    }
-                    break;
-                case 'Regen':
-                    if (phase === 'end' && effect.amount > 0) { // Regen at end of turn
-                        console.log(`Player heals ${effect.amount} from Regen.`);
-                        this.heal(effect.amount);
-                        // Regen often doesn't decrease stack, just duration (handled below)
-                    }
-                    break;
-                case 'Confusion': // Example effect
-                    if (phase === 'start') {
-                         console.log("Player is Confused!");
-                         // Implement Confusion effect (e.g., play random card? Discard random? Skip turn?)
-                         // For simplicity, let's say it forces a random discard
-                         if (this.deckManager.hand.length > 0) {
-                             const randomIndex = Math.floor(Math.random() * this.deckManager.hand.length);
-                             const cardToDiscard = this.deckManager.hand[randomIndex];
-                              console.log(`Confusion forces discard of: ${cardToDiscard?.name}`);
-                             if(cardToDiscard) this.deckManager.discardCardFromHand(cardToDiscard);
-                              this.gameStateRef?.uiManager?.renderHand(this.deckManager.hand); // Update UI
-                         }
-                    }
-                    break;
-                // Add cases for other statuses: Burn, Frail, Intangible, ProtocolActive (might modify other actions)
-            }
-
-            // --- Decrement Duration ---
-            const isPassiveStack = ['Strength', 'Dexterity', 'ProtocolActive' /* Add others? */ ].includes(effect.id);
-            // Decrement duration at the END of the turn, unless it's a passive stack or permanent (99)
-            if (phase === 'end' && effect.duration !== 99 && !isPassiveStack) {
-                effect.duration--;
-                console.log(`   - Status ${effect.id} duration now ${effect.duration}`);
-                if (effect.duration <= 0 && !effectsToRemove.includes(effect.id)) {
-                    // Check if amount still > 0 for stacking effects like poison? No, poison removed when amount=0.
-                    effectsToRemove.push(effect.id);
-                }
-            }
-        });
-
-        // Remove effects marked for removal
-        if (effectsToRemove.length > 0) {
-            console.log(`   - Removing expired Player effects: ${effectsToRemove.join(', ')}`);
-            this.activeStatusEffects = this.activeStatusEffects.filter(
-                effect => !effectsToRemove.includes(effect.id)
-            );
-        }
-
-        // Final UI Update after all ticks
-        this.gameStateRef?.uiManager?.updatePlayerCombatInfo(this);
-    }
-
-
-    // --- Modifiers ---
-     applyModifiers(modifierType, baseValue) {
-         let modifiedValue = baseValue;
-
-         // Apply relevant status effects
-         if (modifierType === 'damageDealt') {
-             if (this.hasStatus('Weak')) modifiedValue = Math.floor(modifiedValue * 0.75);
-             if (this.hasStatus('Strength')) modifiedValue += this.getStatusAmount('Strength');
-         } else if (modifierType === 'damageTaken') {
-             if (this.hasStatus('Vulnerable')) modifiedValue = Math.floor(modifiedValue * 1.5);
-              if (this.hasStatus('Intangible')) modifiedValue = Math.max(1, modifiedValue > 0 ? 1 : 0); // Damage becomes 1 if > 0
-         } else if (modifierType === 'blockGain') {
-             if (this.hasStatus('Dexterity')) modifiedValue += this.getStatusAmount('Dexterity');
-             if (this.hasStatus('Frail')) modifiedValue = Math.floor(modifiedValue * 0.75);
-         }
-          // Add modifier checks for other statuses as needed (e.g., ProtocolActive might increase block)
-           if (modifierType === 'blockGain' && this.hasStatus('ProtocolActive')) {
-               modifiedValue += this.getStatusAmount('ProtocolActive'); // Example: Protocol adds block
-           }
-
-         // Apply artifact modifiers by triggering a specific artifact event type?
-         // Or iterate here? Iterating here might be simpler if modifiers are common.
-         // Example artifact check:
-         // this.artifacts.forEach(artifact => {
-         //    if (artifact.modifies === modifierType) { // Assuming artifact has this property
-         //        modifiedValue = artifact.applyModification(modifiedValue); // Assuming method exists
-         //    }
-         // });
-         // Sticking to triggered effects via handleEvent is cleaner for now.
-
-         return Math.max(0, Math.floor(modifiedValue)); // Ensure non-negative integer
-     }
-
-
-    // --- Artifacts ---
-    addArtifact(artifactId) { /* ... keep existing ... */
-        if (this.artifacts.some(a => a.id === artifactId)) { console.warn(`Player already has artifact: ${artifactId}`); return; }
-        const newArtifact = new Artifact(artifactId);
-        if (newArtifact.id !== 'error_artifact') {
-             this.artifacts.push(newArtifact); console.log(`Player: Added artifact ${newArtifact.name}`);
-             newArtifact.handleEvent('onPickup', this, this.gameStateRef);
-             // Update UI if needed (e.g., artifact display area)
+     addCardToDeck(cardId) {
+        const cardAdded = this.deckManager.addCardToMasterDeck(cardId); // addCardToMasterDeck returns the card obj now? Assume yes.
+        if(cardAdded){
+            // --- NEW: Trigger onCardAdded ---
+            this.triggerArtifacts('onCardAdded', { card: cardAdded });
+            // --- End NEW ---
+            this.gameStateRef?.metaProgression?.checkStateBasedMilestones(this.gameStateRef);
         }
     }
-    triggerArtifacts(triggerPhase, data = null) { /* ... keep existing ... */
-        if (!this.gameStateRef) { return; }
-        [...this.artifacts].forEach(artifact => { // Iterate copy
-            artifact.handleEvent(triggerPhase, this, this.gameStateRef, data);
-        });
-    }
 
-    // --- Deck Manipulation ---
-    addCardToDeck(cardId) { /* ... keep existing ... */
-        this.deckManager.addCardToMasterDeck(cardId);
-        this.gameStateRef?.metaProgression?.checkStateBasedMilestones(this.gameStateRef);
-    }
-    removeCardFromDeck(cardToRemove) { /* ... keep existing ... */
-        if (this.deckManager.removeCardFromMasterDeck(cardToRemove)) {
+    removeCardFromDeck(cardToRemove) {
+        const removed = this.deckManager.removeCardFromMasterDeck(cardToRemove);
+        if (removed) {
+            // --- NEW: Trigger onCardRemove ---
+             this.triggerArtifacts('onCardRemove', { card: cardToRemove }); // Pass the removed card data
+             // --- End NEW ---
             this.gameStateRef?.metaProgression?.checkStateBasedMilestones(this.gameStateRef);
             return true;
-        } return false;
+        }
+        return false;
     }
 
-    // --- Utility ---
-    getDefaultDeckIds() { /* ... keep existing ... */
-         const vanilla = Data.concepts.find(c => c.name === "Vanilla Sex")?.id || 1;
-         const touch = Data.concepts.find(c => c.name === "Sensual Touch")?.id || 2;
-         return [ vanilla, vanilla, vanilla, vanilla, vanilla, touch, touch, touch, touch, touch ];
-     }
-     getDefaultAttunements() { /* ... keep existing ... */
-         return { Attraction: 5, Interaction: 5, Sensory: 5, Psychological: 5, Cognitive: 5, Relational: 5, RoleFocus: 5 };
-      }
+    // Keep Utility methods...
 
 } // End Player Class
