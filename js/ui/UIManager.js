@@ -823,7 +823,7 @@ export class UIManager {
     console.log("UIManager:renderMap - FINISHED execution."); // <<< ADD THIS
 }
         // Render Nodes
-        Object.values(nodes).forEach(node => { /* ... circle/icon/listener logic ... */
+        Object.values(nodes).forEach(node => 
              const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
              nodeGroup.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
              const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute('r', '15');
