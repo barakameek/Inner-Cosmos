@@ -1,260 +1,306 @@
 // js/meta/MetaProgression.js
 
-// Import data - needs access to milestones, concepts, artifacts etc. for initialization
 import * as Data from '../data.js';
+// Import artifact definitions to potentially unlock specific ones via milestones
+import { ARTIFACT_TEMPLATES } from './ArtifactDefinitions.js';
 
 // --- Constants ---
-const SAVE_KEY = 'personaLabyrinth_metaProgress_v1'; // Key for localStorage
+const SAVE_KEY = 'personaLabyrinth_metaProgress_v1.1'; // Increment version if structure changes significantly
+const MAX_ASCENSION = 10; // Example max difficulty
 
 /**
  * Manages persistent player progress between runs.
  */
 export class MetaProgression {
     constructor() {
-        this.totalInsight = 0;          // Total currency accumulated
-        this.unlockedConceptIds = new Set(); // IDs of concepts available to appear in runs
-        this.unlockedArtifactIds = new Set(); // IDs of artifacts available to appear
-        this.completedMilestoneIds = new Set(); // IDs of milestones already claimed
-        this.permanentUpgrades = {}; // e.g., { startingIntegrityBonus: 5 }
-        this.currentAscension = 0;     // Highest unlocked difficulty
+        this.totalInsight = 0;
+        this.unlockedConceptIds = new Set();
+        this.unlockedArtifactIds = new Set();
+        this.completedMilestoneIds = new Set();
+        // Structure for permanent upgrades - values are the *bonus* amount
+        this.permanentUpgrades = {
+             maxIntegrityBonus: 0,
+             startingFocusBonus: 0, // Flat bonus to starting focus
+             focusSlotsBonus: 0, // Bonus slots (affects max focus calculation)
+             startingInsightBonus: 0,
+             cardRewardChoicesBonus: 0, // e.g., +1 card choice
+             // Attunement bonuses stored separately for clarity
+             attunementBonus: { // Store bonuses per element
+                Attraction: 0, Interaction: 0, Sensory: 0, Psychological: 0,
+                Cognitive: 0, Relational: 0, RoleFocus: 0, All: 0 // 'All' applies to each individually
+            }
+             // Add other potential upgrades: starting artifact slot, shop discounts?
+        };
+        this.currentAscension = 0;
+        this.highestAscensionBeat = -1; // Track highest level actually won
 
-        // Runtime tracking (not saved directly, but used for checking milestones)
-        this.milestoneProgress = {}; // { milestoneId: currentCount } - Resets each session potentially
+        // Runtime tracking (not saved)
+        this.milestoneProgress = {}; // { milestoneId: currentCount }
 
-        // Load existing progress if available
         this.load();
-
-        // Initialize basic unlocks if first time playing
         this._initializeDefaultUnlocks();
 
         console.log("MetaProgression initialized.");
-         // console.log("Initial Meta State:", this); // For debugging
     }
 
-    /**
-     * Initializes default unlocked concepts/artifacts if none are saved.
-     * Ensures the player starts with some basic options.
-     */
     _initializeDefaultUnlocks() {
+        let changed = false;
         if (this.unlockedConceptIds.size === 0) {
             console.log("Performing first-time default concept unlocks...");
-            // Unlock common concepts initially
             Data.concepts.forEach(concept => {
                 if (concept.rarity === 'common') {
                     this.unlockedConceptIds.add(concept.id);
+                    changed = true;
                 }
             });
-             // Maybe unlock one or two specific uncommon ones?
-             const sensualTouch = Data.concepts.find(c => c.name === "Sensual Touch")?.id;
-             if(sensualTouch) this.unlockedConceptIds.add(sensualTouch);
-
+             // Unlock a few specific interesting uncommons?
+            const idsToUnlock = [2, 4, 5, 15]; // Sensual Touch, Dom, Sub, Deep Intimacy
+             idsToUnlock.forEach(id => {
+                if(Data.concepts.find(c=>c.id===id)) { // Check exists
+                    this.unlockedConceptIds.add(id);
+                    changed = true;
+                }
+             });
              console.log(`Unlocked ${this.unlockedConceptIds.size} default concepts.`);
-             this.save(); // Save initial unlocks
         }
 
          if (this.unlockedArtifactIds.size === 0) {
              console.log("Performing first-time default artifact unlocks...");
-             // Unlock the first common artifact example
-             if (Data.ARTIFACT_TEMPLATES['insight_fragment_a']) { // Check if defined
+             if (ARTIFACT_TEMPLATES['insight_fragment_a']) {
                   this.unlockedArtifactIds.add('insight_fragment_a');
-                  console.log("Unlocked default artifact: Fragment of Attraction");
-                  this.save();
+                   console.log("Unlocked default artifact: Fragment of Attraction");
+                  changed = true;
              }
+              // Maybe unlock another basic one?
+              // if (ARTIFACT_TEMPLATES['resonant_echo_s']) {
+              //    this.unlockedArtifactIds.add('resonant_echo_s');
+              //    changed = true;
+              // }
          }
+         if (changed) this.save(); // Save only if changes were made
     }
 
-    /**
-     * Loads progress from localStorage.
-     */
     load() {
         const savedData = localStorage.getItem(SAVE_KEY);
         if (savedData) {
             try {
                 const parsedData = JSON.parse(savedData);
                 this.totalInsight = parsedData.totalInsight || 0;
-                // Convert arrays back to Sets
                 this.unlockedConceptIds = new Set(parsedData.unlockedConceptIds || []);
                 this.unlockedArtifactIds = new Set(parsedData.unlockedArtifactIds || []);
                 this.completedMilestoneIds = new Set(parsedData.completedMilestoneIds || []);
-                this.permanentUpgrades = parsedData.permanentUpgrades || {};
+                // Deep merge permanent upgrades to handle potentially new keys in future versions
+                this.permanentUpgrades = this._mergeDeep(this.getDefaultUpgrades(), parsedData.permanentUpgrades || {});
                 this.currentAscension = parsedData.currentAscension || 0;
+                this.highestAscensionBeat = parsedData.highestAscensionBeat || -1;
 
                 console.log("MetaProgression loaded successfully.");
-                // console.log("Loaded state:", this);
             } catch (error) {
                 console.error("Failed to parse saved meta progression:", error);
-                // Clear corrupted data?
+                // Consider backing up corrupted data before removing
+                // localStorage.setItem(SAVE_KEY + '_backup_' + Date.now(), savedData);
                 // localStorage.removeItem(SAVE_KEY);
+                 // Reset to defaults after failed load
+                 Object.assign(this, new MetaProgression()); // Reinitialize might be risky, manual reset better
+                 this.permanentUpgrades = this.getDefaultUpgrades(); // Reset upgrades explicitly
+                 this._initializeDefaultUnlocks();
+
             }
         } else {
-            console.log("No saved meta progression found. Starting fresh.");
+            console.log("No saved meta progression found. Initializing defaults.");
+             this.permanentUpgrades = this.getDefaultUpgrades(); // Ensure defaults on fresh start
+             this._initializeDefaultUnlocks();
         }
     }
 
-    /**
-     * Saves the current progress to localStorage.
-     */
+    /** Helper for merging nested objects during load */
+    _mergeDeep(target, source) {
+        const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+        Object.keys(source).forEach(key => {
+            const targetValue = target[key];
+            const sourceValue = source[key];
+            if (isObject(targetValue) && isObject(sourceValue)) {
+                this._mergeDeep(targetValue, sourceValue);
+            } else {
+                target[key] = sourceValue; // Overwrite or add source value
+            }
+        });
+        return target;
+     }
+
+    /** Returns the default structure for permanent upgrades */
+    getDefaultUpgrades() {
+         return {
+             maxIntegrityBonus: 0, startingFocusBonus: 0, focusSlotsBonus: 0,
+             startingInsightBonus: 0, cardRewardChoicesBonus: 0,
+             attunementBonus: { Attraction: 0, Interaction: 0, Sensory: 0, Psychological: 0, Cognitive: 0, Relational: 0, RoleFocus: 0, All: 0 }
+         };
+     }
+
     save() {
         try {
             const dataToSave = {
                 totalInsight: this.totalInsight,
-                // Convert Sets to arrays for JSON serialization
                 unlockedConceptIds: Array.from(this.unlockedConceptIds),
                 unlockedArtifactIds: Array.from(this.unlockedArtifactIds),
                 completedMilestoneIds: Array.from(this.completedMilestoneIds),
-                permanentUpgrades: this.permanentUpgrades,
+                permanentUpgrades: this.permanentUpgrades, // Save the nested structure
                 currentAscension: this.currentAscension,
+                highestAscensionBeat: this.highestAscensionBeat,
             };
             localStorage.setItem(SAVE_KEY, JSON.stringify(dataToSave));
-            console.log("MetaProgression saved.");
+            // console.log("MetaProgression saved."); // Can be noisy
         } catch (error) {
             console.error("Failed to save meta progression:", error);
+            // Consider notifying the user
         }
     }
 
-    /**
-     * Resets all meta progression (USE WITH CAUTION).
-     */
-    resetProgress() {
-        console.warn("Resetting all meta progression!");
+    // Keep resetProgress, addInsight, spendInsight...
+     resetProgress() { /* ... keep, ensure it calls getDefaultUpgrades and saves */
+         console.warn("Resetting all meta progression!");
         this.totalInsight = 0;
         this.unlockedConceptIds = new Set();
         this.unlockedArtifactIds = new Set();
         this.completedMilestoneIds = new Set();
-        this.permanentUpgrades = {};
+        this.permanentUpgrades = this.getDefaultUpgrades(); // Reset to defaults
         this.currentAscension = 0;
+         this.highestAscensionBeat = -1;
         this.milestoneProgress = {};
         localStorage.removeItem(SAVE_KEY);
-        this._initializeDefaultUnlocks(); // Re-add defaults after reset
+        this._initializeDefaultUnlocks();
         this.save();
         console.log("Meta progression has been reset.");
-        // TODO: Add confirmation prompt in UI before calling this
-    }
-
-    // --- Currency ---
-    addInsight(amount) {
-        if (amount > 0) {
+     }
+     addInsight(amount) { /* ... keep, ensures save() is called ... */
+         if (amount > 0) {
             this.totalInsight += amount;
             console.log(`Added ${amount} Insight. Total: ${this.totalInsight}`);
-            this.save(); // Save after gaining currency
-             this.checkMilestonesOnInsightChange(); // Check if insight gain triggers milestones
+             this.checkMilestonesOnInsightChange();
+             this.save(); // Save after potentially completing milestones too
         }
-    }
-
-    spendInsight(amount) {
+     }
+     spendInsight(amount) { /* ... keep, ensures save() is called ... */
         if (amount > 0 && this.totalInsight >= amount) {
             this.totalInsight -= amount;
             console.log(`Spent ${amount} Insight. Remaining: ${this.totalInsight}`);
             this.save();
-            return true; // Purchase successful
+            return true;
         }
         console.log(`Failed to spend ${amount} Insight. Have: ${this.totalInsight}`);
-        return false; // Insufficient funds
-    }
+        return false;
+     }
 
-    // --- Unlocks ---
-    unlockConcept(conceptId) {
+
+    // Keep unlockConcept, unlockArtifact, isUnlocked methods...
+     unlockConcept(conceptId) { /* ... keep, ensures save() is called ... */
         if (!this.unlockedConceptIds.has(conceptId)) {
+            // Check if concept ID is valid? Optional.
+             const conceptExists = Data.concepts.some(c => c.id === conceptId);
+             if (!conceptExists) {
+                console.warn(`Attempted to unlock non-existent concept ID: ${conceptId}`);
+                return false;
+             }
             this.unlockedConceptIds.add(conceptId);
             console.log(`Unlocked Concept ID: ${conceptId}`);
             this.save();
             return true;
         }
         return false;
-    }
-
-    unlockArtifact(artifactId) {
+     }
+     unlockArtifact(artifactId) { /* ... keep, ensures save() is called ... */
         if (!this.unlockedArtifactIds.has(artifactId)) {
+             // Check if artifact ID is valid
+             if (!ARTIFACT_TEMPLATES[artifactId]) {
+                  console.warn(`Attempted to unlock non-existent artifact ID: ${artifactId}`);
+                 return false;
+             }
             this.unlockedArtifactIds.add(artifactId);
             console.log(`Unlocked Artifact ID: ${artifactId}`);
             this.save();
             return true;
         }
         return false;
-    }
-
-    isConceptUnlocked(conceptId) {
-        return this.unlockedConceptIds.has(conceptId);
-    }
-
-     isArtifactUnlocked(artifactId) {
-         return this.unlockedArtifactIds.has(artifactId);
      }
-
-     getUnlockedConcepts() {
-         return Array.from(this.unlockedConceptIds);
-     }
-
-     getUnlockedArtifacts() {
-         return Array.from(this.unlockedArtifactIds);
-     }
+     isConceptUnlocked(conceptId) { /* ... keep ... */ return this.unlockedConceptIds.has(conceptId); }
+     isArtifactUnlocked(artifactId) { /* ... keep ... */ return this.unlockedArtifactIds.has(artifactId); }
+     getUnlockedConcepts() { /* ... keep ... */ return Array.from(this.unlockedConceptIds); }
+     getUnlockedArtifacts() { /* ... keep ... */ return Array.from(this.unlockedArtifactIds); }
 
     // --- Milestones ---
 
-    /**
-     * Updates progress towards an action-based milestone.
-     * @param {string} actionName - The action identifier (e.g., 'completeReflection', 'discoverRareCard').
-     * @param {number} count - The amount to increment the action count by (usually 1).
-     * @param {object|null} context - Optional context data (e.g., { level: 3 } for lore unlock)
-     */
+    // Refine updateMilestoneProgress for clarity
     updateMilestoneProgress(actionName, count = 1, context = null) {
-        console.log(`Tracking milestone action: ${actionName}, Count: ${count}, Context:`, context);
+        // console.log(`Tracking milestone action: ${actionName}, Count: ${count}, Context:`, context); // Can be noisy
+        let milestoneCompleted = false; // Flag to save only once if multiple complete
+
          Data.milestones.forEach(milestone => {
-             // Skip if already completed
              if (this.completedMilestoneIds.has(milestone.id)) return;
 
-             // Check if this milestone tracks this action
              if (milestone.track.action === actionName) {
                  const progressKey = `${milestone.id}_actionCount`;
-                 this.milestoneProgress[progressKey] = (this.milestoneProgress[progressKey] || 0) + count;
+                 const currentCount = (this.milestoneProgress[progressKey] || 0) + count;
+                 this.milestoneProgress[progressKey] = currentCount; // Update runtime progress
 
-                 console.log(`   Milestone ${milestone.id} progress: ${this.milestoneProgress[progressKey]} / ${milestone.track.count}`);
+                 // console.log(`   Milestone ${milestone.id} progress: ${currentCount} / ${milestone.track.threshold}`);
 
-                 // Check if threshold is met
-                 if (this.milestoneProgress[progressKey] >= milestone.track.count) {
-                      // Additional context checks if needed
-                      let contextMatch = true;
-                      if (milestone.track.condition === 'level3' && context?.level !== 3) {
-                         contextMatch = false; // Specific level 3 check
-                      }
-                       if (milestone.track.condition === 'anyLevel' && !context?.level) {
-                         contextMatch = false; // Requires a level context
-                       }
-                       // Add more specific condition checks here based on milestone definitions
-
-                      if (contextMatch) {
-                          this.completeMilestone(milestone);
+                 if (currentCount >= milestone.track.threshold) {
+                      // Perform context check
+                      if (this._checkMilestoneContext(milestone.track, context)) {
+                          if (this.completeMilestone(milestone)) {
+                              milestoneCompleted = true;
+                          }
                       }
                  }
              }
          });
+         if (milestoneCompleted) this.save(); // Save if any action milestone completed
     }
 
-    /**
-     * Checks state-based milestones (e.g., deck size, attunement level).
-     * Should be called when relevant game state changes (e.g., end of run, gaining cards).
-     * @param {GameState} currentGameState - The current run's GameState (if applicable).
-     */
+    /** Helper to check context conditions for milestones */
+     _checkMilestoneContext(trackData, context) {
+         if (!trackData.condition) return true; // No specific condition to check
+
+         switch(trackData.condition) {
+             case 'level3': // Specific check for lore level 3
+                 return context?.level === 3;
+             case 'anyLevel': // Requires some level context exists
+                  return context?.level !== undefined && context?.level !== null;
+             case 'microStory': // Requires context indicating microStory unlock
+                  return context?.unlockType === 'microStory';
+             // Add more conditions as needed based on milestone definitions
+             default:
+                 console.warn("Unhandled milestone context condition:", trackData.condition);
+                 return true; // Default to true if condition isn't understood? Or false?
+         }
+     }
+
+
+    // Refine checkStateBasedMilestones
     checkStateBasedMilestones(currentGameState = null) {
-         console.log("Checking state-based milestones...");
+         // console.log("Checking state-based milestones..."); // Can be noisy
+         let milestoneCompleted = false;
          const player = currentGameState?.player;
 
          Data.milestones.forEach(milestone => {
-             if (this.completedMilestoneIds.has(milestone.id) || !milestone.track.state) return; // Skip completed or non-state milestones
+             if (this.completedMilestoneIds.has(milestone.id) || !milestone.track.state) return;
 
              let conditionMet = false;
              const stateKey = milestone.track.state;
              const threshold = milestone.track.threshold;
 
-             try { // Add try-catch for safety when accessing potentially null state
+             try {
                  switch(stateKey) {
-                     case 'discoveredConcepts.size': // Check meta unlocked concepts
+                     case 'discoveredConcepts.size':
                          conditionMet = this.unlockedConceptIds.size >= threshold;
                          break;
-                     case 'focusedConcepts.size': // Check during run state? Needs GameState access
-                          if (player) conditionMet = player.focusedConcepts?.length >= threshold; // Assuming player has focusedConcepts array
-                         break;
-                     case 'elementAttunement': // Check during run state? Needs GameState access
+                     case 'focusedConcepts.size':
+                          // Needs player object from current run
+                          if (player && player.focusedConcepts) { // Assuming player tracks focused concepts
+                              conditionMet = player.focusedConcepts.length >= threshold;
+                          }
+                          break;
+                     case 'elementAttunement':
                           if (player && player.attunements) {
                              if (milestone.track.condition === 'any') {
                                  conditionMet = Object.values(player.attunements).some(att => att >= threshold);
@@ -263,96 +309,155 @@ export class MetaProgression {
                              }
                           }
                          break;
-                      case 'unlockedDeepDiveLevels': // Check meta state
-                           // Placeholder: need to track library unlocks in meta state
-                           // Example: this.libraryUnlocks['Attraction'] >= threshold
-                          console.warn("State check for 'unlockedDeepDiveLevels' not implemented.");
+                     case 'totalInsight': // Check meta insight total
+                         conditionMet = this.totalInsight >= threshold;
+                         break;
+                     // --- Add placeholders for unimplemented state checks ---
+                     case 'unlockedDeepDiveLevels':
+                     case 'repositoryInsightsCount':
+                     case 'repositoryContents':
+                     case 'elementLevel':
+                     case 'focusSlotsTotal': // Example: Check against max slots defined elsewhere
+                          // console.warn(`State check for '${stateKey}' not fully implemented yet.`);
                           break;
-                     case 'repositoryInsightsCount': // Check meta state
-                          // Placeholder: need to track collected insights
-                          console.warn("State check for 'repositoryInsightsCount' not implemented.");
-                          break;
-                     case 'repositoryContents': // Check meta state
-                          // Placeholder: check if at least one of each item type exists
-                           console.warn("State check for 'repositoryContents' not implemented.");
-                          break;
-                     case 'elementLevel': // Check during run state? Needs player XP/Level data
-                         // Placeholder: Check player element levels
-                          console.warn("State check for 'elementLevel' not implemented.");
-                          break;
-                     // Add more state checks here...
+                     default:
+                          console.warn(`Unknown milestone state key: ${stateKey}`);
                  }
              } catch (error) {
-                 console.error(`Error checking state milestone ${milestone.id}:`, error);
+                 console.error(`Error checking state milestone ${milestone.id} (${stateKey}):`, error);
              }
-
 
              if (conditionMet) {
-                 this.completeMilestone(milestone);
+                  if (this.completeMilestone(milestone)) {
+                     milestoneCompleted = true;
+                  }
              }
          });
+          if (milestoneCompleted) this.save(); // Save if any state milestone completed
     }
 
-    /**
-     * Marks a milestone as completed and applies its reward.
-     * @param {object} milestone - The milestone object from Data.js.
-     */
-    completeMilestone(milestone) {
-        if (this.completedMilestoneIds.has(milestone.id)) return; // Already completed
+     // Refine completeMilestone to use new permanentUpgrades structure
+     completeMilestone(milestone) {
+        if (this.completedMilestoneIds.has(milestone.id)) return false; // Already completed
 
         console.log(`%cMilestone Completed: ${milestone.id} - ${milestone.description}`, "color: #f1c40f; font-weight: bold;");
         this.completedMilestoneIds.add(milestone.id);
 
-        // Apply Reward
+        let appliedReward = false;
         if (milestone.reward) {
-            switch (milestone.reward.type) {
+            appliedReward = true; // Assume reward applied unless specific type fails
+            const reward = milestone.reward;
+            switch (reward.type) {
                 case 'insight':
-                    this.addInsight(milestone.reward.amount);
+                    this.addInsight(reward.amount); // addInsight handles saving
+                    appliedReward = false; // Don't double-save below if only insight gained
                     break;
-                case 'attunement': // This might apply to next run start? Or maybe a temp run buff?
-                    console.log(`Milestone Reward: Attunement +${milestone.reward.amount} for ${milestone.reward.element}`);
-                    // How to apply this? Permanent upgrade? Temporary? Add to this.permanentUpgrades?
-                     this.applyPermanentUpgrade(`attunement_${milestone.reward.element}`, milestone.reward.amount);
+                case 'attunement':
+                    const element = reward.element; // 'Sensory', 'All', etc.
+                    if (element === 'All') {
+                        this.applyPermanentUpgrade('attunementBonus.All', reward.amount);
+                    } else if (this.permanentUpgrades.attunementBonus.hasOwnProperty(element)) {
+                        this.applyPermanentUpgrade(`attunementBonus.${element}`, reward.amount);
+                    } else {
+                        console.warn(`Invalid element '${element}' for attunement milestone reward ${milestone.id}`);
+                        appliedReward = false;
+                    }
                     break;
                 case 'increaseFocusSlots':
-                     console.log(`Milestone Reward: +${milestone.reward.amount} Focus Slot(s)!`);
-                     this.applyPermanentUpgrade('focusSlots', milestone.reward.amount);
+                     this.applyPermanentUpgrade('focusSlotsBonus', reward.amount);
                      break;
-                // Add more reward types (unlock specific card, artifact, etc.)
+                 case 'increaseMaxIntegrity': // Example new reward type
+                     this.applyPermanentUpgrade('maxIntegrityBonus', reward.amount);
+                     break;
+                 case 'increaseStartingInsight': // Example
+                     this.applyPermanentUpgrade('startingInsightBonus', reward.amount);
+                     break;
+                 case 'increaseCardRewardChoices': // Example
+                      this.applyPermanentUpgrade('cardRewardChoicesBonus', reward.amount);
+                     break;
                  case 'unlockCard':
-                      this.unlockConcept(milestone.reward.conceptId);
+                      if (!this.unlockConcept(reward.conceptId)) appliedReward = false;
                       break;
                  case 'unlockArtifact':
-                      this.unlockArtifact(milestone.reward.artifactId);
+                      if (!this.unlockArtifact(reward.artifactId)) appliedReward = false;
                       break;
+                 default:
+                      console.warn(`Unknown milestone reward type: ${reward.type}`);
+                      appliedReward = false;
+            }
+            if(appliedReward) {
+                 // TODO: Show UI Notification for the reward gained
+                 this.uiManager?.showNotification(`Milestone Reward: ${this.getRewardDescription(reward)}`);
             }
         }
 
-        // TODO: Show a notification to the player in the UI
-
-        this.save(); // Save after completing a milestone
+        // Save occurs in calling function (updateMilestoneProgress/checkStateBasedMilestones) if appliedReward is true
+        return appliedReward; // Return true if a non-insight reward was successfully applied
     }
 
+    // Keep checkMilestonesOnInsightChange (it now correctly calls the refined checkStateBasedMilestones indirectly via addInsight -> save)
      checkMilestonesOnInsightChange() {
-         // Check milestones specifically triggered by total insight amount
-         Data.milestones.forEach(milestone => {
-             if (this.completedMilestoneIds.has(milestone.id)) return;
-             if (milestone.track.state === 'totalInsight' && this.totalInsight >= milestone.track.threshold) {
-                 this.completeMilestone(milestone);
-             }
-         });
+         this.checkStateBasedMilestones(); // Check relevant state milestones after insight changes
      }
 
-    // --- Permanent Upgrades ---
+    // Refine permanent upgrades
     applyPermanentUpgrade(upgradeKey, amount) {
-        this.permanentUpgrades[upgradeKey] = (this.permanentUpgrades[upgradeKey] || 0) + amount;
-        console.log(`Applied permanent upgrade: ${upgradeKey} +${amount}. New value: ${this.permanentUpgrades[upgradeKey]}`);
-        this.save();
+         // Use dot notation access for nested properties
+         const keys = upgradeKey.split('.');
+         let target = this.permanentUpgrades;
+         try {
+             for (let i = 0; i < keys.length - 1; i++) {
+                target = target[keys[i]];
+                if (target === undefined) throw new Error(`Invalid key path: ${upgradeKey}`);
+            }
+            const finalKey = keys[keys.length - 1];
+            target[finalKey] = (target[finalKey] || 0) + amount;
+            console.log(`Applied permanent upgrade: ${upgradeKey} +${amount}. New value: ${target[finalKey]}`);
+            // Save is handled by the function that calls this (e.g., completeMilestone)
+         } catch (error) {
+             console.error(`Error applying permanent upgrade ${upgradeKey}:`, error);
+         }
+
     }
 
+    // Refine getting bonuses
     getStartingBonus(bonusKey) {
-        // Used by GameState/Player constructor to apply bonuses at run start
-        return this.permanentUpgrades[bonusKey] || 0;
+        const keys = bonusKey.split('.');
+        let value = this.permanentUpgrades;
+        try {
+            for (const key of keys) {
+                if (value === undefined || value === null) return 0; // Not found
+                value = value[key];
+            }
+            // Special handling for attunement 'All' bonus
+            if (keys[0] === 'attunementBonus' && keys.length === 2 && keys[1] !== 'All') {
+                 value = (value || 0) + (this.permanentUpgrades.attunementBonus?.All || 0);
+            }
+
+            return value || 0; // Return 0 if value is undefined/null at the end
+        } catch (error) {
+            console.warn(`Error getting starting bonus ${bonusKey}:`, error);
+            return 0;
+        }
     }
+
+     // Helper to generate reward description for notifications
+     getRewardDescription(reward) {
+         switch (reward.type) {
+             case 'insight': return `${reward.amount} Insight`;
+             case 'attunement': return `+${reward.amount} ${reward.element} Attunement`;
+             case 'increaseFocusSlots': return `+${reward.amount} Focus Slot`;
+             case 'increaseMaxIntegrity': return `+${reward.amount} Max Integrity`;
+             case 'increaseStartingInsight': return `+${reward.amount} Starting Insight`;
+             case 'increaseCardRewardChoices': return `+${reward.amount} Card Reward Choice`;
+             case 'unlockCard':
+                  const card = Data.concepts.find(c => c.id === reward.conceptId);
+                  return `Unlocked Concept: ${card?.name || 'Unknown'}`;
+             case 'unlockArtifact':
+                   const artifact = ARTIFACT_TEMPLATES[reward.artifactId];
+                   return `Unlocked Relic: ${artifact?.name || 'Unknown'}`;
+             default: return `Unknown Reward`;
+         }
+     }
 
 } // End of MetaProgression class
