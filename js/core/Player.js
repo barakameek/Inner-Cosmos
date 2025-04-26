@@ -3,7 +3,7 @@
 import { DeckManager } from './DeckManager.js';
 import { Artifact } from './Artifact.js';
 import { Card } from './Card.js'; // Needed if status adds cards
-import * as Data from '../data.js'; // Keep for defaults if needed
+import * as Data from '../../data.js'; // Keep for defaults if needed
 
 
 // --- Constants ---
