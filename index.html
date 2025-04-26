@@ -11,20 +11,20 @@
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <!-- Load JavaScript files in correct dependency order -->
-  <script src="js/constants.js" defer></script>
-    <script src="js/utils.js" defer></script>
-    <script src="js/cardData.js" defer></script>
-    <script src="js/relicData.js" defer></script>
-    <script src="js/enemyData.js" defer></script>
-    <script src="js/card.js" defer></script>         <!-- Defines Card -->
-    <script src="js/player.js" defer></script>       <!-- Defines Player, uses Card -->
-    <script src="js/enemy.js" defer></script>        <!-- Defines Enemy -->
-    <script src="js/mapGenerator.js" defer></script> <!-- Defines MapGenerator/MapNode -->
-    <script src="js/combatManager.js" defer></script> <!-- Uses Player, Enemy, Card -->
-    <script src="js/gameManager.js" defer></script>   <!-- Uses CombatManager, MapGenerator, Player, etc. -->
-    <script src="js/uiManager.js" defer></script>     <!-- Uses GameManager -->
-    <script src="js/main.js" defer></script>         <!-- Entry point, initializes managers -->
+<!-- Load JavaScript files in correct dependency order -->
+<script src="js/constants.js" defer></script>
+<script src="js/utils.js" defer></script>
+<script src="js/cardData.js" defer></script>
+<script src="js/relicData.js" defer></script>
+<script src="js/enemyData.js" defer></script>
+<script src="js/card.js" defer></script>         <!-- Defines Card -->
+<script src="js/player.js" defer></script>       <!-- Defines Player, uses Card -->
+<script src="js/enemy.js" defer></script>        <!-- Defines Enemy << MUST BE BEFORE combatManager -->
+<script src="js/mapGenerator.js" defer></script> <!-- Defines MapGenerator/MapNode -->
+<script src="js/combatManager.js" defer></script> <!-- Uses Player, Enemy, Card << MUST BE AFTER enemy.js -->
+<script src="js/gameManager.js" defer></script>   <!-- Uses CombatManager, MapGenerator, Player, etc. -->
+<script src="js/uiManager.js" defer></script>     <!-- Uses GameManager -->
+<script src="js/main.js" defer></script>         <!-- Entry point, initializes managers -->
 
 </body>
 </html>
