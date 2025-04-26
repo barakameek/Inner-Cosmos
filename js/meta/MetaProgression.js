@@ -2,7 +2,7 @@
 
 import * as Data from '../data.js';
 // Import artifact definitions to potentially unlock specific ones via milestones
-import { ARTIFACT_TEMPLATES } from './ArtifactDefinitions.js';
+import { ARTIFACT_TEMPLATES } from '../core/ArtifactDefinitions.js';
 
 // --- Constants ---
 const SAVE_KEY = 'personaLabyrinth_metaProgress_v1.1'; // Increment version if structure changes significantly
