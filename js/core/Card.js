@@ -1,7 +1,12 @@
 // js/core/Card.js
 
-import * as Data from '../data.js';
-// Potentially import Player/Enemy if complex effects need direct calls, but try to avoid
+// --- CORRECTED PATH FOR data.js ---
+// Path goes up from 'core' to 'js', then up from 'js' to root
+import * as Data from '../../data.js';
+// --- END CORRECTION ---
+
+// Import specific game classes IF effect logic needs to directly call methods on them
+// (Though preferably effects modify player/target passed in)
 // import { Player } from './Player.js';
 // import { Enemy } from '../combat/Enemy.js';
 
@@ -21,6 +26,7 @@ const CARD_TYPE_FUNCTION_MAP = { // Keep if needed for future reference
  */
 export class Card {
     constructor(conceptId) {
+        // Use imported Data object now
         const conceptData = Data.concepts.find(c => c.id === conceptId);
         if (!conceptData) {
             console.error(`Card Error: Concept data not found for ID: ${conceptId}`);
@@ -86,7 +92,7 @@ export class Card {
         if (this.rarity === 'rare') calculatedCost = Math.max(1, calculatedCost + 1);
         // Keyword/Type adjustments
         if (this.keywords.includes('Simple') || this.keywords.includes('Comfort')) calculatedCost = Math.max(0, calculatedCost -1);
-        if (this.keywords.includes('Intensity') && (this.keywords.includes('Damage') || this.keywords.includes('Pain'))) calculatedCost++; // Pain/Intensity costs more
+        if (this.keywords.includes('Intensity') && (this.keywords.includes('Damage') || this.keywords.includes('Pain'))) calculatedCost++;
         if (this.keywords.includes('Draw')) calculatedCost = Math.max(1, calculatedCost); // Drawing usually costs 1+
 
         return Math.max(0, Math.min(3, calculatedCost)); // Clamp cost 0-3
@@ -111,8 +117,8 @@ export class Card {
          if (this.keywords.includes('BuffSelf') || this.keywords.includes('Heal') || this.keywords.includes('GainFocus') || this.keywords.includes('GainBlock') || this.keywords.includes('Self')) return 'self';
          // Specific card types/keywords that imply self
          if (conceptData.cardType === 'Psychological/Goal' && this.keywords.includes('Comfort')) return 'self';
-         if (conceptData.name === "Stress Relief Focus") return 'self'; // Example ID override
-         if (conceptData.name === "Compliments / Praise") return 'self';
+         // ID overrides
+         if ([31, 46, 51, 57].includes(conceptData.id)) return 'self'; // Cuddling, Compliments, Stress Relief, Sensory Enhancement
          // Default to enemy if targeting is required and not explicitly self
          return 'enemy';
       }
@@ -120,52 +126,52 @@ export class Card {
       _determineAOE(conceptData) {
            if (this.keywords.includes('AOE') || this.keywords.includes('Group')) return true;
            if (conceptData.id === 34) return true; // Group Sex ID
-           // Add other potential AOE indicators
            return false;
        }
 
      _determineExhaust(conceptData) {
-         // Powers exhaust by default
-         if (['Identity/Role', 'Psychological/Goal'].includes(conceptData.cardType)) return true;
+         // Powers exhaust by default (with overrides)
+         if (['Identity/Role', 'Psychological/Goal'].includes(conceptData.cardType)) {
+             // Overrides for common/simple powers that shouldn't exhaust
+             if ([46, 51].includes(conceptData.id) && this.rarity === 'common') return false; // Compliments, Stress Relief
+             return true; // Default exhaust for powers
+         }
          // High-cost rare cards
          if (this.rarity === 'rare' && this.cost >= 2) return true;
          // Specific keywords
          if (this.keywords.includes('Ritual') || this.keywords.includes('OneTime') || this.keywords.includes('Transform') || this.keywords.includes('Intense')) return true;
           // Explicit card IDs
          if ([15, 109, 131, 132, 137 /* etc. */].includes(conceptData.id)) return true;
-         // Overrides - some Powers might NOT exhaust if common/simple
-          if (conceptData.id === 46 && this.rarity === 'common') return false; // Compliments/Praise is common Psych/Goal, shouldn't exhaust
-          if (conceptData.id === 51 && this.rarity === 'common') return false; // Stress Relief Focus
          return false; // Default: don't exhaust skills/attacks
       }
 
       _determineEthereal(conceptData) {
           if (this.keywords.includes('Fleeting') || this.keywords.includes('Ephemeral')) return true;
-          // Maybe specific Cognitive cards?
-          // if (conceptData.id === 14) return true; // Fantasy Immersion?
           return false;
       }
 
     // --- Effect Calculation and Execution ---
 
+    /** Calculates base effect values (damage, block, etc.) */
     _calculateEffects(conceptData, upgraded = false) {
         const values = { damage: 0, block: 0, draw: 0, focus: 0, heal: 0, status: [], aoe: this._determineAOE(conceptData), targetType: this._determineTargetType(conceptData), meta: {} };
         const scores = conceptData.elementScores || {};
         const upgradeMultiplier = upgraded ? 1.3 : 1.0;
-        const upgradeBonus = upgraded ? 2 : 0;
+        const upgradeBonus = upgraded ? 2 : 0; // Flat bonus for upgrading simple effects
         const upgradeStatusDurationBonus = upgraded ? 1 : 0;
-        const upgradeStatusAmountBonus = upgraded ? 1 : 0;
+        const upgradeStatusAmountBonus = upgraded ? 1 : 0; // Usually +1 for stacking effects
 
         const scale = (base, score, factor = 1.0) => Math.max(0, Math.floor(base * (1 + (score || 0) / 10) * factor));
 
-        // Calculate Base Potentials
-        let potentialDamage = scale(5, scores.S, 0.8) + scale(3, scores.I, 0.5);
-        let potentialBlock = scale(4, scores.S, 0.6) + scale(4, scores.P, 0.7);
-        let potentialDraw = (scores.C >= 7) ? 1 : 0;
-        let potentialFocus = (scores.C >= 8 && scores.P >= 5) ? 1 : 0;
-        let potentialHeal = scale(3, scores.P, 0.6);
+        // --- Calculate Base Values ---
+        // Use max of relevant scores? Or average? Let's try max for more distinct feel.
+        let potentialDamage = scale(6, Math.max(scores.S || 0, scores.I || 0), 0.8); // Sensory OR Interaction based damage
+        let potentialBlock = scale(5, Math.max(scores.S || 0, scores.P || 0), 0.7); // Sensory OR Psych based block
+        let potentialDraw = (scores.C >= 6) ? 1 : 0; // Lower Cog threshold slightly
+        let potentialFocus = (scores.C >= 7 && scores.P >= 4) ? 1 : 0;
+        let potentialHeal = scale(4, scores.P, 0.6); // Psych based
 
-        // Adjust based on Keywords & Type
+        // --- Adjust based on Keywords & Type ---
         if (this.keywords.includes('Attack') || this.keywords.includes('Damage') || this.keywords.includes('Impact') || conceptData.cardType === "Practice/Kink") {
             values.damage = potentialDamage + (this.keywords.includes('Impact') ? 3 : 0);
              if (upgraded && values.damage > 0) values.damage = Math.max(values.damage + upgradeBonus + 1, Math.floor(values.damage * 1.2));
@@ -174,13 +180,15 @@ export class Card {
             values.block = potentialBlock + (this.keywords.includes('Comfort') ? 2 : 0);
              if (upgraded && values.block > 0) values.block = Math.max(values.block + upgradeBonus + 1, Math.floor(values.block * 1.2));
         }
-        if (this.keywords.includes('Draw')) { values.draw = potentialDraw + 1; if (upgraded) values.draw++; }
-        if (this.keywords.includes('Focus') || this.keywords.includes('GainFocus')) { values.focus = potentialFocus + 1; if (upgraded) values.focus++; }
-        if (this.keywords.includes('Heal')) { values.heal = potentialHeal + 2; if (upgraded) values.heal = Math.floor(values.heal * 1.2) + 1; }
+        // Ensure keyword guarantees effect even if base potential is 0
+        if (this.keywords.includes('Draw')) { values.draw = Math.max(1, potentialDraw); if (upgraded) values.draw++; } else { values.draw = potentialDraw; }
+        if (this.keywords.includes('Focus') || this.keywords.includes('GainFocus')) { values.focus = Math.max(1, potentialFocus); if (upgraded) values.focus++; } else { values.focus = potentialFocus; }
+        if (this.keywords.includes('Heal')) { values.heal = Math.max(2, potentialHeal); if (upgraded) values.heal = Math.floor(values.heal * 1.2) + 1; } else { values.heal = potentialHeal; }
+
 
         // --- Status Effects ---
         let statusDuration = 1 + upgradeStatusDurationBonus;
-        let statusAmount = 1 + upgradeStatusAmountBonus;
+        let statusAmount = 1 + upgradeStatusAmountBonus; // Default amount bonus for stacking effects
         // Enemy Debuffs
         if (this.keywords.includes('Weak') || this.keywords.includes('Control') || this.keywords.includes('DebuffEnemy')) values.status.push({ id: 'Weak', duration: statusDuration, target: 'enemy', amount: 1 });
         if (this.keywords.includes('Vulnerable') || this.keywords.includes('Expose') || this.keywords.includes('DebuffEnemy')) values.status.push({ id: 'Vulnerable', duration: statusDuration, target: 'enemy', amount: 1 });
@@ -191,16 +199,17 @@ export class Card {
         if (this.keywords.includes('Strength') || this.keywords.includes('StrengthSelf') || this.keywords.includes('BuffSelf')) values.status.push({ id: 'Strength', duration: 99, amount: statusAmount, target: 'self' });
         if (this.keywords.includes('Dexterity') || this.keywords.includes('DexteritySelf') || this.keywords.includes('BuffSelf')) values.status.push({ id: 'Dexterity', duration: 99, amount: statusAmount, target: 'self' });
         if (this.keywords.includes('Regen') || this.keywords.includes('RegenSelf') || this.keywords.includes('BuffSelf')) values.status.push({ id: 'Regen', duration: upgraded ? 4: 3, amount: statusAmount + 1, target: 'self' });
-        if (this.keywords.includes('Intangible') || this.keywords.includes('IntangibleSelf') || this.keywords.includes('BuffSelf')) values.status.push({ id: 'Intangible', duration: 1 + upgradeStatusDurationBonus, amount: 1, target: 'self' });
+        if (this.keywords.includes('Intangible') || this.keywords.includes('IntangibleSelf') || this.keywords.includes('BuffSelf')) values.status.push({ id: 'Intangible', duration: 1, amount: 1, target: 'self' }); // Intangible usually lasts 1 turn, duration doesn't upgrade easily
+
 
         // --- Specific Card Overrides / Adjustments ---
         this._applySpecificCardLogic(conceptData, values, upgraded);
 
         // --- Final Cleanup ---
         for(const key in values) { if (typeof values[key] === 'number') values[key] = Math.max(0, Math.floor(values[key])); }
-        // Don't deal damage if primarily blocking/healing unless explicitly an Attack/Block card
+        // Don't deal damage if primarily blocking/healing unless explicitly AttackBlock
         if (values.block > 0 && values.damage > 0 && !this.keywords.includes('AttackBlock')) values.damage = 0;
-        if (values.heal > 0 && values.damage > 0) values.damage = 0;
+        if (values.heal > 0 && values.damage > 0) values.damage = 0; // Healing cancels damage
 
         return values;
     }
@@ -212,62 +221,38 @@ export class Card {
          const upgradeStatusAmountBonus = upgraded ? 1 : 0;
 
         switch (conceptData.id) {
-            // Batch 1 Overrides
+            // Batch 1 Overrides (Adjusted slightly)
             case 1: values.damage = upgraded ? 9 : 6; values.block = 0; values.status = []; break;
             case 2: values.damage = 0; values.block = upgraded ? 8 : 5; values.status = []; break;
-            case 3: values.damage = 3 + upgradeBonus; values.block = 0; values.status = [{ id: 'Weak', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1 }]; break;
-            case 31: values.damage = 0; values.block = 4 + upgradeBonus; values.heal = upgraded ? 3 : 2; values.status = []; values.targetType = 'self'; break;
+            case 3: values.damage = upgraded ? 5 : 3; values.block = 0; values.status = [{ id: 'Weak', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1 }]; break;
+            case 31: values.damage = 0; values.block = upgraded ? 7 : 4; values.heal = upgraded ? 3 : 2; values.status = []; values.targetType = 'self'; break;
             case 32: values.damage = 0; values.block = 0; values.status = [{ id: 'Vulnerable', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1 }]; if (upgraded) values.draw = 1; break;
-            case 46: values.damage = 0; values.block = 3 + upgradeBonus; values.status = [{ id: 'Strength', duration: 99, amount: 1 + upgradeStatusAmountBonus, target: 'self' }]; values.targetType = 'self'; break;
+            case 46: values.damage = 0; values.block = upgraded ? 6 : 3; values.status = [{ id: 'Strength', duration: 99, amount: 1 + upgradeStatusAmountBonus, target: 'self' }]; values.targetType = 'self'; break;
             case 49: values.damage = 0; values.block = 0; values.draw = upgraded? 2: 1; values.focus = upgraded? 1: 0; values.targetType = null; break;
-            case 51: values.damage = 0; values.block = 6 + upgradeBonus; values.heal = 2; values.targetType = 'self'; this.exhausts = true; break; // Override default exhaust=true here if needed, though type handles it
-            case 74: values.damage = 2 + upgradeBonus; values.status = [{ id: 'Weak', duration: 1, target: 'enemy', amount: 1 }]; if(upgraded) values.draw = 1; break;
+            case 51: values.damage = 0; values.block = upgraded ? 9 : 6; values.heal = upgraded ? 3 : 2; values.targetType = 'self'; this.exhausts = true; break; // Now exhausts via override
+            case 74: values.damage = upgraded ? 4 : 2; values.block = 0; values.status = [{ id: 'Weak', duration: 1, target: 'enemy', amount: 1 }]; if(upgraded) values.draw = 1; break;
 
-            // Batch 2 Overrides
-            case 7: values.damage = 4 + upgradeBonus; values.block = 0; values.status = upgraded ? [{ id: 'Vulnerable', duration: 1, target: 'enemy', amount: 1 }] : []; break;
-            case 9: values.damage = 2 + upgradeBonus; values.block = 0; values.status = [{ id: 'Vulnerable', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1 }]; break;
-            case 13: values.damage = 0; values.block = 5 + upgradeBonus + (upgraded ? 1:0); values.draw = upgraded ? 1 : 0; values.status = []; values.targetType = 'self'; break;
-            case 15: values.damage = 0; values.block = 0; values.heal = 4 + upgradeBonus; values.status = [{ id: 'Regen', duration: upgraded ? 3: 2, amount: 2, target: 'self' }]; values.targetType = 'self'; this.exhausts = true; break;
+            // Batch 2 Overrides (Adjusted slightly)
+            case 7: values.damage = upgraded ? 6 : 4; values.block = 0; values.status = upgraded ? [{ id: 'Vulnerable', duration: 1, target: 'enemy', amount: 1 }] : []; break;
+            case 9: values.damage = upgraded ? 4 : 2; values.block = 0; values.status = [{ id: 'Vulnerable', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1 }]; break;
+            case 13: values.damage = 0; values.block = upgraded ? 8 : 5; values.draw = upgraded ? 1 : 0; values.status = []; values.targetType = 'self'; break;
+            case 15: values.damage = 0; values.block = 0; values.heal = upgraded ? 6 : 4; values.status = [{ id: 'Regen', duration: upgraded ? 3: 2, amount: 2, target: 'self' }]; values.targetType = 'self'; this.exhausts = true; break;
             case 33: values.damage = 0; values.block = 0; values.focus = upgraded ? 2 : 1; values.draw = upgraded ? 1 : 0; values.status = []; values.targetType = null; break;
-            case 37: values.damage = 0; values.block = 4 + upgradeBonus; values.status = [{ id: 'Dexterity', duration: 99, amount: upgraded ? 2: 1, target: 'self' }]; values.targetType = 'self'; break;
-            case 47: values.damage = 0; values.block = 3 + upgradeBonus; values.status = [{ id: 'Vulnerable', duration: upgraded ? 2: 1, target: 'enemy', amount: 1 }]; break;
+            case 37: values.damage = 0; values.block = upgraded ? 7 : 4; values.status = [{ id: 'Dexterity', duration: 99, amount: upgraded ? 2: 1, target: 'self' }]; values.targetType = 'self'; break;
+            case 47: values.damage = 0; values.block = upgraded ? 5 : 3; values.status = [{ id: 'Vulnerable', duration: upgraded ? 2: 1, target: 'enemy', amount: 1 }]; break;
             case 57: values.damage = 0; values.block = 0; values.draw = 1; values.focus = upgraded ? 1 : 0; values.status = [{ id: 'Strength', duration: 99, amount: 1, target: 'self' }]; values.targetType = 'self'; break;
             case 60: values.damage = 0; values.block = 0; values.status = []; values.draw = 1 + Math.floor((this.elementScores.C || 0) / 4) + (upgraded ? 1 : 0); values.targetType = null; this.cost = 1; break;
-            case 66: values.damage = 0; values.block = 4 + upgradeBonus; values.status = [{ id: 'Weak', duration: upgraded ? 2 : 1, target: 'enemy', amount: 1 }]; break;
-            case 67: values.damage = 7 + upgradeBonus + (upgraded?1:0); values.block = 0; values.status = upgraded ? [{ id: 'Vulnerable', duration: 1, target: 'enemy', amount: 1 }] : []; break;
+            case 66: values.damage = 0; values.block = upgraded ? 7 : 4; values.status = [{ id: 'Weak', duration: upgraded ? 2 : 1, target: 'enemy', amount: 1 }]; break;
+            case 67: values.damage = upgraded ? 10 : 7; values.block = 0; values.status = upgraded ? [{ id: 'Vulnerable', duration: 1, target: 'enemy', amount: 1 }] : []; break;
 
-            // --- Add overrides for new cards as you implement them ---
-            case 4: // Dominance (Psychological) - Power card, should exhaust
-                 values.damage = 0; values.block = 0;
-                 // Apply Strength to self, maybe apply Weak to target?
-                 values.status = [
-                     { id: 'Strength', duration: 99, amount: upgraded ? 3 : 2, target: 'self'},
-                     // { id: 'Weak', duration: 1 + upgradeStatusDurationBonus, target: 'enemy', amount: 1} // Optional debuff
-                 ];
-                 values.targetType = 'self'; // Primarily self-buff
-                 this.exhausts = true; // Ensure power exhausts
-                 break;
-            case 5: // Submission (Psychological) - Power card, should exhaust
-                 values.damage = 0; values.block = 0;
-                 // Gain Block and maybe Dexterity? Represents readiness to endure/receive.
-                 values.block = 8 + upgradeBonus * 2; // Good block amount
-                 values.status = [
-                     { id: 'Dexterity', duration: 99, amount: upgraded ? 2 : 1, target: 'self'}
-                 ];
-                 values.targetType = 'self';
-                 this.exhausts = true;
-                 break;
-             case 6: // Switching - Power card? Or Skill? Let's make it a Skill that buffs based on last action.
-                  // This needs state tracking, complex for this system.
-                  // Simpler version: Gain Block and draw 1 card. Upgrade draws 2.
-                  values.damage = 0; values.block = 5 + upgradeBonus; values.draw = upgraded ? 2 : 1; values.status = [];
-                  this.targetType = 'self';
-                  this.exhausts = false; // Make it a non-exhausting skill
-                  break;
+            // Override exhaust logic if needed
+            case 4: this.exhausts = true; break; // Ensure Dominance exhausts
+            case 5: this.exhausts = true; break; // Ensure Submission exhausts
 
-            // ... continue for all 139 concepts ...
+            // ... Add many more cases here ...
         }
     }
+
 
     /** Stores upgrade calculations */
      _prepareUpgradeData(conceptData) {
@@ -285,11 +270,8 @@ export class Card {
              (upgradedValues.status.length > baseValues.status.length) ||
              (upgradedValues.status.some((upgStatus, i) => !baseValues.status[i] || upgStatus.duration > baseValues.status[i].duration || upgStatus.amount > baseValues.status[i].amount ));
 
-         // Reduce cost if upgrade was minor OR if card is expensive initially
-         if (newCost > 0 && (!significantIncrease || newCost > 1)) {
-              newCost = Math.max(0, newCost - 1);
-         }
-         newCost = Math.min(this._determineCost(conceptData), newCost); // Don't increase cost
+         if (newCost > 0 && !significantIncrease) { newCost = Math.max(0, newCost - 1); }
+         newCost = Math.min(this._determineCost(conceptData), newCost); // Ensure upgrade doesn't increase base cost
 
          return { values: upgradedValues, cost: newCost };
      }
@@ -308,7 +290,7 @@ export class Card {
                      if (statusEffect.target === 'self' || targetType === 'self') statusTarget = player;
                      else if (statusEffect.target === 'enemy' || targetType === 'enemy') statusTarget = target;
                      else if (statusEffect.target === 'all_enemies') {
-                          enemies?.forEach(enemy => { if (enemy?.currentHp > 0) enemy.applyStatus(statusEffect.id, statusEffect.duration || 1, statusEffect.amount || 1, this.primaryElement); }); return;
+                          enemies?.forEach(enemy => { if (enemy?.currentHp > 0) enemy.applyStatus(statusEffect.id, statusEffect.duration || 1, statusEffect.amount || 1, this.primaryElement); }); return; // Handled all, exit early
                      }
                      if (statusTarget) { statusTarget.applyStatus(statusEffect.id, statusEffect.duration || 1, statusEffect.amount || 1, this.primaryElement); }
                      else if(statusEffect.target !== 'all_enemies') { console.warn(`Status ${statusEffect.id} on ${this.name} had no valid target.`); }
@@ -327,8 +309,7 @@ export class Card {
                 if (values.focus > 0) player.gainFocus(values.focus);
 
                 // --- Specific Card Execution Logic ---
-                // Example: Erotic Hypnosis - already handled by applying statuses in calculation
-                // Add others if calculation isn't enough (e.g., complex interactions)
+                // Example: if (this.conceptId === SPECIFIC_ID) { /* unique execution */ }
 
             } catch (error) { console.error(`Error during effect execution for ${this.name}:`, error); }
         };
@@ -342,12 +323,12 @@ export class Card {
     upgrade() {
          if (this.upgraded) return; this.upgraded = true; this.name += "+";
          if (this.upgradeData.cost !== undefined && this.upgradeData.cost < this.cost) { this.cost = this.upgradeData.cost; }
-         // Recalculate internal values based on upgrade? No, effectLogic uses the flag.
+         // Recalculate display values maybe? Or rely on tooltip re-rendering?
          console.log(`Card ${this.name} upgraded. New cost: ${this.cost}`);
     }
 
     // --- Display Methods ---
-    getEffectDescriptionHtml() { /* ... keep refined version from File 27 ... */
+    getEffectDescriptionHtml() {
         const values = this.upgraded ? this.upgradeData.values : this.calculatedValues; let parts = [];
         if (values.damage > 0) parts.push(`Deal ${values.damage} damage${values.aoe ? ' to ALL enemies' : ''}.`);
         if (values.block > 0) parts.push(`Gain ${values.block} Block.`);
@@ -355,8 +336,7 @@ export class Card {
         values.status?.forEach(s => {
             let targetText = ""; let valueText = "";
             if (s.target === 'self') targetText = " self"; else if (s.target === 'all_enemies') targetText = " ALL enemies";
-            // Show amount only for specific stacking statuses, otherwise show duration if > 1 & not permanent
-            if (s.amount > 1 && ['Strength', 'Dexterity', 'Poison', 'Regen', 'Burn', 'Metallicize', 'Thorns'].includes(s.id)) valueText = `${s.amount} `;
+            if (s.amount > 1 && ['Strength', 'Dexterity', 'Poison', 'Regen', 'Burn', 'Metallicize', 'Thorns', 'Entangle'].includes(s.id)) valueText = `${s.amount} `;
             else if (s.duration > 1 && s.duration !== 99) valueText = `(${s.duration}) `;
              parts.push(`Apply ${valueText}${s.id}${targetText}.`);
         });
@@ -364,9 +344,10 @@ export class Card {
         if (values.focus > 0) parts.push(`Gain ${values.focus} Focus.`);
         if (parts.length === 0) parts.push(this.upgraded ? (this.detailedDescription || this.baseEffectDescription) : this.baseEffectDescription);
         if (this.exhausts) parts.push("Exhaust."); if (this.isEthereal) parts.push("Ethereal.");
-        return parts.join(' ');
+        return parts.join(' ').trim();
     }
-    getTooltipHtml() { /* ... keep refined version from File 27 ... */
+
+    getTooltipHtml() {
          let html = `<div class="card-tooltip">`;
          html += `<div class="tooltip-header"><strong>${this.name} (${this.cost} <i class="fa-solid fa-bolt" style="color: #f1c40f;"></i>)</strong></div>`;
          html += `<div class="tooltip-type"><em>${this.cardType} - ${this.rarity}</em></div><hr>`;
