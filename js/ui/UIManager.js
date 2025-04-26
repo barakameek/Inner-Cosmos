@@ -739,23 +739,89 @@ export class UIManager {
      }
 
     // --- Map Rendering Methods --- (Keep existing implementations)
-    renderMap(nodes, currentNodeId, connections) { /* ... keep ... */
-        const mapContainer = this.mapArea;
-        if (!mapContainer || !this.gameState || !this.gameState.mapManager) { return; }
-        mapContainer.innerHTML = '';
-        const mapSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        mapSvg.setAttribute('width', '100%'); mapSvg.setAttribute('height', '100%'); mapSvg.style.backgroundColor = '#34495e';
-        // Render Connections
-        connections.forEach(conn => { /* ... line drawing logic ... */
-            const fromNode = nodes[conn.from]; const toNode = nodes[conn.to];
-            if (fromNode && toNode) {
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute('x1', fromNode.position.x); line.setAttribute('y1', fromNode.position.y);
-                line.setAttribute('x2', toNode.position.x); line.setAttribute('y2', toNode.position.y);
-                line.setAttribute('stroke', fromNode.visited ? '#bdc3c7' : '#7f8c8d'); line.setAttribute('stroke-width', '2');
-                mapSvg.appendChild(line);
-            }
-        });
+  renderMap(nodes, currentNodeId, connections) {
+    console.log("UIManager:renderMap - STARTING execution."); // <<< ADD THIS
+    const mapContainer = this.mapArea; // Use the reference stored in constructor
+
+    if (!mapContainer) {
+        console.error("UIManager:renderMap - FAILED: mapArea element not found."); // <<< ADD THIS
+        return; // Stop if container missing
+    }
+    if (!this.gameState || !this.gameState.mapManager) {
+        console.error("UIManager:renderMap - FAILED: GameState or MapManager missing."); // <<< ADD THIS
+        return;
+    }
+    if (!nodes || Object.keys(nodes).length === 0) {
+         console.warn("UIManager:renderMap - WARNING: No nodes received to render."); // <<< ADD THIS
+         // Still clear the loading text even if no nodes
+         mapContainer.innerHTML = '<p style="text-align:center; padding: 20px;">Map Generated (No Nodes?).</p>';
+         return;
+    }
+    console.log(`UIManager:renderMap - Rendering ${Object.keys(nodes).length} nodes. Current: ${currentNodeId}`); // <<< ADD THIS
+
+    // Clear previous map content (including "Loading Map...")
+    console.log("UIManager:renderMap - Clearing mapArea innerHTML."); // <<< ADD THIS
+    mapContainer.innerHTML = '';
+
+    // Create SVG element
+    console.log("UIManager:renderMap - Creating SVG element."); // <<< ADD THIS
+    const mapSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    mapSvg.setAttribute('width', '100%');
+    mapSvg.setAttribute('height', '100%');
+    mapSvg.style.backgroundColor = '#34495e'; // Set background directly for testing
+
+    // Render Connections (Lines) first
+    console.log(`UIManager:renderMap - Rendering ${connections?.length || 0} connections.`); // <<< ADD THIS
+    connections?.forEach(conn => { // Add null check for connections
+        const fromNode = nodes[conn.from];
+        const toNode = nodes[conn.to];
+        if (fromNode && toNode) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            // ... (keep line attribute setting logic) ...
+             line.setAttribute('x1', fromNode.position.x); line.setAttribute('y1', fromNode.position.y);
+             line.setAttribute('x2', toNode.position.x); line.setAttribute('y2', toNode.position.y);
+             line.setAttribute('stroke', fromNode.visited ? '#bdc3c7' : '#7f8c8d'); line.setAttribute('stroke-width', '2');
+            mapSvg.appendChild(line);
+        }
+    });
+
+    // Render Nodes (Circles/Icons) second
+    console.log("UIManager:renderMap - Rendering node elements..."); // <<< ADD THIS
+    Object.values(nodes).forEach(node => {
+         // ... (keep node group, circle, icon text creation logic) ...
+          const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          nodeGroup.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
+         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute('r', '15');
+         circle.setAttribute('fill', this.getNodeColor(node.type));
+         circle.setAttribute('stroke', node.id === currentNodeId ? '#f1c40f' : (node.visited ? '#555' : '#ecf0f1'));
+         circle.setAttribute('stroke-width', node.id === currentNodeId ? '3' : '2');
+         const iconText = document.createElementNS("http://www.w3.org/2000/svg", "text"); /* ... icon attributes ... */ iconText.textContent = this.getNodeIcon(node.type);
+         nodeGroup.appendChild(circle); nodeGroup.appendChild(iconText); nodeGroup.dataset.nodeId = node.id;
+
+        const isAvailableMove = nodes[currentNodeId]?.connections.includes(node.id);
+         if (isAvailableMove && node.id !== currentNodeId) {
+             nodeGroup.style.cursor = 'pointer';
+             // Ensure gameState and mapManager exist before adding listener
+             nodeGroup.addEventListener('click', () => {
+                 if (this.gameState && this.gameState.mapManager) {
+                     this.gameState.mapManager.moveToNode(node.id);
+                 } else { console.error("Cannot move node: GameState or MapManager missing in UIManager listener."); }
+             });
+         } else { /* ... set default cursor/opacity ... */ }
+         // Tooltip listeners...
+         nodeGroup.addEventListener('mouseover', (event) => { /* ... show tooltip ... */ });
+         nodeGroup.addEventListener('mouseout', () => this.hideTooltip());
+         nodeGroup.addEventListener('mousemove', (event) => this.updateTooltipPosition(event.clientX, event.clientY));
+
+         node.element = nodeGroup; // Store reference
+         mapSvg.appendChild(nodeGroup);
+    });
+
+    // Append the SVG to the container
+    console.log("UIManager:renderMap - Appending SVG to mapArea."); // <<< ADD THIS
+    mapContainer.appendChild(mapSvg);
+    console.log("UIManager:renderMap - FINISHED execution."); // <<< ADD THIS
+}
         // Render Nodes
         Object.values(nodes).forEach(node => { /* ... circle/icon/listener logic ... */
              const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
