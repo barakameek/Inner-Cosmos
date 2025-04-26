@@ -8,7 +8,7 @@ import { GameState } from './core/GameState.js';
 import { UIManager } from './ui/UIManager.js';
 import { MetaProgression } from './meta/MetaProgression.js';
 // Import data - useful for debugging or potentially selecting starting elements
-import * as Data from './data.js';
+import * as Data from '../data.js';
 // Import definitions if needed globally (usually not, handled by specific classes)
 // import { ARTIFACT_TEMPLATES } from './core/ArtifactDefinitions.js';
 // import { ENEMY_TEMPLATES } from './combat/Enemy.js';
