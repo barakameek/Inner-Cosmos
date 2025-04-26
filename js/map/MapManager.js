@@ -1,7 +1,7 @@
 // js/map/MapManager.js
 
 // Import data - needed for enemy/event selection
-import * as Data from '../data.js';
+import * as Data from '../../data.js';
 // Import enemy/artifact definitions if needed (e.g., to validate selected IDs)
 import { ENEMY_TEMPLATES } from '../combat/Enemy.js'; // Assuming templates exported from Enemy.js or a dedicated defs file
 import { ARTIFACT_TEMPLATES } from '../core/ArtifactDefinitions.js';
