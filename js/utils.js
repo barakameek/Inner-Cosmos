@@ -99,9 +99,8 @@ function getPersonaLabData() {
 function getElementWeakness(archetype) {
     switch (archetype) {
         case EnemyArchetype.DOUBT: return Elements.INTERACTION;
-        case EnemyArchetype.SHAME: return Elements.ATTRACTION; // Design doc used Attraction, mapping to Relational for now? Let's stick to design doc first, need Attraction element or adjust. Using RELATIONAL as placeholder.
-        // Correction: Design doc says "Attraction" for Shame weakness. Let's assume Attraction maps to RELATIONAL for now, or add Attraction as an element. Sticking with the 5 defined elements for now.
-        case EnemyArchetype.SHAME: return Elements.RELATIONAL; // Adjusted based on defined Elements
+        // Design doc used Attraction for Shame, mapped to Relational based on defined elements.
+        case EnemyArchetype.SHAME: return Elements.RELATIONAL;
         case EnemyArchetype.FEAR: return Elements.SENSORY;
         case EnemyArchetype.DESPAIR: return Elements.PSYCHOLOGICAL;
         case EnemyArchetype.ANGER: return Elements.COGNITIVE;
@@ -154,7 +153,6 @@ function deepCopy(obj) {
     }
     return objCopy;
 }
-
 
 // Example usage (can be removed later):
 // console.log("Random Int (1-10):", getRandomInt(1, 10));
