@@ -836,8 +836,8 @@ export class UIManager {
              iconText.setAttribute('font-size', '16px'); iconText.setAttribute('fill', '#fff'); iconText.setAttribute('text-anchor', 'middle');
              iconText.setAttribute('dominant-baseline', 'central'); iconText.textContent = this.getNodeIcon(node.type);
              nodeGroup.appendChild(circle); nodeGroup.appendChild(iconText); nodeGroup.dataset.nodeId = node.id;
-             const isAvailableMove = nodes[currentNodeId]?.connections.includes(node.id);
-             if (isAvailableMove && node.id !== currentNodeId) { // Ensure not current node for click
+          const isAvailableMove = nodes[currentNodeId]?.connections.includes(node.id); // Add semicolon
+if (isAvailableMove && node.id !== currentNodeId) {
                  nodeGroup.style.cursor = 'pointer';
                  // Ensure gameState and mapManager exist before adding listener
                  nodeGroup.addEventListener('click', () => {
