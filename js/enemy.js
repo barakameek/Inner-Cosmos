@@ -1,199 +1,212 @@
-// js/combatManager.js
+// js/enemy.js
 
-// Define combat states
-const CombatState = {
-    INIT: 'Init',
-    PLAYER_TURN_START: 'PlayerTurnStart',
-    PLAYER_CHOOSE_ACTION: 'PlayerChooseAction',
-    PLAYER_SELECT_TARGET: 'PlayerSelectTarget',
-    PLAYER_ANIMATING: 'PlayerAnimating', // Placeholder
-    ENEMY_TURN_START: 'EnemyTurnStart',
-    ENEMY_ACTING: 'EnemyActing',
-    ENEMY_ANIMATING: 'EnemyAnimating', // Placeholder
-    DILEMMA: 'Dilemma',
-    GAME_OVER: 'GameOver',
-};
-
-class CombatManager {
+class Enemy {
     /**
-     * @param {Player} player - Reference to the player instance.
-     * @param {string[]} enemyIds - Array of enemy definition IDs for this combat.
-     * @param {GameManager} gameManager - Reference to the main game manager.
+     * Creates an instance of an enemy for combat.
+     * @param {string} enemyId - The ID of the enemy definition from enemyData.js.
+     * @param {number} positionX - X coordinate for rendering center base.
+     * @param {number} positionY - Y coordinate for rendering center base.
      */
-    constructor(player, enemyIds, gameManager) {
-        console.log("CombatManager initializing...");
-        if (!player || !enemyIds || enemyIds.length === 0 || !gameManager) { console.error("CombatManager missing args!"); this.isCombatOver = true; this.playerWon = false; this.combatState = CombatState.GAME_OVER; this.enemies = []; return; }
-        this.player = player; this.gameManager = gameManager; this.enemies = this.setupEnemies(enemyIds);
-        this.currentTurnOwner = 'player'; this.turnCount = 0; this.combatState = CombatState.INIT;
-        this.selectedCardIndex = -1; this.selectedCardNeedsTarget = false; this.hoveredCardIndex = -1;
-        this.hoveredEnemyIndex = -1; this.hoveredPile = null;
-        this.endTurnButton = { x: CANVAS_WIDTH - 150, y: CANVAS_HEIGHT - 100, width: 120, height: 40, text: "End Turn", isHovered: false };
-        this.isCombatOver = false; this.playerWon = false;
-        this.pendingRewards = { insightShards: 0, cardChoices: [], relicChoice: null };
-        this.activeDilemma = null; this.dilemmaChoiceButtons = [];
-        this.actionQueue = [];
-        console.log(`Combat starting vs: ${this.enemies.map(e => e.name).join(', ')}`);
+    constructor(enemyId, positionX, positionY) {
+        this.definition = getEnemyDefinition(enemyId);
+        if (!this.definition) {
+            console.error(`Definition missing for ID '${enemyId}'. Fallback.`);
+            // Create a minimal fallback definition
+            this.definition = new EnemyDefinition({
+                id: 'fallback_error',
+                name: 'Error Foe',
+                archetype: EnemyArchetype.DOUBT, // Need a valid archetype for weakness/resistance lookup
+                maxHp: 10,
+                moveSet: [{ id: 'fallback_attack', intentType: 'Attack', damage: 1, description: "Attack for 1 Bruise", weight: 1 }]
+            });
+             // Ensure fallback has weakness/resistance derived
+             if (!this.definition.weakness) this.definition.weakness = getElementWeakness(this.definition.archetype);
+             if (!this.definition.resistance) this.definition.resistance = getElementResistance(this.definition.archetype);
+        }
+
+        this.instanceId = uuidv4(); // Unique ID for this specific instance
+        this.id = this.definition.id; // Base definition ID
+        this.name = this.definition.name;
+        this.archetype = this.definition.archetype;
+        this.maxHp = this.definition.maxHp;
+        this.currentHp = this.maxHp;
+        this.weakness = this.definition.weakness;
+        this.resistance = this.definition.resistance;
+
+        this.position = { x: positionX, y: positionY }; // Center-bottom position
+
+        // Combat State
+        this.statusEffects = {}; // e.g., { [StatusEffects.GUARD]: 0, [StatusEffects.VULNERABLE]: {amount:1, duration:1}, Strength: 2 }
+        this.currentMove = null; // The EnemyMove object chosen for the current turn (intent)
+        this.moveHistory = []; // Track recent move IDs for AI patterns/cooldowns
+        this.moveCooldowns = {}; // Track cooldowns for specific move IDs { moveId: turnsRemaining }
+        this.currentPhase = 1; // For multi-phase bosses
+        // Store the original moveset for phase resets if needed (though phase change logic currently replaces definition.moveSet)
+        this.originalMoveSet = [...this.definition.moveSet];
+
+        // --- Rendering properties ---
+        this.width = 100; // Example dimensions, adjust based on art
+        this.height = 150;
+        this.intentIcon = null; // Stores the icon string for the current intent
+        this.intentValue = null; // Stores damage/block value for intent display
+        this.isHovered = false; // For UI feedback
+
+        console.log(`Enemy instance: ${this.name} (ID: ${this.id}, Instance: ${this.instanceId.substring(0,4)})`);
     }
 
-    setupEnemies(enemyIds) {
-        const enemies = []; const count = enemyIds.length; const spacing = 180; const totalW = (count - 1) * spacing;
-        let startX = CANVAS_WIDTH / 2 - totalW / 2; const yPos = CANVAS_HEIGHT * 0.4;
-        if (count === 1) startX = CANVAS_WIDTH * 0.5; else if (count === 2) startX = CANVAS_WIDTH / 2 - spacing / 2;
-        enemyIds.forEach((id, i) => { const x = startX + i * spacing; enemies.push(new Enemy(id, x, yPos)); }); return enemies;
-    }
+    // --- Combat Turn Management ---
+    startTurn(combatManager) {
+        // Called at the START of the enemy's turn (before acting)
+        this.updateStatusDurations();
+        this.updateCooldowns();
+        // Reset Guard at start of turn? Usually keep until broken.
+        // this.statusEffects[StatusEffects.GUARD] = 0;
 
-    startCombat() {
-        this.changeState(CombatState.PLAYER_TURN_START); this.turnCount = 1;
-        console.log(`--- Combat Turn ${this.turnCount} (Player Start) ---`);
-        this.player.resetMomentum();
-        this.player.triggerEffects('onCombatStart', this.gameManager);
-        this.enemies.forEach(e => { e.statusEffects = {}; e.currentMove = null; /* trigger enemy onCombatStart effects */ });
-        this.startPlayerTurn();
-    }
-
-    update(deltaTime) {
-        if (this.isCombatOver || this.combatState === CombatState.INIT) return;
-        this.updateHoverStates();
-        switch (this.combatState) {
-            case CombatState.ENEMY_TURN_START: this.startEnemyActions(); break;
-            case CombatState.ENEMY_ACTING: this.processEnemyActions(deltaTime); break;
-            // Other states wait for input or animation timers
+        // Trigger start-of-turn effects (if any defined in specialMechanics)
+        if (this.definition.specialMechanics?.onTurnStart) {
+            // Execute defined actions
+             console.log(`${this.name} triggering onTurnStart effects (Not Implemented)`);
         }
     }
-
-    changeState(newState) { if (this.combatState === newState) return; this.combatState = newState; }
-
-    render(ctx) {
-        this.renderEnemies(ctx);
-        if (this.combatState === CombatState.PLAYER_SELECT_TARGET && this.selectedCardIndex !== -1) { this.renderTargetingLine(ctx); }
-        this.renderPlayerHUD(ctx); this.renderDeckPiles(ctx); this.renderHand(ctx); this.renderCombatUI(ctx);
-        if (this.combatState === CombatState.DILEMMA && this.activeDilemma) { this.renderDilemmaBox(ctx); }
-    }
-
-    handleInput(clickPos) {
-        if (this.isCombatOver) return;
-        switch (this.combatState) {
-            case CombatState.PLAYER_CHOOSE_ACTION: this.handlePlayerActionInput(clickPos); break;
-            case CombatState.PLAYER_SELECT_TARGET: this.handlePlayerTargetInput(clickPos); break;
-            case CombatState.DILEMMA: this.handleDilemmaInput(clickPos); break;
-        }
-    }
-
-    handlePlayerActionInput(clickPos) {
-        if (this.isPointInRect(clickPos, this.endTurnButton)) { this.endPlayerTurn(); return; }
-        for (let i = 0; i < this.player.hand.length; i++) { const bounds = this.getCardBoundsInHand(i); if (bounds && this.isPointInRect(clickPos, bounds)) { this.trySelectCard(i); return; } }
-        if (this.selectedCardIndex !== -1) { this.deselectCard(); this.changeState(CombatState.PLAYER_CHOOSE_ACTION); }
-    }
-
-    handlePlayerTargetInput(clickPos) {
-        for (let i = 0; i < this.enemies.length; i++) { if (this.enemies[i].currentHp > 0) { const bounds = this.getEnemyBounds(this.enemies[i]); if (this.isPointInRect(clickPos, bounds)) { this.playSelectedCard(i); return; } } }
-        // Check self target?
-        console.log("Clicked outside targets, cancelling."); this.deselectCard(); this.changeState(CombatState.PLAYER_CHOOSE_ACTION);
-    }
-
-     handleDilemmaInput(clickPos) {
-          if (!this.activeDilemma) return; let choiceMade = false;
-          this.dilemmaChoiceButtons.forEach((button) => { if (this.isPointInRect(clickPos, button.bounds)) { this.resolveDilemmaChoice(button.index); choiceMade = true; } });
-     }
-
-     updateHoverStates() {
-         const mousePos = this.gameManager.lastInputPos; if (!mousePos) return; const mX = mousePos.x; const mY = mousePos.y;
-         this.hoveredCardIndex = -1; this.hoveredEnemyIndex = -1; this.hoveredPile = null; this.endTurnButton.isHovered = false;
-         if (this.combatState === CombatState.PLAYER_CHOOSE_ACTION || this.combatState === CombatState.PLAYER_SELECT_TARGET) { // Allow hover during targeting too
-            for (let i = this.player.hand.length - 1; i >= 0; i--) { const bounds = this.getCardBoundsInHand(i); if (bounds && this.isPointInRect({x: mX, y: mY}, bounds)) { this.hoveredCardIndex = i; break; } }
-            for (let i = 0; i < this.enemies.length; i++) { if (this.enemies[i].currentHp > 0) { const bounds = this.getEnemyBounds(this.enemies[i]); if (this.isPointInRect({x: mX, y: mY}, bounds)) { this.hoveredEnemyIndex = i; break; } } }
-            this.enemies.forEach((e, i) => e.isHovered = (i === this.hoveredEnemyIndex));
-            if (this.isMouseOverDeckPiles(mX, mY)) { this.hoveredPile = 'deck_piles'; }
-            this.endTurnButton.isHovered = this.isPointInRect({x: mX, y: mY}, this.endTurnButton);
+    endTurn(combatManager) {
+         // Called at the END of the enemy's turn (after acting)
+         // Usually less common for enemies to have end-of-turn effects
+         if (this.definition.specialMechanics?.onTurnEnd) {
+            console.log(`${this.name} triggering onTurnEnd effects (Not Implemented)`);
+             // Execute defined actions
          }
-         if (this.combatState === CombatState.DILEMMA) { this.dilemmaChoiceButtons.forEach(b => b.isHovered = this.isPointInRect({x: mX, y: mY}, b.bounds)); }
-         else { this.dilemmaChoiceButtons.forEach(b => b.isHovered = false); }
-     }
-
-    nextTurn() { if (this.isCombatOver) return; if (this.currentTurnOwner === 'player') { this.startEnemyTurn(); } else { this.turnCount++; this.startPlayerTurn(); } }
-    startPlayerTurn() { this.currentTurnOwner = 'player'; console.log(`--- Combat Turn ${this.turnCount} (Player) ---`); this.player.startTurn(this.gameManager); this.deselectCard(); this.changeState(CombatState.PLAYER_CHOOSE_ACTION); }
-    endPlayerTurn() { if (this.combatState !== CombatState.PLAYER_CHOOSE_ACTION && this.combatState !== CombatState.PLAYER_SELECT_TARGET) return; console.log("Player ends turn."); this.player.endTurn(this.gameManager); this.deselectCard(); this.nextTurn(); }
-    startEnemyTurn() { this.currentTurnOwner = 'enemy'; console.log(`--- Combat Turn ${this.turnCount} (Enemy) ---`); this.enemies.forEach(e => { if (e.currentHp > 0) { e.startTurn(this); e.chooseNextMove(this.turnCount); } }); this.changeState(CombatState.ENEMY_TURN_START); }
-    startEnemyActions() { this.actionQueue = this.enemies.filter(e => e.currentHp > 0 && e.currentMove).map(e => e.instanceId); if (this.actionQueue.length > 0) { this.changeState(CombatState.ENEMY_ACTING); } else { console.log("No enemy actions."); this.endEnemyTurn(); } }
-    processEnemyActions(deltaTime) { while (this.actionQueue.length > 0) { if (this.isCombatOver) return; const eId = this.actionQueue.shift(); const enemy = this.getEnemyInstanceById(eId); if (enemy?.currentHp > 0 && enemy.currentMove) { enemy.executeMove(this.player, this); if (this.checkPlayerDefeat()) return; } } if (this.actionQueue.length === 0) { this.endEnemyTurn(); } }
-    endEnemyTurn() { this.enemies.forEach(e => { if(e.currentHp > 0) e.endTurn?.(this); }); this.nextTurn(); }
-
-    trySelectCard(index) {
-         const card = this.player.hand[index]; if (!card) return;
-         if (!card.isPlayable()) { console.log(`Cannot select ${card.name}: Not playable.`); return; }
-         if (this.player.cardsPlayedThisTurn >= this.player.maxCardsPerTurn) { console.log(`Cannot select ${card.name}: Max cards played.`); return; }
-         let currentCost = card.cost; if (this.player.cardsPlayedThisTurn === 0 && this.player.hasStatus('FirstCardFree')) { currentCost = 0; }
-         if (!this.player.canAfford(currentCost)) { console.log(`Cannot select ${card.name}: Cost ${currentCost}, Have ${this.player.currentInsight}.`); return; }
-
-         if (index === this.selectedCardIndex) { if (!this.cardNeedsTargeting(card)) { this.playSelectedCard(null); } else { this.changeState(CombatState.PLAYER_SELECT_TARGET); } return; }
-         this.deselectCard(); this.selectedCardIndex = index; this.selectedCardNeedsTarget = this.cardNeedsTargeting(card); console.log(`Selected: ${card.name} (Target? ${this.selectedCardNeedsTarget})`);
-         if (this.selectedCardNeedsTarget) { this.changeState(CombatState.PLAYER_SELECT_TARGET); } else { this.changeState(CombatState.PLAYER_CHOOSE_ACTION); }
     }
 
-    cardNeedsTargeting(card) { const e = card.effects; return !!(e.dealBruise?.target === 'enemy' || e.applyStatus?.target === 'enemy' || e.applyStatus?.target === 'all_enemies' || e.applyStatus?.target === 'random_enemy'); }
-    cardCanTargetPlayer(card) { const e = card.effects; return !!(e.gainGuard?.target === 'player' || e.heal?.target === 'player' || e.applyStatus?.target === 'player'); }
-    deselectCard() { this.selectedCardIndex = -1; this.selectedCardNeedsTarget = false; }
 
-    playSelectedCard(targetEnemyIndex = null, selfTarget = false) {
-        if (this.selectedCardIndex < 0 || this.selectedCardIndex >= this.player.hand.length) return;
-        const card = this.player.hand[this.selectedCardIndex]; if (!card) return;
-        let targetEnemy = null;
-        if (targetEnemyIndex !== null && targetEnemyIndex >= 0 && targetEnemyIndex < this.enemies.length) { targetEnemy = this.enemies[targetEnemyIndex]; if (targetEnemy.currentHp <= 0) { console.log("Invalid target."); this.changeState(CombatState.PLAYER_SELECT_TARGET); return; } }
-        let currentCost = card.cost; const firstCardFree = this.player.hasStatus('FirstCardFree'); if (this.player.cardsPlayedThisTurn === 0 && firstCardFree) { currentCost = 0; }
-        if (!card.isPlayable() || !this.player.canAfford(currentCost) || this.player.cardsPlayedThisTurn >= this.player.maxCardsPerTurn) { console.warn("Cannot play card: Pre-play check failed."); this.deselectCard(); this.changeState(CombatState.PLAYER_CHOOSE_ACTION); return; }
-        if (this.selectedCardNeedsTarget && !targetEnemy) { console.warn("Cannot play card: Needs target."); this.changeState(CombatState.PLAYER_SELECT_TARGET); return; }
+    /**
+     * Choose the next move based on the move set, weights, cooldowns, and HP thresholds.
+     * This determines the *intent* for the next turn. Called BEFORE the enemy acts.
+     */
+    chooseNextMove(turnCount) { // Pass turn count for initial cooldown checks
+        let currentMoveSet = this.definition.moveSet; // Use the active moveset (might change by phase)
 
-        const cardName = card.name; const cardElement = card.element; const requiresExhaust = card.hasKeyword(StatusEffects.EXHAUST);
-        const playedCardInstance = this.player.hand[this.selectedCardIndex]; // Get instance ref
+        let availableMoves = currentMoveSet.filter(move => {
+            // Check HP thresholds
+            const hpPercent = this.currentHp / this.maxHp * 100;
+            if (move.minHpThreshold !== undefined && hpPercent >= move.minHpThreshold) return false; // Use >= for "below threshold"
+            if (move.maxHpThreshold !== undefined && hpPercent < move.maxHpThreshold) return false; // Use < for "above threshold"
 
-        // --- Execute Play ---
-        console.log(`Playing: ${cardName}` + (targetEnemy ? ` on ${targetEnemy.name}` : '') + (selfTarget ? ` on self` : ''));
-        this.player.hand.splice(this.selectedCardIndex, 1); // Remove from hand FIRST
-        this.player.spendInsight(currentCost); if (this.player.cardsPlayedThisTurn === 0 && firstCardFree) { this.player.applyStatus('FirstCardFree', -1, 0); }
-        this.player.cardsPlayedThisTurn++;
-        this.player.generateMomentum(cardElement, this.gameManager);
-        this.player.executeCardEffects(playedCardInstance, targetEnemy, selfTarget, this.gameManager); // Pass GM
-        const triggerContext = { card: playedCardInstance.baseDefinition, target: targetEnemy };
-        this.player.triggerEffects('onPlayCard', this.gameManager, triggerContext); if (cardElement === Elements.INTERACTION) { this.player.triggerEffects('onPlayInteractionCard', this.gameManager, triggerContext); }
-        if (requiresExhaust) { this.player.exhaustPile.push(playedCardInstance); console.log(`Card '${cardName}' exhausted.`); } else { this.player.discardPile.push(playedCardInstance); }
-        this.deselectCard();
-        if(this.checkCombatEnd()) return; // Stop if combat ended
-        this.changeState(CombatState.PLAYER_CHOOSE_ACTION); // Return to choosing
-        if (this.player.cardsPlayedThisTurn >= this.player.maxCardsPerTurn) { console.log("Max cards played."); }
+            // Check cooldowns
+            if (this.moveCooldowns[move.id] && this.moveCooldowns[move.id] > 0) return false;
+
+            // Check initial cooldown (only applies on turn 1)
+            if (move.initialCooldown && turnCount === 1) return false;
+
+            // Add other conditions (e.g., require player debuff, require self buff) if needed later
+
+            return true;
+        });
+
+        if (availableMoves.length === 0) {
+            console.warn(`Enemy ${this.name} has no available moves! Fallback.`);
+            // Use a basic attack or defend as fallback
+            const fallbackAttack = currentMoveSet.find(m => m.intentType === 'Attack');
+            if (fallbackAttack) {
+                 availableMoves.push(fallbackAttack);
+            } else {
+                 // Absolute fallback: Wait/Defend weakly
+                 availableMoves.push({ id: 'fb_wait', intentType: 'Defend', block: 1, description: "Waiting...", weight: 1 });
+            }
+        }
+
+        // Calculate total weight
+        const totalWeight = availableMoves.reduce((sum, move) => sum + (move.weight || 1), 0);
+        // Handle zero total weight case
+        if (totalWeight <= 0) {
+             console.warn(`Enemy ${this.name} available moves have zero total weight. Choosing first available.`);
+             this.currentMove = availableMoves[0];
+        } else {
+            let randomRoll = Math.random() * totalWeight;
+            // Select move based on weight
+            let chosenMove = availableMoves[availableMoves.length - 1]; // Default to last if roll somehow fails
+            for (const move of availableMoves) {
+                const weight = move.weight || 1;
+                if (randomRoll < weight) {
+                    chosenMove = move;
+                    break;
+                }
+                randomRoll -= weight;
+            }
+            this.currentMove = chosenMove;
+        }
+
+
+        this.moveHistory.push(this.currentMove.id); // Track history
+        // Limit history size if needed: if (this.moveHistory.length > 5) this.moveHistory.shift();
+        this.setIntentDisplay(); // Update display values for UI
+        // console.log(`${this.name} intends to use: ${this.currentMove.id} (${this.currentMove.intentType})`);
     }
 
-    applyDamageToEnemy(enemy, amount, element) { const result = enemy.takeBruise(amount, element); if (result.isWeaknessHit) { this.player.triggerResonance(element, 1); this.player.triggerEffects('onResonanceTrigger', this.gameManager, { element: element, target: enemy }); } if (result.isResistanceHit) { const penalty = RESISTANCE_DISSONANCE_PENALTY; console.log(`Hit Resist. Add ${penalty} Static.`); for (let i=0; i < penalty; i++) { const staticDef = getCardDefinition('status_static'); if (staticDef) this.player.addCardToDeck(new Card(staticDef), 'discard'); } } }
+    /** Updates intent icon and value based on the currentMove */
+    setIntentDisplay() {
+        if (!this.currentMove) { this.intentIcon = null; this.intentValue = null; return; }
+        const move = this.currentMove; this.intentValue = null;
+        switch (move.intentType) { case 'Attack': this.intentIcon = '⚔️'; this.intentValue = this.calculateIntentDamage(); break; case 'Defend': this.intentIcon = '🛡️'; this.intentValue = move.block || null; break; case 'Debuff': this.intentIcon = '⬇️'; if (move.applyStatus?.amount > 1) this.intentValue = move.applyStatus.amount; break; case 'Buff': this.intentIcon = '⬆️'; if (move.applyStatus?.amount > 1) this.intentValue = move.applyStatus.amount; break; case 'Dilemma': this.intentIcon = '❓'; break; case 'AttackDebuff': this.intentIcon = '⚔️⬇️'; this.intentValue = this.calculateIntentDamage(); break; default: this.intentIcon = '✨'; break; }
+    }
 
-    triggerDilemma(dilemmaData, sourceEnemy) { console.log(`Dilemma: ${dilemmaData.id} by ${sourceEnemy.name}`); this.activeDilemma = { ...dilemmaData, sourceEnemy: sourceEnemy }; this.calculateDilemmaButtonBounds(); this.changeState(CombatState.DILEMMA); }
-    resolveDilemmaChoice(choiceIndex) { if (!this.activeDilemma || choiceIndex < 0 || choiceIndex >= this.activeDilemma.choices.length) return; if (this.combatState !== CombatState.DILEMMA) return; const choice = this.activeDilemma.choices[choiceIndex]; const sourceEnemy = this.activeDilemma.sourceEnemy; console.log(`Resolving Dilemma: Chose "${choice.text}"`); if (choice.effects) { const context = { sourceEnemy: sourceEnemy }; this.player.executeEffect({ action: 'applyEffectsObject', effectsObject: choice.effects }, 'dilemma', this.gameManager, context); } this.activeDilemma = null; this.dilemmaChoiceButtons = []; this.changeState(CombatState.PLAYER_CHOOSE_ACTION); this.checkCombatEnd(); }
-    calculateDilemmaButtonBounds() { if (!this.activeDilemma) return; this.dilemmaChoiceButtons = []; const boxW=500, boxH=250, boxX=CANVAS_WIDTH/2-boxW/2, boxY=CANVAS_HEIGHT/2-boxH/2; const btnH=40, spacing=15, btnW=boxW*0.8, startX=boxX+boxW*0.1; let choiceY = boxY+boxH-(btnH+spacing)*this.activeDilemma.choices.length; this.activeDilemma.choices.forEach((choice, index) => { const bounds = { x: startX, y: choiceY, width: btnW, height: btnH }; this.dilemmaChoiceButtons.push({ bounds: bounds, index: index, isHovered: false }); choiceY += btnH + spacing; }); }
+    calculateIntentDamage() {
+        if (!this.currentMove || !this.currentMove.damage) return 0; let dmg = this.currentMove.damage; dmg += this.getStatus(StatusEffects.STRENGTH);
+        if (this.currentMove.effectsModifiers?.condition === 'hp_below_50' && (this.currentHp / this.maxHp) < 0.5) { dmg += this.currentMove.effectsModifiers.damageBonus || 0; } return Math.max(0, Math.floor(dmg));
+    }
 
-    checkPlayerDefeat() { if (!this.isCombatOver && this.player.currentHp <= 0) { console.log("Player defeated!"); this.endCombat(false); return true; } return false; }
-    checkEnemyDefeat() { if (this.isCombatOver) return false; const allDefeated = this.enemies.every(e => e.currentHp <= 0); if (allDefeated) { console.log("All enemies defeated!"); this.endCombat(true); return true; } return false; }
-    checkCombatEnd() { if (this.isCombatOver) return true; return this.checkPlayerDefeat() || this.checkEnemyDefeat(); }
-    endCombat(playerVictory) { if (this.isCombatOver) return; console.log(`Combat ending. Victory: ${playerVictory}`); this.isCombatOver = true; this.playerWon = playerVictory; this.changeState(CombatState.GAME_OVER); const context = { victory: playerVictory }; this.player.triggerEffects('onCombatEnd', this.gameManager, context); this.pendingRewards = { insightShards: 0, cardChoices: [], relicChoice: null }; } // Reward calculation now in GameManager
+    executeMove(player, combatManager) { // --- Executes the CURRENT selected move ---
+        if (!this.currentMove) { console.log(`${this.name} skips turn.`); return; }
+        const move = this.currentMove; console.log(`${this.name} executes: ${move.id} (${move.intentType})`);
+        // --- Damage ---
+        const dealDamage = this.calculateIntentDamage(); if (dealDamage > 0) { let finalDamage = dealDamage; if (player.hasStatus(StatusEffects.WEAK)) { finalDamage = Math.floor(finalDamage * WEAK_MULTIPLIER); console.log(`Player Weak -> ${finalDamage} incoming`); } player.takeBruise(finalDamage); }
+        // --- Block ---
+        if (move.block) { this.applyStatus(StatusEffects.GUARD, move.block); }
+        // --- Apply Status ---
+        if (move.applyStatus) { const sInfo = move.applyStatus; const target = (sInfo.target === 'player') ? player : this; if (target) { if(sInfo.status === StatusEffects.FREEZE && sInfo.element) { target.applyStatus(sInfo.status + '_' + sInfo.element, sInfo.amount || 1, sInfo.duration || 1); } else { target.applyStatus(sInfo.status, sInfo.amount || 1, sInfo.duration || 1); } } }
+        // --- Trigger Dilemma ---
+        if (move.intentType === 'Dilemma' && move.dilemma) { combatManager.triggerDilemma(move.dilemma, this); }
+        // --- Special Effects ---
+        if (move.effects?.addCardToDrawPile || move.effects?.addCardToDiscard || move.effects?.addCardToHand) { const effect = move.effects.addCardToDrawPile || move.effects.addCardToDiscard || move.effects.addCardToHand; const pile = move.effects.addCardToDrawPile ? 'draw' : move.effects.addCardToHand ? 'hand' : 'discard'; const cardDef = getCardDefinition(effect.cardId); if (cardDef) { const count = effect.count || 1; console.log(`Adding ${count}x '${effect.cardId}' to player's ${pile}.`); for(let i=0; i<count; i++) { player.addCardToDeck(new Card(cardDef), pile); } } else { console.warn(`Card def missing for '${effect.cardId}'`); } }
+        // --- Set Cooldown ---
+        if (move.cooldown) { this.moveCooldowns[move.id] = move.cooldown + 1; } // +1 because it decrements at start of next turn
+        // --- Clear Executed Move ---
+        this.currentMove = null; this.intentIcon = null; this.intentValue = null;
+    }
 
-    getEnemyInstanceById(instanceId) { return this.enemies.find(e => e.instanceId === instanceId); }
-    isPointInRect(point, rect) { if (!point || !rect) return false; return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height; }
+    updateCooldowns() { for (const moveId in this.moveCooldowns) { if (this.moveCooldowns[moveId] > 0) { this.moveCooldowns[moveId]--; } } }
 
-    // --- Rendering Functions --- (Simplified for brevity - use full versions from previous posts)
-    renderPlayerHUD(ctx) { /* ... (Draw HP, Guard, Insight, Momentum, Resonance, Statuses) ... */
-        const hudX = 20; let hudY = CANVAS_HEIGHT - 180; const hpBarWidth = 200; const hpBarHeight = 20; const hpPercent = Math.max(0, this.player.currentHp / this.player.maxHp); ctx.fillStyle = '#500'; ctx.fillRect(hudX, hudY, hpBarWidth, hpBarHeight); ctx.fillStyle = '#D9534F'; ctx.fillRect(hudX, hudY, hpBarWidth * hpPercent, hpBarHeight); ctx.fillStyle = '#FFF'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${this.player.currentHp} / ${this.player.maxHp}`, hudX + hpBarWidth / 2, hudY + hpBarHeight / 2); hudY += hpBarHeight + 5; const guard = this.player.getStatus(StatusEffects.GUARD); if (guard > 0) { ctx.fillStyle = '#428BCA'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`🛡️ ${guard}`, hudX, hudY + 10); hudY += 25; } ctx.fillStyle = '#6495ED'; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(`💡 ${this.player.currentInsight} / ${this.player.maxInsight}`, hudX, hudY); hudY += 25; ctx.fillStyle = '#FFD700'; ctx.font = '16px sans-serif'; ctx.fillText(`Momentum (${this.player.lastElementPlayed}): ${this.player.momentum}`, hudX, hudY); hudY += 20; /* ... Resonance/Status rendering ... */
-     }
-    renderEnemies(ctx) { /* ... (Loop enemies, call enemy.render, draw target/hover highlights) ... */
-        this.enemies.forEach((enemy, index) => { if (enemy.currentHp > 0) { enemy.render(ctx); /* Draw highlights */ } else { ctx.globalAlpha = 0.5; enemy.render(ctx); ctx.globalAlpha = 1.0; } });
-     }
-    renderHand(ctx) { /* ... (Calculate layout, loop hand, draw each card with hover/select state, rotation/fan) ... */
-        const hand = this.player.hand; const handSize = hand.length; if (handSize === 0) return; const baseCardW=100, baseCardH=140, areaW = CANVAS_WIDTH*0.7, baseSpace=10, overlap=0.6; let cardW=baseCardW, cardH=baseCardH, spacing=baseSpace; const naturalW=handSize*cardW+(handSize-1)*spacing; if(naturalW > areaW){ const overflow=naturalW-areaW; const spaceReduce=overflow/(handSize-1); spacing=Math.max(-cardW*overlap, baseSpace-spaceReduce); const finalW=handSize*cardW+(handSize-1)*spacing; if(finalW > areaW){ const scale = areaW/finalW; cardW*=scale; cardH*=scale; spacing*=scale;} } const finalHandW=handSize*cardW+(handSize-1)*spacing; const startX=(CANVAS_WIDTH/2)-(finalHandW/2); const baseY=CANVAS_HEIGHT-cardH-20; const hoverYOff=-30; const fanAngle=handSize>5?5:0;
-        hand.forEach((card, index) => { const isHover = (index === this.hoveredCardIndex); const isSelect = (index === this.selectedCardIndex); const cY = baseY + (isHover || isSelect ? hoverYOff : 0); const cX = startX + index * (cardW + spacing); const rot = handSize>1?(index - (handSize - 1) / 2) * fanAngle : 0; ctx.save(); ctx.translate(cX + cardW / 2, cY + cardH / 2); ctx.rotate(rot * Math.PI / 180); ctx.translate(-(cX + cardW / 2), -(cY + cardH / 2)); const bounds = { x: cX, y: cY, width: cardW, height: cardH }; ctx.fillStyle = '#444'; ctx.strokeStyle = isSelect ? '#FFFF00' : (isHover ? '#FFF' : (ElementColors[card.element] || '#888')); ctx.lineWidth = isSelect ? 3 : 2; ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height); ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height); /* ... Text Rendering ... */ ctx.restore(); });
-     }
-    wrapText(context, text, x, y, maxWidth, lineHeight) { /* ... (Code from previous full post) ... */ if (!text) return; const words = text.split(' '); let line = ''; let lines = []; const initialY = y; for (let n = 0; n < words.length; n++) { const testLine = line + words[n] + ' '; const metrics = context.measureText(testLine); const testWidth = metrics.width; if (testWidth > maxWidth && n > 0) { lines.push(line); line = words[n] + ' '; } else { line = testLine; } } lines.push(line); y = initialY - (lines.length - 1) * lineHeight; for (let k = 0; k < lines.length; k++) { context.fillText(lines[k].trim(), x, y + k * lineHeight); } }
-    getCardBoundsInHand(index) { /* ... (Code from previous full post - recalculate layout) ... */ const hand = this.player.hand; const handSize = hand.length; if (index < 0 || index >= handSize) return null; const baseCardW=100, baseCardH=140, areaW = CANVAS_WIDTH*0.7, baseSpace=10, overlap=0.6; let cardW=baseCardW, cardH=baseCardH, spacing=baseSpace; const naturalW=handSize*cardW+(handSize-1)*spacing; if(naturalW > areaW){ const overflow=naturalW-areaW; const spaceReduce=overflow/(handSize-1); spacing=Math.max(-cardW*overlap, baseSpace-spaceReduce); const finalW=handSize*cardW+(handSize-1)*spacing; if(finalW > areaW){ const scale = areaW/finalW; cardW*=scale; cardH*=scale; spacing*=scale;} } const finalHandW=handSize*cardW+(handSize-1)*spacing; const startX=(CANVAS_WIDTH/2)-(finalHandW/2); const baseY=CANVAS_HEIGHT-cardH-20; const hoverYOff=-30; const isHover = (index === this.hoveredCardIndex); const isSelect = (index === this.selectedCardIndex); const cY = baseY + (isHover || isSelect ? hoverYOff : 0); const cX = startX + index * (cardW + spacing); return { x: cX, y: cY, width: cardW, height: cardH }; }
-    getEnemyBounds(enemy) { /* ... (Code from previous full post) ... */ const baseX = enemy.position.x; const baseY = enemy.position.y; const bodyW = enemy.width*0.8; const bodyH = enemy.height*0.9; return { x: baseX-bodyW/2, y: baseY-bodyH, width: bodyW, height: bodyH }; }
-    renderDeckPiles(ctx) { /* ... (Code from previous full post) ... */ const pW=50, pH=70, pX=CANVAS_WIDTH-80; let pY=CANVAS_HEIGHT-250; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; const drawB={x:pX-pW/2,y:pY-pH/2,width:pW,height:pH}; ctx.fillStyle=this.hoveredPile==='deck_piles'?'#A46A40':'#8B4513'; ctx.fillRect(drawB.x,drawB.y,drawB.width,drawB.height); ctx.strokeStyle='#FFF'; ctx.lineWidth=1; ctx.strokeRect(drawB.x,drawB.y,drawB.width,drawB.height); ctx.fillStyle='#FFF'; ctx.fillText(`${this.player.drawPile.length}`,pX,pY-10); ctx.fillText(`Draw`,pX,pY+10); pY+=100; const discB={x:pX-pW/2,y:pY-pH/2,width:pW,height:pH}; ctx.fillStyle=this.hoveredPile==='deck_piles'?'#777':'#555'; ctx.fillRect(discB.x,discB.y,discB.width,discB.height); ctx.strokeStyle='#FFF'; ctx.lineWidth=1; ctx.strokeRect(discB.x,discB.y,discB.width,discB.height); ctx.fillStyle='#FFF'; ctx.fillText(`${this.player.discardPile.length}`,pX,pY-10); ctx.fillText(`Discard`,pX,pY+10); this.drawPileBounds = drawB; this.discardPileBounds = discB; }
-    renderCombatUI(ctx) { /* ... (Code from previous full post) ... */ const btn=this.endTurnButton; const canEnd=this.combatState===CombatState.PLAYER_CHOOSE_ACTION||this.combatState===CombatState.PLAYER_SELECT_TARGET; ctx.fillStyle=btn.isHovered&&canEnd?'#F54E5C':(canEnd?'#DC3545':'#888'); ctx.fillRect(btn.x,btn.y,btn.width,btn.height); ctx.strokeStyle='#FFF'; ctx.lineWidth=1; ctx.strokeRect(btn.x,btn.y,btn.width,btn.height); ctx.fillStyle='#FFF'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(btn.text,btn.x+btn.width/2,btn.y+btn.height/2); }
-    renderDilemmaBox(ctx) { /* ... (Code from previous full post) ... */ if (!this.activeDilemma) return; const boxW=500, boxH=250, boxX=CANVAS_WIDTH/2-boxW/2, boxY=CANVAS_HEIGHT/2-boxH/2; ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT); ctx.fillStyle='rgba(30,30,30,0.95)'; ctx.fillRect(boxX,boxY,boxW,boxH); ctx.strokeStyle='#FFF'; ctx.lineWidth=2; ctx.strokeRect(boxX,boxY,boxW,boxH); ctx.fillStyle='#FFF'; ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top'; this.wrapText(ctx, this.activeDilemma.text, boxX+boxW/2, boxY+20, boxW-40, 22); this.dilemmaChoiceButtons.forEach(button => { const bounds = button.bounds; const choice = this.activeDilemma.choices[button.index]; ctx.fillStyle = button.isHovered ? '#777' : '#555'; ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height); ctx.strokeStyle = '#AAA'; ctx.lineWidth = 1; ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height); ctx.fillStyle = '#FFF'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; this.wrapText(ctx, choice.text, bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, bounds.width - 10, 18); }); }
-    renderTargetingLine(ctx) { /* ... (Code from previous full post) ... */ if (this.selectedCardIndex === -1 || !this.gameManager.lastInputPos) return; const bounds = this.getCardBoundsInHand(this.selectedCardIndex); if (!bounds) return; const startX = bounds.x + bounds.width / 2; const startY = bounds.y; const endX = this.gameManager.lastInputPos.x; const endY = this.gameManager.lastInputPos.y; ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 3; ctx.setLineDash([10, 5]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; ctx.beginPath(); ctx.arc(endX, endY, 15, 0, Math.PI * 2); ctx.fill(); }
-    isMouseOverDeckPiles(mouseX, mouseY) { /* ... (Code from previous full post) ... */ if (!this.drawPileBounds || !this.discardPileBounds) return false; return this.isPointInRect({x: mouseX, y: mouseY}, this.drawPileBounds) || this.isPointInRect({x: mouseX, y: mouseY}, this.discardPileBounds); }
+    // --- Health & Status ---
+    takeBruise(amount, sourceElement = Elements.NEUTRAL) {
+        if (amount <= 0) return { actualHpLoss: 0, isWeaknessHit: false, isResistanceHit: false, sourceElement: sourceElement };
+        let damage = amount; let weaknessHit = false; let resistanceHit = false;
+        if (sourceElement !== Elements.NEUTRAL) { if (sourceElement === this.weakness) { damage = Math.floor(damage * WEAKNESS_MULTIPLIER); weaknessHit = true; } else if (sourceElement === this.resistance) { damage = Math.floor(damage * RESISTANCE_MULTIPLIER); resistanceHit = true; } }
+        if (this.hasStatus(StatusEffects.VULNERABLE)) { damage = Math.floor(damage * VULNERABLE_MULTIPLIER); }
+        const guard = this.getStatus(StatusEffects.GUARD); if (guard > 0) { const blocked = Math.min(guard, damage); this.applyStatus(StatusEffects.GUARD, -blocked); damage -= blocked; }
+        let hpLoss = 0; if (damage > 0) { hpLoss = Math.min(damage, this.currentHp); this.currentHp -= hpLoss; console.log(`${this.name} took ${hpLoss} Bruise. HP: ${this.currentHp}/${this.maxHp}`); if (this.definition.specialMechanics?.onHpLoss) { const m = this.definition.specialMechanics.onHpLoss; if(m.action === 'applyStatusToSelf') { this.applyStatus(m.status, m.amount || 1, m.duration || Infinity); } } this.checkPhaseChange(); }
+        return { actualHpLoss: hpLoss, isWeaknessHit: weaknessHit, isResistanceHit: resistanceHit, sourceElement: sourceElement };
+    }
+    applyStatus(effectId, amount, duration = Infinity) {
+        if (!effectId) return; if (effectId === StatusEffects.GUARD || effectId === StatusEffects.STRENGTH) { if (!this.statusEffects[effectId]) this.statusEffects[effectId] = 0; this.statusEffects[effectId] += amount; if (effectId === StatusEffects.GUARD) this.statusEffects[effectId] = Math.max(0, this.statusEffects[effectId]); } else if (duration > 0 || duration === Infinity) { const existing = this.statusEffects[effectId]; if (existing && typeof existing === 'object') { existing.amount += amount; existing.duration = duration; if (existing.amount <= 0) delete this.statusEffects[effectId]; } else if (amount > 0) { this.statusEffects[effectId] = { amount: amount, duration: duration }; } } else { delete this.statusEffects[effectId]; }
+    }
+    getStatus(effectId) { const s = this.statusEffects[effectId]; if (!s) return 0; if (typeof s === 'number') return s; if (typeof s === 'object' && s.amount !== undefined) { return (s.duration === Infinity || s.duration > 0) ? s.amount : 0; } return 0; }
+    hasStatus(effectId) { return this.getStatus(effectId) > 0; }
+    updateStatusDurations() { for (const key in this.statusEffects) { if (this.statusEffects[key] && typeof this.statusEffects[key] === 'object' && this.statusEffects[key].duration !== undefined) { const status = this.statusEffects[key]; if (status.duration !== Infinity) { status.duration--; if (status.duration <= 0) { delete this.statusEffects[key]; } } } } }
 
-} // End CombatManager Class
+    // --- Phase Management ---
+    checkPhaseChange() {
+        if (!this.definition.specialMechanics?.phaseChangeThresholds) return; const hpP = this.currentHp / this.maxHp * 100; const thresholds = this.definition.specialMechanics.phaseChangeThresholds; let newPhase = 1;
+        for (let i = 0; i < thresholds.length; i++) { if (hpP <= thresholds[i]) { newPhase = i + 2; } else { break; } }
+        if (newPhase > this.currentPhase) { console.log(`${this.name} entering Phase ${newPhase}!`); this.currentPhase = newPhase; const phaseActions = this.definition.specialMechanics.onPhaseChange?.filter(a => a.phase === newPhase) || []; phaseActions.forEach(pAction => { if (pAction.action === 'changeMoveSet' && this.definition.moveSetDefinitions?.[pAction.newMoveSetId]) { console.log(`${this.name} changing moveset to ${pAction.newMoveSetId}`); this.definition.moveSet = this.definition.moveSetDefinitions[pAction.newMoveSetId]; this.moveCooldowns = {}; this.moveHistory = []; } else if (pAction.action === 'applyStatusToSelf') { this.applyStatus(pAction.status, pAction.amount || 1, pAction.duration || Infinity); } }); this.currentMove = null; this.intentIcon = null; this.intentValue = null; }
+    }
+
+    // --- Rendering ---
+    render(ctx) {
+         const baseX = this.position.x; const baseY = this.position.y; const bodyW = this.width * 0.8; const bodyH = this.height * 0.9;
+         ctx.fillStyle = '#A0522D'; ctx.strokeStyle = this.isHovered ? '#FFFF00' : '#333'; ctx.lineWidth = this.isHovered ? 3 : 2; ctx.fillRect(baseX - bodyW / 2, baseY - bodyH, bodyW, bodyH); ctx.strokeRect(baseX - bodyW / 2, baseY - bodyH, bodyW, bodyH);
+         ctx.fillStyle = '#FFF'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(this.name, baseX, baseY - bodyH - 45);
+         if (this.currentMove) { const iY = baseY - bodyH - 25; ctx.fillStyle = '#FFF'; ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; let iText = this.intentIcon || '?'; if (this.intentValue !== null) { iText += `${this.intentValue}`; } ctx.fillText(iText, baseX, iY); }
+         const hpBW = this.width * 0.8; const hpBH = 10; const hpBX = baseX - hpBW / 2; const hpBY = baseY - bodyH - 15; const hpP = Math.max(0, this.currentHp / this.maxHp); ctx.fillStyle = '#555'; ctx.fillRect(hpBX, hpBY, hpBW, hpBH); ctx.fillStyle = '#D9534F'; ctx.fillRect(hpBX, hpBY, hpBW * hpP, hpBH); ctx.fillStyle = '#FFF'; ctx.font = '10px sans-serif'; ctx.textBaseline = 'middle'; ctx.fillText(`${this.currentHp}/${this.maxHp}`, baseX, hpBY + hpBH / 2);
+         const guard = this.getStatus(StatusEffects.GUARD); if (guard > 0) { const gIX = hpBX - 5; const gIY = hpBY + hpBH / 2; ctx.fillStyle = '#428BCA'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(`🛡️${guard}`, gIX, gIY); }
+         let sIX = baseX - bodyW / 2; const sIY = baseY + 15; const iconS = 16; Object.entries(this.statusEffects).forEach(([key, value]) => { if (key === StatusEffects.GUARD) return; let amount = 0; let durInfo = ''; let color = '#FFF'; if (typeof value === 'number') amount = value; else if (typeof value === 'object') { amount = value.amount; if(value.duration !== Infinity && value.duration > 0) durInfo = `(${value.duration}t)`; } if (amount <= 0) return; let icon = '?'; switch (key) { case StatusEffects.VULNERABLE: icon = '💥'; color = '#FF8C00'; break; case StatusEffects.WEAK: icon = '💧'; color = '#ADD8E6'; break; case StatusEffects.STRENGTH: icon = '💪'; color = '#FF6347'; break; default: if (key.startsWith(StatusEffects.FREEZE)) { icon = '❄️'; color = '#ADD8E6'; amount = key.split('_')[1]?.[0] || '?'; durInfo=''; } break; } const text = `${icon}${amount}${durInfo}`; ctx.fillStyle = color; ctx.font = `bold ${iconS}px sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(text, sIX, sIY); sIX += ctx.measureText(text).width + 6; });
+    }
+} // End Enemy Class
