@@ -3,28 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grimoire Roguelite</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Persona Labyrinth</title>
+    <!-- Link to the CSS file (we'll create this later) -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Add Font Awesome for Icons (optional, but used in data.js Insight icon) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
+    <!-- Main container for the game -->
     <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
+
+        <!-- Placeholder areas for different game screens/views -->
+        <!-- We'll manage visibility via JavaScript -->
+
+        <div id="mainMenuScreen" class="screen">
+            <h1>Persona Labyrinth</h1>
+            <button id="startGameButton">Begin Introspection</button>
+            <button id="loadGameButton">Continue Journey</button> <!-- Placeholder -->
+            <button id="metaProgressionButton">View Unlocks</button> <!-- Placeholder -->
+            <button id="settingsButton">Settings</button> <!-- Placeholder -->
+        </div>
+
+        <div id="mapScreen" class="screen" style="display: none;">
+            <h2>The Labyrinth of Self</h2>
+            <div id="mapArea">
+                <!-- Map nodes will be rendered here -->
+            </div>
+            <div id="playerInfoMap">
+                <!-- Player HP, Deck size, Insight etc. -->
+            </div>
+        </div>
+
+        <div id="combatScreen" class="screen" style="display: none;">
+            <div id="enemyArea">
+                <!-- Enemy sprites, HP, intents -->
+            </div>
+            <div id="playerArea">
+                <!-- Player sprite/info, HP, Focus, Block, Statuses -->
+            </div>
+            <div id="handArea">
+                <!-- Player's card hand -->
+            </div>
+            <div id="deckDiscardArea">
+                <!-- Deck count, Discard pile count -->
+                <button id="endTurnButton">End Turn</button>
+            </div>
+        </div>
+
+        <div id="eventScreen" class="screen" style="display: none;">
+            <div id="eventText"></div>
+            <div id="eventChoices"></div>
+        </div>
+
+        <div id="shopScreen" class="screen" style="display: none;">
+            <h2>Integration Hub</h2>
+            <div id="shopCards"></div>
+            <div id="shopArtifacts"></div>
+            <button id="leaveShopButton">Leave Hub</button>
+        </div>
+
+        <div id="restSiteScreen" class="screen" style="display: none;">
+            <h2>Sanctuary</h2>
+            <button id="restHealButton">Restore Integrity</button>
+            <button id="restMeditateButton">Meditate (Upgrade)</button>
+            <button id="restJournalButton">Journal (Remove)</button>
+            <button id="leaveRestSiteButton">Continue</button>
+        </div>
+
+         <div id="metaScreen" class="screen" style="display: none;">
+             <h2>Meta Progression / Unlocks</h2>
+             <!-- Content for viewing unlocks, spending Insight -->
+             <button id="backToMenuButton">Back to Menu</button>
+         </div>
+
+        <!-- UI Overlay elements like tooltips, popups etc. -->
+        <div id="tooltip" style="display: none; position: absolute; border: 1px solid black; background-color: lightyellow; padding: 5px;"></div>
+        <div id="modalPopup" class="modal" style="display: none;">
+             <!-- Content for popups like reflections, game over, victory -->
+             <div class="modal-content">
+                 <span class="close-button">×</span>
+                 <p id="modalText"></p>
+                 <div id="modalChoices"></div>
+             </div>
+         </div>
+
     </div>
 
-    <!-- Load JavaScript files in correct dependency order -->
-    <script src="js/constants.js" defer></script>
-    <script src="js/utils.js" defer></script>
-    <script src="js/cardData.js" defer></script>
-    <script src="js/relicData.js" defer></script>
-    <script src="js/enemyData.js" defer></script>
-    <script src="js/card.js" defer></script>         <!-- Defines Card -->
-    <script src="js/player.js" defer></script>       <!-- Defines Player, uses Card -->
-    <script src="js/enemy.js" defer></script>        <!-- Defines Enemy -->
-    <script src="js/mapGenerator.js" defer></script> <!-- Defines MapGenerator/MapNode -->
-    <script src="js/combatManager.js" defer></script> <!-- Defines CombatManager << MUST BE BEFORE gameManager -->
-    <script src="js/gameManager.js" defer></script>   <!-- Uses CombatManager, MapGenerator, Player, etc. << MUST BE AFTER combatManager -->
-    <script src="js/uiManager.js" defer></script>     <!-- Uses GameManager -->
-    <script src="js/main.js" defer></script>         <!-- Entry point, initializes managers -->
-
+    <!-- Link to the main JavaScript file (using type="module" for import/export) -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
