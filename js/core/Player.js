@@ -1,6 +1,5 @@
 
 
-```javascript
 // js/core/Player.js
 
 import { DeckManager } from './DeckManager.js';
