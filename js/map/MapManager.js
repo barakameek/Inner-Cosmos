@@ -1,53 +1,48 @@
 // js/map/MapManager.js
 
-// Import node types if we define them separately later
-// import { CombatNode, EventNode, ShopNode, RestNode, BossNode } from './MapNode.js'; // Example
+// Import node data definitions if they become complex
+import * as Data from '../data.js'; // Needed for event/enemy definitions
 
 // --- Constants ---
-// Define probabilities or counts for different node types per floor
+// Keep existing constants NODE_DISTRIBUTION, ENEMY_ENCOUNTERS, EVENT_IDS...
 const NODE_DISTRIBUTION = {
-    // Floor: [Combat, Elite, Event, Rest, Shop] counts/weights
-    1: { combat: 7, elite: 1, event: 3, rest: 1, shop: 1 },
-    2: { combat: 8, elite: 2, event: 4, rest: 1, shop: 1 },
-    // Add more floors as needed
+    1: { combat: 7, elite: 1, event: 3, rest: 1, shop: 1, /* Total: 13 */ },
+    2: { combat: 8, elite: 2, event: 4, rest: 1, shop: 1, /* Total: 16 */ },
+    3: { combat: 6, elite: 2, event: 3, rest: 2, shop: 1, /* Total: 14 - Fewer combats before boss? */},
 };
-
-// Define potential enemy encounters per floor/node type
 const ENEMY_ENCOUNTERS = {
-    floor1_combat: [
-        ['doubt_whisper'], // Single enemy
-        ['doubt_whisper', 'doubt_whisper'], // Two enemies
-        // Add more combinations
-    ],
-    floor1_elite: [
-        ['rigid_perfectionism'], // Elite enemy
-    ],
-    // Add encounters for other floors/types
+    floor1_combat: [ ['doubt_whisper'], ['doubt_whisper', 'doubt_whisper'] ],
+    floor1_elite: [ ['rigid_perfectionism'] ],
+    floor1_boss: [ ['shadow_aspect_interaction'] ], // Ensure boss encounters are defined
+    // Placeholder for floor 2+ - NEEDS DEFINITIONS
+    floor2_combat: [ ['rigid_perfectionism'], ['doubt_whisper','rigid_perfectionism'] ],
+    floor2_elite: [ ['rigid_perfectionism', 'rigid_perfectionism'] ], // Example: Tougher elite
+    floor2_boss: [ ['shadow_aspect_interaction'] ], // Placeholder boss
+    floor3_combat: [ ['rigid_perfectionism','rigid_perfectionism'], ['rigid_perfectionism', 'doubt_whisper','doubt_whisper'] ],
+    floor3_elite: [ ['shadow_aspect_interaction'] ], // Example: Boss as Elite on final floor? Risky!
+    floor3_boss: [ ['shadow_aspect_interaction'] ], // Final Boss
 };
-
-// Define potential event IDs per floor
 const EVENT_IDS = {
-     floor1: ['ED_A01', 'ED_I01', 'ED_S01', /* ... more dilemma/reflection IDs */ ],
-     // Add more floors
+     floor1: ['ED_A01', 'ED_I01', 'ED_S01', 'ED_P01', 'ED_C01', 'ED_R01'], // Example mix
+     floor2: ['ED_A02', 'ED_I02', 'ED_S02', 'ED_P02', 'ED_C02', 'ED_R02'],
+     floor3: ['ED_A03', 'ED_I03', 'ED_RF01', 'ED_RF02', 'ED_P01'], // Mix repeats potentially
 };
 
 
 /**
  * Represents a single node on the map.
- * (Could be a separate file: MapNode.js, but included here for simplicity initially)
  */
-class MapNode {
+class MapNode { // Keep MapNode class definition here or move to separate file
     constructor(id, type, floor, position = { x: 0, y: 0 }, data = {}) {
-        this.id = id; // Unique identifier (e.g., "floor1-node5-combat")
-        this.type = type; // 'combat', 'elite', 'event', 'rest', 'shop', 'boss', 'start'
+        this.id = id;
+        this.type = type;
         this.floor = floor;
-        this.position = position; // { x, y } coordinates for rendering
-        this.connections = []; // Array of node IDs this node connects TO
+        this.position = position;
+        this.connections = []; // Node IDs this connects TO
+        this.incomingConnections = []; // Node IDs that connect TO THIS (useful for path validation)
         this.visited = false;
-        this.data = data; // Extra data (e.g., enemy group ID for combat, event ID)
-
-        // Rendering properties (optional)
-        this.element = null; // Reference to the DOM element for this node
+        this.data = data; // { enemies?: string[], eventId?: string }
+        this.element = null; // DOM element reference (set by UIManager)
     }
 }
 
@@ -57,57 +52,67 @@ class MapNode {
  */
 export class MapManager {
     constructor(gameState, uiManager) {
+        if (!gameState) throw new Error("MapManager requires a GameState instance.");
+        if (!uiManager) throw new Error("MapManager requires a UIManager instance.");
+
         this.gameState = gameState;
         this.uiManager = uiManager;
         this.currentFloor = 0;
-        this.nodes = {}; // Store all nodes by ID: { nodeId: MapNode }
+        this.nodes = {}; // { nodeId: MapNode }
         this.startNodeId = null;
         this.bossNodeId = null;
-        this.currentNodeId = null; // ID of the node the player is currently on
+        this.currentNodeId = null;
 
         console.log("MapManager initialized.");
     }
 
     /**
      * Generates the map data for a specific floor.
-     * This is a complex task, simplified here.
      * @param {number} floorNum - The floor number to generate.
-     * @returns {object} The generated map data (nodes, connections).
      */
     generateFloor(floorNum) {
         console.log(`MapManager: Generating map for Floor ${floorNum}...`);
         this.currentFloor = floorNum;
-        this.nodes = {}; // Clear nodes from previous floor
+        this.nodes = {};
         this.startNodeId = `floor${floorNum}-start`;
         this.bossNodeId = `floor${floorNum}-boss`;
-        this.currentNodeId = null; // Reset current node
+        this.currentNodeId = null;
 
-        const distribution = NODE_DISTRIBUTION[floorNum] || NODE_DISTRIBUTION[1]; // Fallback to floor 1
-        const totalNodes = Object.values(distribution).reduce((a, b) => a + b, 0);
-        const layers = 7; // Example: Fixed number of layers/rows for the map
-        const nodesPerLayer = Math.ceil(totalNodes / (layers - 2)); // Distribute nodes between start/boss
+        const distribution = NODE_DISTRIBUTION[floorNum] || NODE_DISTRIBUTION[1];
+        const layers = 9; // Increase layers for potentially better pathing variance
+        const baseWidth = 4; // Avg nodes per layer
+        const widthVariance = 2; // Allow layers to have +/- this many nodes
 
         let nodeCounter = 0;
-        const generatedNodes = []; // Array to hold nodes layer by layer
+        const generatedNodesByLayer = []; // Array of arrays: [[startNode], [layer1Nodes], ..., [bossNode]]
+        const nodeWidth = 100; // Estimated horizontal space per node for positioning
+        const layerHeight = (800 - 100) / (layers -1); // Vertical space per layer (assuming 800px map height)
+        const mapWidth = this.uiManager?.mapArea?.clientWidth || 1000; // Get actual width if possible
+
 
         // 1. Create Start Node
-        const startNode = new MapNode(this.startNodeId, 'start', floorNum, { x: 50, y: 50 }); // Example position
+        const startNode = new MapNode(this.startNodeId, 'start', floorNum, { x: mapWidth / 2, y: 50 });
         this.nodes[this.startNodeId] = startNode;
-        generatedNodes.push([startNode]); // First layer
+        generatedNodesByLayer.push([startNode]);
 
         // 2. Generate Middle Layers
         let availableTypes = this._getShuffledNodeTypes(distribution);
         for (let layer = 1; layer < layers - 1; layer++) {
             const layerNodes = [];
-            const numNodesThisLayer = Math.min(nodesPerLayer, availableTypes.length); // Adjust based on remaining types
-             const layerY = 50 + layer * (800 - 100) / layers; // Distribute vertically (assuming 800px height)
+             // Determine number of nodes for this layer (randomized slightly)
+            const numNodesThisLayer = Math.max(1, baseWidth + Math.floor(Math.random() * (widthVariance * 2 + 1)) - widthVariance);
+            const layerY = 50 + layer * layerHeight;
 
             for (let i = 0; i < numNodesThisLayer; i++) {
-                 if (availableTypes.length === 0) break; // Ran out of types
+                 if (availableTypes.length === 0) {
+                    console.warn(`Ran out of node types for floor ${floorNum} at layer ${layer}. Using combat fallback.`);
+                    availableTypes.push('combat'); // Add fallback combat node if we run out
+                 };
 
                  const nodeType = availableTypes.pop();
                  const nodeId = `floor${floorNum}-node${nodeCounter++}-${nodeType}`;
-                 const nodeX = 50 + (i + 1) * (1200 - 100) / (numNodesThisLayer + 1); // Distribute horizontally (1200px width)
+                 // Distribute horizontally more evenly
+                 const nodeX = (mapWidth / (numNodesThisLayer + 1)) * (i + 1);
 
                  let nodeData = {};
                  if (nodeType === 'combat' || nodeType === 'elite') {
@@ -121,54 +126,99 @@ export class MapManager {
                  this.nodes[nodeId] = newNode;
                  layerNodes.push(newNode);
             }
-            if(layerNodes.length > 0) generatedNodes.push(layerNodes);
+            if(layerNodes.length > 0) generatedNodesByLayer.push(layerNodes);
         }
 
         // 3. Create Boss Node
-        const bossNode = new MapNode(this.bossNodeId, 'boss', floorNum, { x: 600, y: 800 - 50 }); // Centered at bottom
-         bossNode.data.enemies = this.selectEnemyEncounter(floorNum, 'boss'); // Get boss encounter
-        this.nodes[this.bossNodeId] = bossNode;
-        generatedNodes.push([bossNode]); // Last layer
+         const bossNode = new MapNode(this.bossNodeId, 'boss', floorNum, { x: mapWidth / 2, y: 50 + (layers - 1) * layerHeight });
+         bossNode.data.enemies = this.selectEnemyEncounter(floorNum, 'boss');
+         this.nodes[this.bossNodeId] = bossNode;
+         generatedNodesByLayer.push([bossNode]);
 
+        // 4. Create Connections (Improved Logic)
+         this._connectLayers(generatedNodesByLayer);
+         this._ensurePathToBoss(generatedNodesByLayer); // Try to guarantee at least one path
 
-        // 4. Create Connections (Simplified: connect each node to 1-2 random nodes in next layer)
-        for (let layer = 0; layer < generatedNodes.length - 1; layer++) {
-            const currentLayer = generatedNodes[layer];
-            const nextLayer = generatedNodes[layer + 1];
-            if (!nextLayer || nextLayer.length === 0) continue;
-
-            currentLayer.forEach(node => {
-                const numConnections = Math.random() < 0.4 ? 1 : 2; // Connect to 1 or 2 nodes usually
-                const potentialTargets = [...nextLayer]; // Copy target layer
-                this.shuffleArray(potentialTargets); // Shuffle targets
-
-                for (let i = 0; i < Math.min(numConnections, potentialTargets.length); i++) {
-                     node.connections.push(potentialTargets[i].id);
-                 }
-                // Ensure at least one connection if possible
-                 if (node.connections.length === 0 && potentialTargets.length > 0) {
-                     node.connections.push(potentialTargets[0].id);
-                 }
-            });
-        }
 
         // --- Final Setup ---
-        this.currentNodeId = this.startNodeId; // Player starts at the start node
+        this.currentNodeId = this.startNodeId;
         this.nodes[this.startNodeId].visited = true;
 
         console.log(`MapManager: Generated ${Object.keys(this.nodes).length} nodes for Floor ${floorNum}.`);
-        // console.log("Generated Nodes:", this.nodes); // For debugging
 
-         // Initial rendering
+         // Initial rendering via UIManager
          this.renderMap();
-
-        return { nodes: this.nodes, connections: this.getAllConnections() }; // Return map data
     }
 
+
     /**
-     * Creates a shuffled list of node types based on distribution counts.
+     * Creates connections between adjacent layers.
      */
-     _getShuffledNodeTypes(distribution) {
+    _connectLayers(layers) {
+         for (let i = 0; i < layers.length - 1; i++) {
+            const currentLayerNodes = layers[i];
+            const nextLayerNodes = layers[i + 1];
+
+            if (!nextLayerNodes || nextLayerNodes.length === 0) continue;
+
+            currentLayerNodes.forEach(node => {
+                 // Connect to 1-3 nodes in the next layer, prioritizing closer ones?
+                 const potentialTargets = [...nextLayerNodes].sort((a, b) => {
+                     // Simple proximity sort based on X distance
+                     return Math.abs(a.position.x - node.position.x) - Math.abs(b.position.x - node.position.x);
+                 });
+
+                const maxConnections = 3; // Max outgoing connections
+                 let connectionCount = 0;
+                 // Always connect to the closest?
+                 if (potentialTargets.length > 0) {
+                     const targetNode = potentialTargets[0];
+                     node.connections.push(targetNode.id);
+                     targetNode.incomingConnections.push(node.id);
+                     connectionCount++;
+                 }
+                 // Add 1-2 more random connections from remaining nearby targets
+                 const additionalConnections = Math.floor(Math.random() * Math.min(maxConnections, potentialTargets.length)); // 0, 1 or 2 more
+                  for (let j = 1; j < potentialTargets.length && connectionCount < maxConnections && connectionCount <= additionalConnections ; j++) {
+                      // Add bias towards connecting? Or purely random?
+                      if (Math.random() < 0.6) { // 60% chance to connect to other nearby nodes
+                         const targetNode = potentialTargets[j];
+                         if (!node.connections.includes(targetNode.id)) {
+                            node.connections.push(targetNode.id);
+                            targetNode.incomingConnections.push(node.id);
+                            connectionCount++;
+                         }
+                      }
+                 }
+            });
+         }
+    }
+
+     /**
+     * Tries to ensure at least one path exists from start to boss.
+     * Very basic implementation: checks if boss is reachable and adds connections if not.
+     */
+     _ensurePathToBoss(layers) {
+         const bossNode = layers[layers.length - 1][0];
+         const penultimateLayer = layers[layers.length - 2];
+
+         // Check if boss has any incoming connections
+         if (bossNode.incomingConnections.length === 0 && penultimateLayer && penultimateLayer.length > 0) {
+             console.warn("Boss node initially unreachable! Forcing connection...");
+             // Connect a random node from the penultimate layer to the boss
+             const randomPenultimateNode = penultimateLayer[Math.floor(Math.random() * penultimateLayer.length)];
+             if (!randomPenultimateNode.connections.includes(bossNode.id)) {
+                 randomPenultimateNode.connections.push(bossNode.id);
+                 bossNode.incomingConnections.push(randomPenultimateNode.id);
+                 console.log(`Forced connection from ${randomPenultimateNode.id} to boss ${bossNode.id}`);
+             }
+         }
+          // A more robust check would involve traversing the graph from the start node.
+     }
+
+
+    // Keep _getShuffledNodeTypes, shuffleArray, selectEnemyEncounter, selectEvent...
+     _getShuffledNodeTypes(distribution) { /* ... keep ... */
          const types = [];
          for (const type in distribution) {
              for (let i = 0; i < distribution[type]; i++) {
@@ -177,53 +227,39 @@ export class MapManager {
          }
          return this.shuffleArray(types);
      }
-
-    /**
-     * Utility to shuffle an array.
-     */
-    shuffleArray(array) {
+     shuffleArray(array) { /* ... keep ... */
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
         return array;
-    }
-
-
-    /**
-     * Selects an enemy encounter configuration for a given node type and floor.
-     */
-     selectEnemyEncounter(floorNum, nodeType) {
-         let key;
+     }
+     selectEnemyEncounter(floorNum, nodeType) { /* ... keep ... */
+        let key;
+         const floorKey = `floor${floorNum}`;
          if (nodeType === 'boss') {
-             key = `floor${floorNum}_boss`; // Define boss encounters separately if needed
-             // Placeholder boss encounter
-             return ['shadow_aspect_interaction']; // Default boss
+             key = `${floorKey}_boss`;
          } else {
-             key = `floor${floorNum}_${nodeType}`;
+             key = `${floorKey}_${nodeType}`;
          }
 
-         const encounters = ENEMY_ENCOUNTERS[key];
+         const encounters = ENEMY_ENCOUNTERS[key] || ENEMY_ENCOUNTERS[`floor1_${nodeType}`]; // Fallback to floor 1 if specific floor missing
          if (encounters && encounters.length > 0) {
              const randomIndex = Math.floor(Math.random() * encounters.length);
-             return encounters[randomIndex]; // Return an array of enemy IDs
+             return encounters[randomIndex];
          }
          console.warn(`No enemy encounters defined for key: ${key}. Using default.`);
          return ['doubt_whisper']; // Default fallback
      }
-
-     /**
-     * Selects an event ID for an event node.
-     */
-     selectEvent(floorNum) {
+     selectEvent(floorNum) { /* ... keep ... */
          const key = `floor${floorNum}`;
-         const eventIds = EVENT_IDS[key];
+         const eventIds = EVENT_IDS[key] || EVENT_IDS['floor1']; // Fallback to floor 1
          if (eventIds && eventIds.length > 0) {
               const randomIndex = Math.floor(Math.random() * eventIds.length);
               return eventIds[randomIndex];
          }
          console.warn(`No events defined for key: ${key}.`);
-         return null; // Or a default event ID
+         return null;
      }
 
 
@@ -236,199 +272,79 @@ export class MapManager {
             return;
         }
         // Pass necessary data to the UIManager's map rendering function
+        // UIManager needs nodes, current node ID, and all connections
         this.uiManager.renderMap(this.nodes, this.currentNodeId, this.getAllConnections());
-        this.uiManager.updatePlayerMapInfo(this.gameState.player, this.currentFloor); // Update player info display
+        // Player info update might happen separately or here
+        // this.uiManager.updatePlayerMapInfo(this.gameState.player, this.currentFloor);
     }
 
 
     /**
-     * Moves the player to a new node if it's a valid connection from the current node.
+     * Moves the player to a new node and triggers the node's interaction logic via GameState.
      * @param {string} targetNodeId - The ID of the node to move to.
      */
     moveToNode(targetNodeId) {
+        // Validate move
         if (!this.currentNodeId || !this.nodes[this.currentNodeId]) {
             console.error("MapManager: Cannot move, current node is invalid.");
             return;
         }
-
         const currentNode = this.nodes[this.currentNodeId];
         if (!currentNode.connections.includes(targetNodeId)) {
             console.warn(`MapManager: Cannot move from ${this.currentNodeId} to ${targetNodeId}. Not connected.`);
+            this.uiManager.showActionFeedback("Invalid move!", "warning"); // UI Feedback
             return;
         }
-
         const targetNode = this.nodes[targetNodeId];
         if (!targetNode) {
             console.error(`MapManager: Target node ${targetNodeId} not found.`);
+             this.uiManager.showActionFeedback("Map Error!", "error");
             return;
         }
 
+        // --- Perform Move ---
         console.log(`MapManager: Moving from ${currentNode.type} node ${this.currentNodeId} to ${targetNode.type} node ${targetNodeId}...`);
         this.currentNodeId = targetNodeId;
-        targetNode.visited = true; // Mark the new node as visited
+        targetNode.visited = true;
 
-        // --- Trigger Node Interaction ---
-        this.gameState.handleNodeEntry(targetNode); // Delegate interaction logic to GameState
+        // --- Delegate Interaction to GameState ---
+        // GameState will handle starting combat, events, shops etc. and changing screens
+        this.gameState.handleNodeEntry(targetNode);
 
-        // Re-render the map to show updated player position and visited status
-        this.renderMap();
+        // --- Update UI (Map is usually re-rendered AFTER node interaction completes) ---
+        // We don't necessarily render the map immediately here, because handleNodeEntry
+        // might switch the screen to combat/event/etc. The map should be rendered
+        // when the player returns TO the map screen after completing the node action.
+        // However, we might update player info immediately if needed.
+         this.uiManager.updatePlayerMapInfo(this.gameState.player, this.currentFloor);
+
     }
 
 
-    /**
-     * Returns an array of all connection pairs for rendering.
-     * @returns {Array<{from: string, to: string}>}
-     */
-    getAllConnections() {
+    // Keep getAllConnections, getAvailableMoves, getCurrentNode...
+     getAllConnections() { /* ... keep ... */
         const connections = [];
         Object.values(this.nodes).forEach(node => {
             node.connections.forEach(targetId => {
-                connections.push({ from: node.id, to: targetId });
+                // Ensure target exists before adding connection (robustness)
+                if(this.nodes[targetId]) {
+                    connections.push({ from: node.id, to: targetId });
+                } else {
+                    console.warn(`Map Connection Error: Node ${node.id} connects to non-existent node ${targetId}`);
+                }
             });
         });
         return connections;
-    }
-
-    /**
-     * Returns the possible next nodes the player can move to.
-     * @returns {MapNode[]} An array of reachable MapNode objects.
-     */
-    getAvailableMoves() {
-        if (!this.currentNodeId || !this.nodes[this.currentNodeId]) {
+     }
+     getAvailableMoves() { /* ... keep ... */
+         if (!this.currentNodeId || !this.nodes[this.currentNodeId]) {
             return [];
         }
         const currentNode = this.nodes[this.currentNodeId];
-        return currentNode.connections.map(id => this.nodes[id]).filter(node => node); // Filter out invalid IDs
-    }
-
-    getCurrentNode() {
+        return currentNode.connections.map(id => this.nodes[id]).filter(node => node);
+     }
+     getCurrentNode() { /* ... keep ... */
         return this.nodes[this.currentNodeId];
-    }
-
-
-} // End of MapManager class
-
-
-// --- Add Map Rendering to UIManager (Example Snippet) ---
-/*
-// Add this method to UIManager.js
-
-    renderMap(nodes, currentNodeId, connections) {
-        if (!this.mapArea) return;
-        this.mapArea.innerHTML = ''; // Clear previous map
-        const mapSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        mapSvg.setAttribute('width', '100%');
-        mapSvg.setAttribute('height', '100%');
-        mapSvg.style.backgroundColor = '#34495e'; // Match area background
-
-        // Render Connections (Lines) first
-        connections.forEach(conn => {
-            const fromNode = nodes[conn.from];
-            const toNode = nodes[conn.to];
-            if (fromNode && toNode) {
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute('x1', fromNode.position.x);
-                line.setAttribute('y1', fromNode.position.y);
-                line.setAttribute('x2', toNode.position.x);
-                line.setAttribute('y2', toNode.position.y);
-                // Style based on visited status?
-                 line.setAttribute('stroke', fromNode.visited ? '#bdc3c7' : '#7f8c8d'); // Lighter if origin visited
-                line.setAttribute('stroke-width', '2');
-                mapSvg.appendChild(line);
-            }
-        });
-
-        // Render Nodes (Circles/Icons) second
-        Object.values(nodes).forEach(node => {
-             const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-             nodeGroup.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
-             nodeGroup.style.cursor = 'pointer'; // Indicate clickable
-
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute('r', '15'); // Radius of the node circle
-            circle.setAttribute('fill', this.getNodeColor(node.type));
-            circle.setAttribute('stroke', node.id === currentNodeId ? '#f1c40f' : (node.visited ? '#555' : '#ecf0f1')); // Highlight current, dim visited
-            circle.setAttribute('stroke-width', node.id === currentNodeId ? '3' : '2');
-
-            // Add icon based on type (using Font Awesome text)
-             const iconText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-             iconText.setAttribute('font-family', 'FontAwesome'); // Requires Font Awesome loaded
-             iconText.setAttribute('font-size', '16px');
-             iconText.setAttribute('fill', '#fff');
-             iconText.setAttribute('text-anchor', 'middle');
-             iconText.setAttribute('dominant-baseline', 'central');
-             iconText.textContent = this.getNodeIcon(node.type);
-
-
-            nodeGroup.appendChild(circle);
-            nodeGroup.appendChild(iconText);
-
-            // Store node ID for click handling
-             nodeGroup.dataset.nodeId = node.id;
-
-            // Add click listener to move
-             nodeGroup.addEventListener('click', () => {
-                  if (nodes[currentNodeId]?.connections.includes(node.id)) {
-                       this.gameState.mapManager.moveToNode(node.id); // Use references correctly
-                  } else {
-                      console.log(`Cannot move to ${node.id} from ${currentNodeId}`);
-                  }
-             });
-
-             // Add tooltip listener
-            nodeGroup.addEventListener('mouseover', (event) => {
-                 this.showTooltip(`Node: ${node.type.toUpperCase()}${node.visited ? ' (Visited)' : ''}`, event.clientX, event.clientY);
-            });
-             nodeGroup.addEventListener('mouseout', () => {
-                 this.hideTooltip();
-             });
-              nodeGroup.addEventListener('mousemove', (event) => {
-                  this.updateTooltipPosition(event.clientX, event.clientY);
-              });
-
-
-             node.element = nodeGroup; // Store reference if needed
-             mapSvg.appendChild(nodeGroup);
-        });
-
-        this.mapArea.appendChild(mapSvg);
-    }
-
-     getNodeColor(type) {
-         switch (type) {
-             case 'combat': return '#c0392b'; // Red
-             case 'elite': return '#8e44ad'; // Purple
-             case 'event': return '#2980b9'; // Blue
-             case 'rest': return '#27ae60'; // Green
-             case 'shop': return '#f39c12'; // Orange
-             case 'boss': return '#e74c3c'; // Darker Red
-             case 'start': return '#bdc3c7'; // Grey
-             default: return '#7f8c8d';
-         }
      }
 
-      getNodeIcon(type) {
-          // Font Awesome unicode characters
-          switch (type) {
-              case 'combat': return '\uf118'; // fa-meh (placeholder for sword)
-              case 'elite': return '\uf005'; // fa-star
-              case 'event': return '\uf059'; // fa-question-circle
-              case 'rest': return '\uf0f4'; // fa-coffee (placeholder for campfire)
-              case 'shop': return '\uf07a'; // fa-shopping-cart
-              case 'boss': return '\uf188'; // fa-skull (placeholder)
-              case 'start': return '\uf007'; // fa-user
-              default: return '?';
-          }
-      }
-
-    updatePlayerMapInfo(player, floor) {
-        if (!this.playerInfoMap) return;
-        // Example: Show HP and current floor
-        this.playerInfoMap.innerHTML = `
-            <span>Floor: ${floor}</span>
-            <span>Integrity: ${player.currentIntegrity} / ${player.maxIntegrity}</span>
-            <span>Insight: ${player.insightThisRun} <i class='fas fa-brain insight-icon'></i></span>
-            <span>Deck: ${player.deckManager.masterDeck.length}</span>
-        `;
-    }
-*/
+} // End of MapManager class
