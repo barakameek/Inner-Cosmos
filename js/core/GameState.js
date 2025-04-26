@@ -7,7 +7,7 @@ import { CombatManager } from '../combat/CombatManager.js';
 import { UIManager } from '../ui/UIManager.js';
 import { Card } from './Card.js';
 import { Artifact } from './Artifact.js';
-import * as Data from '../data.js';
+import * as Data from '.../data.js';
 import { ARTIFACT_TEMPLATES } from './ArtifactDefinitions.js';
 // Assuming ENEMY_TEMPLATES are accessible, e.g., imported or part of Data
 import { ENEMY_TEMPLATES } from '../combat/Enemy.js';
