@@ -823,7 +823,9 @@ export class UIManager {
     console.log("UIManager:renderMap - FINISHED execution."); // <<< ADD THIS
 }
         // Render Nodes
-        Object.values(nodes).forEach(node => 
+            // Render Nodes (Circles/Icons) second
+        console.log("UIManager:renderMap - Rendering node elements...");
+        Object.values(nodes).forEach(node => { // <<< ADDED Opening Brace {
              const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
              nodeGroup.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
              const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute('r', '15');
@@ -837,10 +839,15 @@ export class UIManager {
              const isAvailableMove = nodes[currentNodeId]?.connections.includes(node.id);
              if (isAvailableMove && node.id !== currentNodeId) { // Ensure not current node for click
                  nodeGroup.style.cursor = 'pointer';
-                 nodeGroup.addEventListener('click', () => this.gameState?.mapManager?.moveToNode(node.id));
+                 // Ensure gameState and mapManager exist before adding listener
+                 nodeGroup.addEventListener('click', () => {
+                     if (this.gameState && this.gameState.mapManager) {
+                         this.gameState.mapManager.moveToNode(node.id);
+                     } else { console.error("Cannot move node: GameState or MapManager missing in UIManager listener."); }
+                 });
              } else { nodeGroup.style.cursor = 'default'; nodeGroup.style.opacity = (node.id !== currentNodeId && !node.visited) ? 0.6 : 1; }
              // Tooltip listeners
-             nodeGroup.addEventListener('mouseover', (event) => { /* ... show tooltip ... */
+             nodeGroup.addEventListener('mouseover', (event) => {
                   let tooltipText = `${node.type.toUpperCase()}${node.visited ? ' (Visited)' : ''}`;
                   if(node.id === currentNodeId) tooltipText += " (Current)";
                   else if (!isAvailableMove && !node.visited) tooltipText += " (Unavailable)";
@@ -848,10 +855,15 @@ export class UIManager {
              });
              nodeGroup.addEventListener('mouseout', () => this.hideTooltip());
              nodeGroup.addEventListener('mousemove', (event) => this.updateTooltipPosition(event.clientX, event.clientY));
-             node.element = nodeGroup; mapSvg.appendChild(nodeGroup);
-        });
+             node.element = nodeGroup;
+             mapSvg.appendChild(nodeGroup);
+        }); // <<< ADDED Closing Brace }
+
+        // Append the SVG to the container
+        console.log("UIManager:renderMap - Appending SVG to mapArea.");
         mapContainer.appendChild(mapSvg);
-    }
+        console.log("UIManager:renderMap - FINISHED execution.");
+    } // <<< Closing brace for the renderMap method itself
     getNodeColor(type) { /* ... keep ... */
         switch (type) { case 'combat': return '#c0392b'; case 'elite': return '#8e44ad'; case 'event': return '#2980b9'; case 'rest': return '#27ae60'; case 'shop': return '#f39c12'; case 'boss': return '#e74c3c'; case 'start': return '#bdc3c7'; default: return '#7f8c8d'; }
     }
