@@ -40,23 +40,41 @@ body {
     display: none; /* Hide screens by default */
     flex-direction: column; /* Default layout for screens */
     overflow-y: auto; /* Allow scrolling if content overflows */
+    background-color: #34495e; /* Default screen background */
 }
 
 .screen.active {
     display: flex; /* Show the active screen */
 }
 
+/* --- Headings --- */
+.screen h1 {
+    margin-bottom: 30px;
+    font-size: 3em;
+    color: #e74c3c; /* Reddish title */
+    text-align: center;
+}
+.screen h2 {
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #e67e22; /* Orange subtitle */
+    text-align: center;
+    border-bottom: 1px solid #7f8c8d;
+    padding-bottom: 10px;
+}
+.screen h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 1.4em;
+    color: #f1c40f; /* Yellow section title */
+}
+
+
 /* --- Main Menu Specifics --- */
 #mainMenuScreen {
     justify-content: center;
     align-items: center;
     text-align: center;
-}
-
-#mainMenuScreen h1 {
-    margin-bottom: 30px;
-    font-size: 3em;
-    color: #e74c3c; /* Reddish title */
 }
 
 #mainMenuScreen button {
@@ -77,50 +95,118 @@ body {
 }
 
 
-/* --- Basic Combat Screen Layout Placeholders --- */
+/* --- Map Screen Layout --- */
+#mapScreen {
+    background-color: #2c3e50; /* Darker background for map */
+}
+#mapArea {
+    flex-grow: 1; /* Takes up available space */
+    border: 1px solid #7f8c8d;
+    margin-bottom: 10px;
+    padding: 0; /* Remove padding for SVG */
+    position: relative; /* For node placement */
+    background-color: #34495e;
+    overflow: hidden; /* Prevent SVG overflow issues */
+}
+#mapArea svg {
+    display: block; /* Remove extra space below SVG */
+}
+#playerInfoMap {
+    height: 50px; /* Fixed height for player info */
+    border-top: 1px solid #7f8c8d;
+    padding: 5px 15px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #2c3e50; /* Match map background */
+    font-size: 0.9em;
+}
+
+
+/* --- Combat Screen Layout --- */
 #combatScreen {
     position: relative; /* For positioning elements inside */
     background-color: #1a2530; /* Darker combat background */
+    padding: 10px; /* Reduce padding for combat */
 }
 
 #enemyArea {
-    height: 30%; /* Approximate */
+    height: 35%; /* More space for enemies */
     border-bottom: 1px dashed #7f8c8d;
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: flex-end; /* Align enemies to bottom */
     padding: 10px;
-    color: #e74c3c; /* Enemy elements in red */
+    gap: 15px;
+}
+.enemy-display {
+    border: 2px solid #ccc;
+    background-color: rgba(52, 73, 94, 0.8); /* Semi-transparent */
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    min-width: 120px;
+    transition: border-color 0.3s ease, opacity 0.3s ease;
+    color: #ecf0f1;
+}
+.enemy-display div {
+    margin-bottom: 4px;
+    font-size: 0.9em;
+}
+.enemy-intent {
+    margin-top: 5px;
+    font-style: italic;
+    color: #f39c12; /* Orange intent color */
+    font-size: 0.85em;
+    min-height: 1.2em; /* Reserve space even if no intent */
+}
+.enemy-statuses {
+    font-size: 0.8em;
+    min-height: 1em;
+    color: #bdc3c7;
 }
 
 #playerArea {
-    height: 20%; /* Approximate */
+    height: 15%; /* Less space needed */
     border-bottom: 1px dashed #7f8c8d;
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between; /* Align stats left, statuses right? */
     align-items: center;
-    padding: 10px;
+    padding: 5px 15px;
     color: #3498db; /* Player elements in blue */
+    transition: border-color 0.3s ease;
+    font-size: 0.95em;
+}
+#playerStatusesCombat {
+    text-align: right;
+    font-size: 0.9em;
 }
 
+
 #handArea {
-    height: 35%; /* Approximate */
-    border-bottom: 1px dashed #7f8c8d;
+    height: 35%; /* Space for cards */
+    /* border-bottom: 1px dashed #7f8c8d; */ /* Remove bottom border */
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap; /* Allow cards to wrap */
+    flex-wrap: nowrap; /* Prevent wrapping initially */
     padding: 10px;
-    overflow-x: auto; /* Allow horizontal scroll if many cards */
+    overflow-x: auto; /* Allow horizontal scroll for many cards */
     gap: 10px;
+    transition: opacity 0.3s ease; /* For disabling input */
 }
 
 #deckDiscardArea {
-    height: 15%; /* Approximate */
+    height: 15%; /* Bottom controls */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 5px 15px;
+    border-top: 1px solid #7f8c8d;
+}
+#deckInfo {
+    font-size: 0.9em;
+    color: #bdc3c7;
 }
 
 #endTurnButton {
@@ -131,32 +217,95 @@ body {
     color: white;
     border: none;
     border-radius: 5px;
+    transition: background-color 0.3s ease;
 }
-#endTurnButton:hover {
+#endTurnButton:hover:not(:disabled) {
     background-color: #27ae60;
 }
+#endTurnButton:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
 
-/* --- Basic Map Screen Layout --- */
-#mapScreen {
-    background-color: #2c3e50; /* Match body */
+/* --- Status Effect Styling --- */
+.status-effect {
+    border: 1px solid;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 0 2px;
+    font-size: 0.8em;
+    display: inline-block; /* Prevent wrapping */
+    white-space: nowrap;
 }
-#mapArea {
-    flex-grow: 1; /* Takes up available space */
-    border: 1px solid #7f8c8d;
-    margin-bottom: 10px;
-    padding: 10px;
-    /* Placeholder for map visualization */
-    background-color: #34495e;
-    position: relative; /* For node placement */
-}
-#playerInfoMap {
-    height: 50px; /* Fixed height for player info */
-    border-top: 1px solid #7f8c8d;
-    padding: 5px;
+.player-status { border-color: #3498db; background-color: rgba(52, 152, 219, 0.2); }
+.enemy-status { border-color: #e74c3c; background-color: rgba(231, 76, 60, 0.2); }
+
+
+/* --- Basic Card Styling --- */
+.card {
+    border: 2px solid #bdc3c7;
+    background-color: #4a627a; /* Darker blue-grey */
+    color: #ecf0f1;
+    padding: 8px;
+    width: 120px; /* Fixed width */
+    height: 180px; /* Fixed height */
+    border-radius: 8px;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: grab; /* Indicate draggable */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.85em;
+    position: relative; /* For positioning cost */
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    user-select: none; /* Prevent text selection while dragging */
 }
+.card:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-color: #f1c40f; /* Highlight border on hover */
+}
+.card-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+    text-align: center;
+    color: #f1c40f; /* Yellowish name */
+    padding-top: 15px; /* Space below cost */
+}
+.card-cost {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: #2980b9; /* Blue cost background */
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    font-weight: bold;
+    border: 1px solid #ecf0f1;
+}
+.card-description {
+    font-size: 0.95em;
+    flex-grow: 1;
+    margin: 5px 0;
+    overflow-y: auto; /* Allow scroll if text too long */
+    padding: 2px;
+    text-align: center;
+}
+.card-type {
+    font-size: 0.8em;
+    font-style: italic;
+    text-align: center;
+    color: #bdc3c7; /* Light grey type */
+    padding-top: 5px;
+    border-top: 1px dashed #7f8c8d;
+}
+
 
 /* --- Modal Popup Styling --- */
 .modal {
@@ -165,19 +314,19 @@ body {
     z-index: 100; /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7); /* Darker overlay */
 }
 
 .modal-content {
-    background-color: #4a627a;
-    margin: 15% auto; /* 15% from the top and centered */
+    background-color: #4a627a; /* Mid-dark blue-grey */
+    margin: 10% auto; /* Adjust vertical margin */
     padding: 25px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-    max-width: 600px;
+    border: 1px solid #7f8c8d;
+    width: 90%; /* Allow wider modal */
+    max-width: 700px; /* Increase max width */
     border-radius: 8px;
     position: relative;
     color: #ecf0f1;
@@ -214,6 +363,7 @@ body {
     color: white;
     border: none;
     border-radius: 4px;
+    transition: background-color 0.2s ease;
 }
 #modalChoices button:hover {
     background-color: #2980b9;
@@ -228,11 +378,12 @@ body {
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 0.9em;
-    position: absolute;
-    z-index: 101; /* Above modal potentially */
-    white-space: pre-wrap; /* Respect newlines in tooltip text */
+    position: absolute; /* Managed by JS */
+    z-index: 101; /* Above most things */
+    white-space: pre-wrap;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     pointer-events: none; /* Prevent tooltip from blocking mouse events */
+    max-width: 300px; /* Prevent very wide tooltips */
 }
 
 /* --- Helper Classes --- */
@@ -240,59 +391,151 @@ body {
     display: none !important; /* Force hide */
 }
 
-/* Basic Card Placeholder Style */
-.card {
-    border: 1px solid #ccc;
-    background-color: #567;
-    padding: 10px;
-    min-width: 100px;
-    min-height: 150px;
-    border-radius: 5px;
+/* --- Reward/Shop/Selection Grids --- */
+.card-grid, .artifact-grid {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    font-size: 0.8em;
-}
-.card:hover {
-    transform: translateY(-5px) scale(1.03);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-.card-name {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #f1c40f; /* Yellowish name */
-}
-.card-cost {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    background-color: rgba(0,0,0,0.6);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    font-size: 0.9em;
-    font-weight: bold;
-}
-.card-description {
-    font-size: 0.9em;
-    flex-grow: 1;
-    margin-bottom: 5px;
-}
-.card-type {
-    font-size: 0.8em;
-    font-style: italic;
-    text-align: right;
-    color: #bdc3c7; /* Light grey type */
+    gap: 15px; /* Space between items */
+    margin: 15px 0;
+    padding: 10px;
+    border: 1px dashed #7f8c8d;
+    border-radius: 5px;
+    min-height: 100px;
+    background-color: rgba(44, 62, 80, 0.5); /* Slightly darker inner area */
 }
 
-/* Icon style */
+/* Specific Card Selection Modal Grid */
+#cardSelectionGrid {
+    max-height: 400px;
+    overflow-y: auto;
+    justify-content: flex-start; /* Align cards to start */
+}
+#cardSelectionModal .modal-content {
+     max-width: 900px; /* Allow card selection modal to be wider */
+     margin: 5% auto; /* Less top margin */
+}
+
+
+/* --- Shop Specifics --- */
+.shop-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #566573;
+}
+.shop-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px; /* Space below shop items */
+}
+.shop-item button, #shopRemoveService button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    cursor: pointer;
+    background-color: #27ae60; /* Green purchase buttons */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+.shop-item button:hover:not(:disabled), #shopRemoveService button:hover:not(:disabled) {
+    background-color: #229954;
+}
+.shop-item button:disabled, #shopRemoveService button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+/* --- Rest Site Specifics --- */
+#restSiteScreen button {
+    display: block;
+    width: 80%;
+    max-width: 300px;
+    margin: 15px auto;
+    padding: 15px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, opacity 0.3s ease;
+}
+#restHealButton { background-color: #2ecc71; color: white; } /* Green */
+#restMeditateButton { background-color: #8e44ad; color: white; } /* Purple */
+#restJournalButton { background-color: #e74c3c; color: white; } /* Red */
+#leaveRestSiteButton { background-color: #7f8c8d; color: white; } /* Grey */
+
+#restSiteScreen button:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+#restSiteScreen button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+#restUsedIndicator {
+    text-align: center;
+    margin-top: 20px;
+    font-style: italic;
+    color: #bdc3c7;
+}
+
+/* --- Reward Screen Specifics --- */
+#rewardScreen {
+    text-align: center;
+}
+#rewardInsight {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #f1c40f; /* Yellow insight */
+}
+#rewardScreen .card-grid .card:hover, #rewardScreen .artifact-grid .artifact-display:hover {
+     /* Enhance hover for selection */
+     box-shadow: 0 0 15px #f1c40f;
+     border-color: #fff;
+}
+#rewardSkipButton {
+    margin-top: 25px;
+    padding: 12px 30px;
+    font-size: 1.1em;
+    background-color: #3498db; /* Blue continue button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#rewardSkipButton:hover {
+    background-color: #2980b9;
+}
+
+.artifact-display {
+    border: 1px solid #aaa;
+    padding: 8px 12px;
+    margin: 5px;
+    background-color: #525E6C; /* Slightly different from card bg */
+    border-radius: 4px;
+    min-width: 180px; /* Wider for text */
+    max-width: 250px;
+    text-align: left;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+.artifact-display strong {
+    color: #f1c40f; /* Match card name color */
+}
+
+
+/* --- Meta Screen Placeholder --- */
+#metaScreen button {
+     margin-top: 30px;
+     padding: 10px 20px;
+     /* Add styling */
+}
+
+/* --- Icon style --- */
 .insight-icon {
     color: #f1c40f; /* Yellowish */
     margin-left: 2px;
+    font-size: 0.9em; /* Slightly smaller */
 }
