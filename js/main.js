@@ -1,136 +1,113 @@
-// --- Imports ---
-// We'll import specific classes/functions as we create them
-// For now, let's anticipate needing these modules:
-// import { GameState } from './core/GameState.js';
-// import { Player } from './core/Player.js';
-// import { MapManager } from './map/MapManager.js';
-// import { CombatManager } from './combat/CombatManager.js';
-// import { UIManager } from './ui/UIManager.js';
-// import { MetaProgression } from './meta/MetaProgression.js';
+// js/main.js
 
-// Import data directly (it exports named objects)
-import * as Data from './data.js'; // Use 'as Data' to namespace the imports
+// --- Imports ---
+import { GameState } from './core/GameState.js';
+import { Player } from './core/Player.js'; // Although GameState creates Player
+import { UIManager } from './ui/UIManager.js';
+import { MetaProgression } from './meta/MetaProgression.js';
+import * as Data from './data.js';
 
 // --- Global Variables & Constants ---
-// (We'll add more as needed)
 const gameContainer = document.getElementById('gameContainer');
-let currentScreen = null; // Track the currently active screen element
+let uiManager = null; // Will hold the UIManager instance
+let metaProgression = null; // Will hold the MetaProgression instance
+let currentGameState = null; // Will hold the active GameState instance for the run
 
 // --- Game Initialization ---
 function initializeGame() {
     console.log("Initializing Persona Labyrinth...");
 
-    // TODO: Load Meta Progression / Save Data
-    // const metaProgress = new MetaProgression();
-    // metaProgress.load(); // Load saved unlocks, insight, etc.
+    // 1. Initialize Meta Progression (Loads save data)
+    metaProgression = new MetaProgression();
 
-    // TODO: Initialize GameState
-    // const gameState = new GameState();
+    // 2. Initialize UI Manager
+    uiManager = new UIManager('gameContainer'); // Pass container ID
 
-    // Setup UI Manager (simplified for now)
-    setupUIManager();
-
-    // Show the main menu initially
-    showScreen('mainMenuScreen');
-
-    // Setup initial event listeners
+    // 3. Setup initial event listeners (now using uiManager potentially)
     setupMainMenuListeners();
 
+    // 4. Show the main menu initially
+    uiManager.showScreen('mainMenuScreen');
+
     console.log("Game Initialized. Welcome, Alchemist.");
-    // --- TEMPORARY ---
-    // Log loaded data to verify import
-    console.log("Element Details Loaded:", Data.elementDetails);
-    console.log("Concepts Loaded:", Data.concepts.length);
-    // --- END TEMPORARY ---
+    // Verify data load (optional)
+    // console.log("Concepts Loaded:", Data.concepts.length);
+    // console.log("Initial Meta Insight:", metaProgression.totalInsight);
 }
 
-// --- UI Management (Simplified) ---
-// (This will likely become a dedicated UIManager class later)
-const screens = {};
-
-function setupUIManager() {
-    // Find all screen elements and store them
-    const screenElements = gameContainer.querySelectorAll('.screen');
-    screenElements.forEach(screen => {
-        screens[screen.id] = screen;
-        screen.classList.remove('active'); // Ensure all are hidden initially
-    });
-    console.log("UI Manager initialized, found screens:", Object.keys(screens));
-}
-
-function showScreen(screenId) {
-    if (currentScreen) {
-        currentScreen.classList.remove('active');
-        // Optional: Add fade-out transition later
-    }
-    if (screens[screenId]) {
-        currentScreen = screens[screenId];
-        currentScreen.classList.add('active');
-        console.log(`Showing screen: ${screenId}`);
-        // Optional: Add fade-in transition later
-    } else {
-        console.error(`Screen ID "${screenId}" not found!`);
-    }
-}
+// --- UI Management ---
+// We now rely on the UIManager instance, so these functions are less needed here
+// function showScreen(screenId) { uiManager?.showScreen(screenId); } // Example delegation
 
 // --- Event Listeners Setup ---
 function setupMainMenuListeners() {
-    const startButton = document.getElementById('startGameButton');
-    // Add other main menu button listeners here (Load, Meta, Settings)
+    // Use uiManager references if available, otherwise query DOM directly as fallback
+    const startButton = uiManager?.startGameButton || document.getElementById('startGameButton');
+    const loadButton = uiManager?.loadGameButton || document.getElementById('loadGameButton');
+    const metaButton = uiManager?.metaProgressionButton || document.getElementById('metaProgressionButton');
+    const settingsButton = uiManager?.settingsButton || document.getElementById('settingsButton');
+    const backToMenuButton = uiManager?.backToMenuButton || document.getElementById('backToMenuButton'); // From meta screen
 
     if (startButton) {
-        startButton.addEventListener('click', () => {
-            console.log("Start Game button clicked");
-            startNewRun();
-        });
+        startButton.addEventListener('click', startNewRun); // Keep reference to function
     } else {
         console.error("Start Game button not found!");
     }
 
-    // Placeholder listeners for other buttons
-    const loadButton = document.getElementById('loadGameButton');
     if (loadButton) loadButton.addEventListener('click', () => alert("Load Game functionality not implemented yet."));
 
-    const metaButton = document.getElementById('metaProgressionButton');
-     if (metaButton) {
-         // Example of switching to another screen
-         const backButton = document.getElementById('backToMenuButton'); // Get the back button from meta screen
-         metaButton.addEventListener('click', () => showScreen('metaScreen'));
-         if(backButton) backButton.addEventListener('click', () => showScreen('mainMenuScreen'));
+    if (metaButton) {
+         metaButton.addEventListener('click', () => {
+             // TODO: Render meta progression screen using uiManager and metaProgression data
+             console.log("TODO: Render meta screen with unlocks/insight.");
+             uiManager?.showScreen('metaScreen');
+         });
+     }
+     if (backToMenuButton) { // Listener for button ON the meta screen
+          backToMenuButton.addEventListener('click', () => uiManager?.showScreen('mainMenuScreen'));
      }
 
-
-    const settingsButton = document.getElementById('settingsButton');
     if (settingsButton) settingsButton.addEventListener('click', () => alert("Settings functionality not implemented yet."));
 }
 
 // --- Game Flow Functions ---
 function startNewRun() {
-    console.log("Starting new run...");
+    console.log("Starting new run via main.js...");
 
-    // --- Placeholder Steps ---
-    // 1. Reset or Initialize Run-Specific Game State
-    //    - Create Player instance (using Lab data or default)
-    //    - Build initial deck
-    //    - Reset floor number, etc.
-    console.log("TODO: Initialize Player, Deck, Run State...");
+    // --- Get Starting Player Data ---
+    // TODO: Implement logic to select starting persona/deck based on meta unlocks
+    const startingPlayerData = {
+        // Example: Load base stats + permanent upgrades from metaProgression
+        maxIntegrity: (metaProgression?.getStartingBonus('baseIntegrity') || 70) + (metaProgression?.getStartingBonus('maxIntegrityBonus') || 0),
+        // Add other starting bonuses (focus, specific cards, artifacts?)
+        // attunements could be loaded from a saved Persona Lab profile or chosen archetype
+        attunements: metaProgression?.getDefaultAttunements(), // Using default for now
+        startingDeck: metaProgression?.getDefaultDeckIds() // Using default for now
+    };
 
-    // 2. Generate Map for Floor 1
-    //    - const mapManager = new MapManager();
-    //    - mapManager.generateFloor(1);
-    console.log("TODO: Generate Map for Floor 1...");
+    // 1. Create a new GameState instance for this run
+    // Pass references to metaProgression and uiManager
+    currentGameState = new GameState(startingPlayerData, metaProgression, uiManager);
 
-    // 3. Transition to Map Screen
-    showScreen('mapScreen');
+    // 2. Tell GameState to initialize the run internals (Player, Map, Combat Managers)
+    // This now happens inside GameState's constructor or a dedicated start method
+    currentGameState.startRun(startingPlayerData, metaProgression, uiManager); // Pass refs again just in case
 
-    // 4. Update Map UI & Player Info UI
-    console.log("TODO: Render Map UI & Player Info...");
-    // --- End Placeholders ---
+    // 3. Tell UIManager which GameState to use for callbacks
+    uiManager?.setGameState(currentGameState);
+
+    // 4. Transition to Map Screen (GameState.startRun now handles MapManager generation & initial render)
+    uiManager?.showScreen('mapScreen');
+
+    // 5. Check initial state-based milestones
+    metaProgression?.checkStateBasedMilestones(currentGameState);
 }
 
 // --- Main Execution ---
-// Wait for the DOM to be fully loaded before initializing
 document.addEventListener('DOMContentLoaded', initializeGame);
 
-// --- Exports (if needed later by other modules) ---
-// export { showScreen }; // Example export
+// --- Optional: Make core objects globally accessible for debugging ---
+// window.uiManager = uiManager;
+// window.metaProgression = metaProgression;
+// window.currentGameState = currentGameState;
+// window.Data = Data; // Expose Data for easy console access
