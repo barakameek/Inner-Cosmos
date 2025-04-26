@@ -1,10 +1,7 @@
 // js/combat/CombatManager.js
 
 import { Enemy } from './Enemy.js';
-// No longer need direct Player/GameState imports if accessed via this.gameState
-// import { GameState } from '../core/GameState.js';
-// import { Player } from '../core/Player.js';
-// import { Card } from '../core/Card.js';
+// No direct imports needed if GameState and UIManager are passed in constructor
 
 /**
  * Manages the state and flow of a single combat encounter.
@@ -14,17 +11,13 @@ export class CombatManager {
         if (!gameState) throw new Error("CombatManager requires a GameState instance.");
         if (!uiManager) throw new Error("CombatManager requires a UIManager instance.");
 
-        this.gameState = gameState; // Reference to the main game state
-        this.uiManager = uiManager; // Reference to the UI manager for updates
+        this.gameState = gameState;
+        this.uiManager = uiManager;
         this.isActive = false;
         this.enemies = [];
         this.playerTurn = true;
         this.turnNumber = 0;
-        this.currentRewardData = null; // Store pending rewards if needed between states
-
-        // Combat queue/timing variables (optional)
-        this.actionQueue = [];
-        this.processingQueue = false;
+        this.currentTarget = null; // Store the currently selected enemy target
 
         console.log("CombatManager initialized.");
     }
@@ -38,64 +31,61 @@ export class CombatManager {
             console.warn("CombatManager: Cannot start combat, already active.");
             return;
         }
+        if (!this.gameState || !this.uiManager || !this.gameState.player) {
+             console.error("CombatManager: Cannot start combat - GameState, UIManager, or Player missing.");
+             return;
+        }
+
         console.log("CombatManager: Starting combat...");
         this.isActive = true;
         this.turnNumber = 1;
         this.playerTurn = true;
-        this.currentRewardData = null; // Clear any previous reward data
+        this.currentTarget = null; // Reset target at combat start
 
-        // --- Spawn Enemies ---
+        // Spawn Enemies
         this.enemies = enemyIds.map((id, index) => new Enemy(id, index));
         if (this.enemies.some(e => e.enemyType === 'error')) {
-            console.error("CombatManager: Error creating one or more enemies. Aborting combat start.");
+            console.error("CombatManager: Error creating enemies. Aborting combat.");
             this.isActive = false;
             this.enemies = [];
-            // TODO: Handle this error (e.g., tell GameState to complete the node with an error state?)
             this.gameState.completeNode(this.gameState.mapManager?.currentNodeId, { error: "Enemy spawn failed" });
-            this.uiManager.showScreen('mapScreen'); // Go back to map
+            this.uiManager.showScreen('mapScreen');
             return;
         }
         console.log("Enemies spawned:", this.enemies.map(e => e.name));
 
-        // --- Player Combat Setup ---
-        // Ensure player exists before calling startCombat
-        if (!this.gameState.player) {
-             console.error("CombatManager: Player object not found in GameState!");
-             this.isActive = false;
-             this.enemies = [];
-             return;
-        }
-        this.gameState.player.startCombat(); // Resets block, draws initial hand, gains focus, triggers artifacts
+        // Player Combat Setup (triggers artifacts, draws hand, etc.)
+        this.gameState.player.startCombat();
 
-        // --- UI Setup ---
+        // UI Setup - Show screen FIRST, then start turn which updates UI
         this.uiManager.showScreen('combatScreen');
-        // Initial UI update is now triggered by beginPlayerTurn
-        // this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
+        this.beginPlayerTurn(); // Start the first player turn (which calls updateCombatUI)
 
         console.log(`--- Combat Start --- Floor ${this.gameState.currentFloor}, Turn ${this.turnNumber}`);
-        this.beginPlayerTurn(); // Start the first player turn
     }
 
     /**
      * Ends the current combat encounter.
-     * Clean state and delegate back to GameState for rewards/progression.
      * @param {boolean} victory - Whether the player won the combat.
      */
     endCombat(victory) {
-        if (!this.isActive) return;
+        if (!this.isActive) return; // Prevent double execution
         console.log(`CombatManager: Ending combat. Victory: ${victory}`);
-        this.isActive = false;
+        const wasActive = this.isActive; // Store state before setting false
+        this.isActive = false; // Set inactive flag
 
-        // Player end-of-combat artifact triggers
-        this.gameState.player?.triggerArtifacts('onCombatEnd', { victory: victory });
+        // Player end-of-combat artifact triggers (only if combat was actually active)
+        if (wasActive) {
+            this.gameState.player?.triggerArtifacts('onCombatEnd', { victory: victory });
+        }
 
-        // Clear enemy references and UI elements potentially associated with them
-        this.enemies = [];
-        this.uiManager?.enemyArea?.replaceChildren(); // Clear enemy display explicitly
+        this.enemies = []; // Clear enemy array
+        this.currentTarget = null; // Clear target
 
+        // Clear enemy display in UI
+        this.uiManager?.enemyArea?.replaceChildren(); // Use replaceChildren for modern browsers
 
-        // Delegate back to GameState to handle post-combat logic (rewards, map state)
-        // This is crucial - CombatManager shouldn't handle rewards directly.
+        // Delegate back to GameState for rewards/progression AFTER cleanup
         this.gameState.handleCombatEnd(victory);
     }
 
@@ -103,46 +93,41 @@ export class CombatManager {
      * Initiates the player's turn sequence.
      */
     beginPlayerTurn() {
-        if (!this.isActive || !this.playerTurn) return;
+        if (!this.isActive || !this.playerTurn || !this.gameState.player) return;
         console.log(`--- Player Turn ${this.turnNumber} ---`);
+        this.currentTarget = null; // Reset target selection each turn
 
-        // Player start-of-turn logic (block reset, focus gain, draw, status ticks, artifacts)
-        // This is already called within player.startTurn()
+        // Player start-of-turn logic is handled within player.startTurn()
         this.gameState.player.startTurn();
 
-        // Update UI AFTER player startTurn logic has resolved
+        // Update UI AFTER player logic (stats, hand, enemy intents might have changed)
         this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
-        this.uiManager.enablePlayerInput(true);
+        this.uiManager.enablePlayerInput(true); // Enable card playing etc.
+        this.uiManager.clearEnemyHighlights(); // Clear any lingering highlights
     }
 
     /**
      * Ends the player's turn and transitions to the enemy turn.
-     * Called by UI (End Turn Button) or potentially automatically.
      */
     endPlayerTurn() {
-        if (!this.isActive || !this.playerTurn) return;
+        if (!this.isActive || !this.playerTurn || !this.gameState.player) return;
         console.log("CombatManager: Ending player turn.");
-        this.uiManager.enablePlayerInput(false);
+        this.uiManager.enablePlayerInput(false); // Disable player actions
+        this.currentTarget = null; // Clear target
 
-        // Player end-of-turn logic (artifacts, status ticks, discard hand)
-        // This is already called within player.endTurn()
+        // Player end-of-turn logic handled within player.endTurn()
         this.gameState.player.endTurn();
 
-        // Check if combat ended due to player actions (e.g., end-of-turn damage/effects)
-        if (this.checkCombatEndCondition()) {
-             return; // endCombat will handle the rest
-        }
+        // Check immediately if combat ended from player's end-of-turn effects
+        if (this.checkCombatEndCondition()) return;
 
         this.playerTurn = false;
-        this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn); // Show it's enemy turn
+        // Update UI to show enemy turn (disables buttons, shows intents clearly)
+        this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
 
-        // Use setTimeout for a slight delay before enemies act for better pacing
         setTimeout(() => {
-             // Double check combat didn't end during the delay (e.g., player disconnected)
-             if (this.isActive) {
-                 this.beginEnemyTurn();
-             }
-        }, 600); // Adjust delay as needed (e.g., 600ms)
+             if (this.isActive) this.beginEnemyTurn(); // Check isActive again
+        }, 600);
     }
 
     /**
@@ -151,42 +136,38 @@ export class CombatManager {
     beginEnemyTurn() {
         if (!this.isActive || this.playerTurn) return;
         console.log(`--- Enemy Turn ${this.turnNumber} ---`);
-
-        // Process enemy actions (can add delays between actions here if desired)
-        this.executeEnemyActionsSequentially(); // Changed to sequential execution
+        this.executeEnemyActionsSequentially();
     }
 
     /**
-     * Executes actions for all active enemies one by one with delays.
+     * Executes actions for all active enemies sequentially with delays.
      */
     async executeEnemyActionsSequentially() {
         const activeEnemies = this.enemies.filter(enemy => enemy.currentHp > 0);
         for (const enemy of activeEnemies) {
             if (!this.isActive) break; // Stop if combat ended mid-turn
 
-            console.log(`CombatManager: ${enemy.name} is acting...`);
-            // Optional: Add UI highlight for acting enemy
-            this.uiManager.highlightEnemy(enemy.id, true);
+            console.log(`CombatManager: ${enemy.name} acting...`);
+            this.uiManager.highlightEnemy(enemy.id, true); // Highlight acting enemy
 
-            enemy.executeTurn(this.gameState.player, this.gameState); // Enemy performs its action
+            // Execute enemy action (which includes determining next intent *after* acting)
+            enemy.executeTurn(this.gameState.player, this.gameState);
 
-            // Update UI after each enemy action to show damage/status changes immediately
-             this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
+            // Update UI immediately after the action to show results
+            this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
 
-
-            // Check if combat ended after this enemy's action
+            // Check end condition immediately after action + UI update
             if (this.checkCombatEndCondition()) {
-                this.uiManager.highlightEnemy(enemy.id, false); // Remove highlight
-                return; // Exit loop if combat ended
+                this.uiManager.highlightEnemy(enemy.id, false); // Ensure highlight is removed
+                return; // Stop the loop
             }
 
-             // Optional: Remove highlight after action + delay
-             await this.delay(500); // Wait 0.5s before next enemy acts (adjust delay)
-             this.uiManager.highlightEnemy(enemy.id, false);
-
+            // Delay before next enemy acts
+            await this.delay(700); // Slightly longer delay?
+            this.uiManager.highlightEnemy(enemy.id, false); // Remove highlight
         }
 
-        // If loop completes and combat is still active, end the enemy turn
+        // If loop completes and combat is still active
         if (this.isActive) {
              console.log("CombatManager: All enemies acted.");
              this.endEnemyTurn();
@@ -198,7 +179,6 @@ export class CombatManager {
         return new Promise(resolve => setTimeout(resolve, ms));
      }
 
-
     /**
      * Ends the enemy turn and transitions back to the player turn.
      */
@@ -209,28 +189,27 @@ export class CombatManager {
         this.turnNumber++;
         this.playerTurn = true;
 
-        // Check if combat ended (e.g., all enemies defeated via statuses after their turn)
-        if (this.checkCombatEndCondition()) {
-             return; // endCombat will handle the rest
-        }
+        // Check if combat ended via end-of-turn effects (e.g., poison killing last enemy)
+        // Note: Enemy determines its *next* intent at the end of its executeTurn action.
+        if (this.checkCombatEndCondition()) return;
 
-        // Use setTimeout for a slight delay before player turn starts
         setTimeout(() => {
-             if (this.isActive) {
-                this.beginPlayerTurn();
-             }
-        }, 600); // Adjust delay
+             if (this.isActive) this.beginPlayerTurn(); // Check isActive again
+        }, 600);
     }
 
     /**
-     * Handles the player attempting to play a card via UIManager interaction (e.g., drop).
+     * Handles the player attempting to play a card via UIManager interaction.
+     * Incorporates target selection state.
      * @param {Card} card - The card object being played.
-     * @param {Enemy | null} target - The chosen enemy target, if any.
+     * @param {Enemy | null} droppedTarget - The enemy the card was dropped on (if any).
      */
-    handlePlayerCardPlay(card, target = null) {
-        if (!this.isActive || !this.playerTurn) {
-            console.warn("Cannot play card: Not player's turn or combat inactive.");
-            this.uiManager.showActionFeedback("Not your turn!", "error"); // Added UI feedback
+    handlePlayerCardPlay(card, droppedTarget = null) {
+        if (!this.isActive || !this.playerTurn || !this.gameState.player) {
+            console.warn("Cannot play card: Not player's turn or combat inactive/player missing.");
+            this.uiManager.showActionFeedback("Not your turn!", "error");
+            this.currentTarget = null; // Clear dangling target ref
+            this.uiManager.clearEnemyHighlights();
             return;
         }
         if (!card) {
@@ -238,83 +217,94 @@ export class CombatManager {
             return;
         }
 
-        // Validate target based on card requirements and target health
-        const actualTarget = this.validateTarget(card, target);
-        if (card.requiresTarget && !actualTarget) {
-             // validateTarget logs the specific warning
-             this.uiManager.showActionFeedback("Invalid target selected.", "warning"); // Added UI feedback
+        // Use the target stored from the click/drag interaction if available,
+        // otherwise use the target the card was dropped on (redundant but safe)
+        const finalTarget = this.currentTarget || droppedTarget;
+
+        // Validate target based on card requirements
+        const validatedTarget = this.validateTarget(card, finalTarget);
+        if (card.requiresTarget && !validatedTarget) {
+             // validateTarget logs the warning
+             this.uiManager.showActionFeedback("Invalid target selected.", "warning");
+             this.currentTarget = null; // Clear invalid target
+             this.uiManager.clearEnemyHighlights();
              return; // Stop if required target is invalid
         }
 
-
-        const player = this.gameState.player;
-
         // Attempt to play the card via Player class
-        // Player.playCard now handles focus check, effect execution, artifact triggers, discard/exhaust
-        const playedSuccessfully = player.playCard(card, actualTarget, this.enemies);
+        const playedSuccessfully = this.gameState.player.playCard(card, validatedTarget, this.enemies);
+
+        // Clear targeting state AFTER attempting play
+        this.currentTarget = null;
+        this.uiManager.clearEnemyHighlights(); // Always clear highlights after play attempt
 
         if (playedSuccessfully) {
             console.log(`CombatManager: Player successfully played: ${card.name}`);
-
-            // Update UI AFTER card resolution (Player/Enemy stats, hand)
-            // Use a slight delay for effects to visually register before UI snaps back? Optional.
-            // setTimeout(() => {
-                 this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
-                 // Check if combat ended immediately after card play
-                 this.checkCombatEndCondition();
-            // }, 100); // Small delay e.g., 100ms
-
-
+            // Update UI AFTER card resolution
+            this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
+            // Check end condition immediately
+            this.checkCombatEndCondition();
         } else {
-            console.log(`Failed to play card: ${card.name} (likely due to insufficient Focus).`);
-            this.uiManager.showActionFeedback("Not enough Focus!", "error"); // Added UI feedback
+            console.log(`Failed to play card: ${card.name}`);
+            // Feedback provided by Player.playCard failure or here
+            // this.uiManager.showActionFeedback("Not enough Focus!", "error"); // Example feedback
         }
     }
 
-     /**
-      * Validates if the chosen target is appropriate for the card.
-      * @param {Card} card
-      * @param {Enemy | null} target
-      * @returns {Enemy | null} The validated target or null if invalid.
-      */
+    /**
+     * Sets the currently selected enemy target (called by UI click listener).
+     * @param {Enemy | null} enemy - The enemy object that was clicked, or null to clear.
+     */
+    setSelectedTarget(enemy) {
+         if (!this.playerTurn || !this.isActive) return; // Can only target on player turn
+
+         this.currentTarget = enemy;
+         console.log(`CombatManager: Target set to ${enemy ? enemy.name : 'None'}`);
+
+         // Update UI to visually indicate the selected target
+         this.uiManager.clearEnemyHighlights(); // Clear previous highlights
+         if (enemy && enemy.currentHp > 0) {
+            this.uiManager.highlightEnemy(enemy.id, true);
+         }
+    }
+
+
+     /** Validates if the chosen target is appropriate for the card. */
       validateTarget(card, target) {
          if (!card.requiresTarget) {
-             return null; // No target needed, validation passes
+             return null; // No target needed
          }
          if (!target) {
-              console.warn(`Card ${card.name} requires a target, but none provided.`);
+              console.warn(`Card ${card.name} requires a target, but none provided or selected.`);
              return null;
          }
+          // Check if the target object is actually one of the current enemies
+          if (!this.enemies.some(e => e.id === target.id)) {
+               console.warn(`Target ${target.name} is not a valid enemy in this combat.`);
+               return null;
+          }
          if (target.currentHp <= 0) {
               console.warn(`Cannot target defeated enemy ${target.name}.`);
               return null;
          }
-         // TODO: Add checks if card targets allies vs enemies, if relevant later
          return target; // Target is valid
      }
 
-    /**
-      * Checks if the combat should end and calls endCombat if necessary.
-      * Now checks isActive flag first.
-      * @returns {boolean} True if combat ended, false otherwise.
-      */
+    /** Checks if the combat should end and calls endCombat if necessary. */
      checkCombatEndCondition() {
-         if (!this.isActive) {
-            // console.log("Combat Check: Already inactive.");
-            return true; // Already ended, don't call endCombat again
-         }
+         if (!this.isActive) return true; // Already ended
 
          // Check player defeat
          if (this.gameState.player && this.gameState.player.currentIntegrity <= 0) {
              console.log("Combat Check: Player Defeated!");
-             this.endCombat(false); // Player lost
+             this.endCombat(false);
              return true;
          }
 
-         // Check enemy defeat (ensure enemies array exists)
+         // Check enemy defeat
          if (this.enemies && this.enemies.length > 0 && this.enemies.every(enemy => enemy.currentHp <= 0)) {
              console.log("Combat Check: All Enemies Defeated!");
-             this.endCombat(true); // Player won
+             this.endCombat(true);
              return true;
          }
 
