@@ -48,24 +48,38 @@ export const ARTIFACT_TEMPLATES = {
             console.log("Artifact Triggered: Fleeting Thought (C) - Gained 3 Block.");
         }
     },
-     'stubborn_psyche_p': {
-        id: 'stubborn_psyche_p',
-        name: "Stubborn Psyche (Psychological)",
-        description: "Gain 1 temporary Max Integrity at the start of each combat.",
-        rarity: 'common',
-        trigger: 'onCombatStart',
+      id: 'stubborn_psyche_p', name: "Stubborn Psyche (P)",
+        description: "At the start of each combat, gain 5 temporary Hit Points.", // Changed effect
+        rarity: 'common', trigger: 'onCombatStart',
         effect: (player, gameState) => {
              if(player) {
-                 // This requires modifying maxIntegrity and healing, needs careful thought
-                 // Easiest way might be a status effect like "Temporary HP"
-                 player.applyStatus('TempMaxHP', 99, 1); // Duration 99 = lasts for combat, Amount = 1 HP
-                 player.heal(1); // Heal the gained HP
-                 console.log("Artifact Triggered: Stubborn Psyche - Gained 1 Temp Max HP.");
-                  // Need status logic for TempMaxHP: increase max HP while active, remove at end of combat
+                 player.applyStatus('TemporaryHP', 99, 5); // Use amount for HP value
+                 console.log("Artifact Triggered: Stubborn Psyche - Gained 5 Temporary HP.");
+                 // Need status logic in Player.takeDamage to consume TemporaryHP before currentIntegrity
              }
         }
     },
-
+ 'quick_wit_c': { // NEW Common
+        id: 'quick_wit_c', name: "Quick Wit (C)",
+        description: "Whenever you play 3 Attacks in a single turn, draw 1 card.",
+        rarity: 'common', trigger: 'onCardPlay',
+        // Requires tracking attacks played per turn (needs state in Player or CombatManager)
+        // Placeholder implementation - assumes CombatManager tracks turn state
+        condition: (player, gameState, eventData) => {
+            const card = eventData?.card;
+            if (!card || !card.keywords.includes('Attack')) return false;
+            // Access turn state (e.g., from gameState.combatManager.turnState.attacksPlayed)
+            const attacksThisTurn = gameState?.combatManager?.getTurnState?.()?.attacksPlayed ?? 0; // Need getTurnState()
+            return attacksThisTurn === 3; // Trigger on the 3rd attack
+        },
+        effect: (player, gameState, eventData) => {
+            if (player) {
+                player.drawCards(1);
+                console.log("Artifact Triggered: Quick Wit - Drew card after 3rd Attack.");
+                player.gameStateRef?.uiManager?.showNotification("Quick Wit triggered!");
+            }
+        }
+    },
     // --- Uncommon Artifacts ---
     'resonant_echo_s': {
         id: 'resonant_echo_s',
@@ -127,7 +141,55 @@ export const ARTIFACT_TEMPLATES = {
              }
          }
      },
-
+ 'mirror_shield_i': { // NEW Uncommon
+         id: 'mirror_shield_i', name: "Mirror Shield (I)",
+         description: "The first time you are attacked each combat, apply 1 Weak to the attacker.",
+         rarity: 'uncommon', trigger: 'onDamageTaken', // Use damage trigger
+         // Need state to track if it already triggered this combat
+         // Use a temporary status effect on the player as the flag?
+         condition: (player, gameState, eventData) => {
+            // Check if damage > 0 and if the 'MirrorShieldUsed' flag status is NOT present
+            return eventData?.amount > 0 && !player?.hasStatus('MirrorShieldUsed');
+         },
+         effect: (player, gameState, eventData) => {
+             // eventData for onDamageTaken should include source enemy ID
+             const sourceEnemy = gameState?.combatManager?.enemies.find(e => e.id === eventData?.source?.id); // Need source in eventData
+             if (sourceEnemy && player) {
+                 sourceEnemy.applyStatus('Weak', 1); // Apply 1 Weak
+                 player.applyStatus('MirrorShieldUsed', 99, 1); // Apply flag status for rest of combat
+                 console.log(`Artifact Triggered: Mirror Shield - Applied Weak to ${sourceEnemy.name}.`);
+                  player.gameStateRef?.uiManager?.showNotification("Mirror Shield reflected Weakness!");
+             }
+         }
+     },
+      'alchemical_pouch_x': { // NEW Uncommon (Cross-element?)
+         id: 'alchemical_pouch_x', name: "Alchemical Pouch",
+         description: "At the start of combat, add 2 random common Potion cards to your hand.", // Potion cards TBD
+         rarity: 'uncommon', trigger: 'onCombatStart',
+         effect: (player, gameState) => {
+              if (player && player.deckManager) {
+                   console.log("Artifact Triggered: Alchemical Pouch - Adding Potions...");
+                   // TODO: Define "Potion" cards (e.g., concepts for heal, temp str, block)
+                   const potionIds = [1001, 1002, 1003]; // Placeholder Potion Concept IDs
+                   for (let i = 0; i < 2; i++) {
+                        const randomPotionId = potionIds[Math.floor(Math.random() * potionIds.length)];
+                        const potionCard = new Card(randomPotionId); // Need Card class imported
+                         if (potionCard.conceptId !== -1 && player.deckManager.hand.length < player.deckManager.maxHandSize) {
+                             // Mark as Ethereal and maybe Exhaust?
+                             potionCard.isEthereal = true;
+                             potionCard.exhausts = true;
+                             player.deckManager.hand.push(potionCard); // Add directly to hand
+                              console.log(`   Added ${potionCard.name} to hand.`);
+                         } else if (potionCard.conceptId !== -1) {
+                             // Add to draw pile if hand full? Or discard? Discard is safer.
+                              player.deckManager.discardPile.push(potionCard);
+                               console.log(`   Hand full, added ${potionCard.name} to discard.`);
+                         }
+                   }
+                    player.gameStateRef?.uiManager?.renderHand(player.deckManager.hand); // Update UI
+              }
+         }
+     },
 
     // --- Rare Artifacts ---
     'focus_lens_c': {
@@ -180,22 +242,27 @@ export const ARTIFACT_TEMPLATES = {
               }
           }
       },
-       'shadow_insight_artifact': { // Example specific drop from boss template
-          id: 'shadow_insight_artifact', // Matches ID in ENEMY_TEMPLATES['shadow_aspect_interaction'].onDeathAction
-          name: "Shadow Insight",
-          description: "Whenever you Exhaust a card, gain 1 Focus next turn.",
-          rarity: 'rare', // Boss rarity
-          trigger: 'onCardExhaust', // Needs a specific trigger from DeckManager or Player.playCard
-          // Need internal state to track focus gain for next turn
-          // This requires more complex state management within the artifact or player
-          effect: (player, gameState, eventData) => {
-               console.log(`Artifact Triggered: Shadow Insight - Storing 1 Focus for next turn due to exhausting ${eventData?.card?.name}.`);
-               // Example using a temporary status effect on the player
-               player.applyStatus('FocusNextTurn', 1, 1); // Apply status for 1 turn, amount 1
-          }
-       }
-
-    // Add many more artifacts...
+       'shadow_insight_artifact': { /* ... keep (Focus next turn on Exhaust) ... */ },
+     'philosophers_catalyst_p': { // NEW Rare
+         id: 'philosophers_catalyst_p', name: "Philosopher's Catalyst (P)",
+         description: "Whenever you heal Integrity, gain that much Block.",
+         rarity: 'rare', trigger: 'onHeal',
+         condition: (player, gameState, eventData) => eventData?.amount > 0,
+         effect: (player, gameState, eventData) => {
+              const healAmount = eventData.amount;
+              if (player && healAmount > 0) {
+                  player.gainBlock(healAmount);
+                   console.log(`Artifact Triggered: Catalyst - Gained ${healAmount} Block from healing.`);
+              }
+         }
+     },
+     'labyrinth_map_r': { // NEW Rare
+          id: 'labyrinth_map_r', name: "Labyrinth Map (R)",
+          description: "You can now see paths 2 nodes ahead on the map.",
+          rarity: 'rare', trigger: 'passive', // No event trigger, effect handled by MapUI rendering
+          effect: null, // Logic implemented in MapUI
+          isPassive: true // Flag for passive effects
+      }
 };
 
 // --- Need Status Effect Logic Implementation ---
