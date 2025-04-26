@@ -4,7 +4,7 @@
 import { GameState } from './core/GameState.js';
 import { UIManager } from './ui/UIManager.js';
 import { MetaProgression } from './meta/MetaProgression.js';
-import * as Data from './data.js'; // Assuming data.js is in root, correct path from main.js
+import * as Data from '../../data.js'; // Assuming data.js is in root, correct path from main.js
 
 // --- Global Variables (Module Scope) ---
 let uiManager = null;
