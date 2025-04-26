@@ -1,0 +1,298 @@
+/* --- Basic Reset & Body --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2c3e50; /* Dark blue-grey background */
+    color: #ecf0f1; /* Light grey text */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Prevent scrollbars initially */
+}
+
+/* --- Game Container --- */
+#gameContainer {
+    width: 100%;
+    max-width: 1200px; /* Adjust as needed */
+    height: 90vh; /* Adjust as needed */
+    max-height: 800px;
+    background-color: #34495e; /* Slightly lighter background */
+    border: 2px solid #7f8c8d;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    position: relative; /* Needed for absolute positioning inside */
+    overflow: hidden; /* Keep content contained */
+    display: flex; /* Use flex for screen management */
+    flex-direction: column; /* Stack elements vertically */
+}
+
+/* --- Screen Management --- */
+.screen {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    display: none; /* Hide screens by default */
+    flex-direction: column; /* Default layout for screens */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.screen.active {
+    display: flex; /* Show the active screen */
+}
+
+/* --- Main Menu Specifics --- */
+#mainMenuScreen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#mainMenuScreen h1 {
+    margin-bottom: 30px;
+    font-size: 3em;
+    color: #e74c3c; /* Reddish title */
+}
+
+#mainMenuScreen button {
+    display: block;
+    margin: 15px auto;
+    padding: 12px 25px;
+    font-size: 1.2em;
+    cursor: pointer;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#mainMenuScreen button:hover {
+    background-color: #c0392b;
+}
+
+
+/* --- Basic Combat Screen Layout Placeholders --- */
+#combatScreen {
+    position: relative; /* For positioning elements inside */
+    background-color: #1a2530; /* Darker combat background */
+}
+
+#enemyArea {
+    height: 30%; /* Approximate */
+    border-bottom: 1px dashed #7f8c8d;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+    color: #e74c3c; /* Enemy elements in red */
+}
+
+#playerArea {
+    height: 20%; /* Approximate */
+    border-bottom: 1px dashed #7f8c8d;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+    color: #3498db; /* Player elements in blue */
+}
+
+#handArea {
+    height: 35%; /* Approximate */
+    border-bottom: 1px dashed #7f8c8d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Allow cards to wrap */
+    padding: 10px;
+    overflow-x: auto; /* Allow horizontal scroll if many cards */
+    gap: 10px;
+}
+
+#deckDiscardArea {
+    height: 15%; /* Approximate */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+#endTurnButton {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #2ecc71; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+#endTurnButton:hover {
+    background-color: #27ae60;
+}
+
+/* --- Basic Map Screen Layout --- */
+#mapScreen {
+    background-color: #2c3e50; /* Match body */
+}
+#mapArea {
+    flex-grow: 1; /* Takes up available space */
+    border: 1px solid #7f8c8d;
+    margin-bottom: 10px;
+    padding: 10px;
+    /* Placeholder for map visualization */
+    background-color: #34495e;
+    position: relative; /* For node placement */
+}
+#playerInfoMap {
+    height: 50px; /* Fixed height for player info */
+    border-top: 1px solid #7f8c8d;
+    padding: 5px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* --- Modal Popup Styling --- */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 100; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #4a627a;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 600px;
+    border-radius: 8px;
+    position: relative;
+    color: #ecf0f1;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* The Close Button */
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #e74c3c;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#modalText {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+#modalChoices button {
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+#modalChoices button:hover {
+    background-color: #2980b9;
+}
+
+
+/* --- Tooltip Styling --- */
+#tooltip {
+    background-color: #f9f9f9;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    position: absolute;
+    z-index: 101; /* Above modal potentially */
+    white-space: pre-wrap; /* Respect newlines in tooltip text */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    pointer-events: none; /* Prevent tooltip from blocking mouse events */
+}
+
+/* --- Helper Classes --- */
+.hidden {
+    display: none !important; /* Force hide */
+}
+
+/* Basic Card Placeholder Style */
+.card {
+    border: 1px solid #ccc;
+    background-color: #567;
+    padding: 10px;
+    min-width: 100px;
+    min-height: 150px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.8em;
+}
+.card:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.card-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #f1c40f; /* Yellowish name */
+}
+.card-cost {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+.card-description {
+    font-size: 0.9em;
+    flex-grow: 1;
+    margin-bottom: 5px;
+}
+.card-type {
+    font-size: 0.8em;
+    font-style: italic;
+    text-align: right;
+    color: #bdc3c7; /* Light grey type */
+}
+
+/* Icon style */
+.insight-icon {
+    color: #f1c40f; /* Yellowish */
+    margin-left: 2px;
+}
