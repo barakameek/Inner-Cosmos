@@ -4,14 +4,14 @@
 let canvas = null;
 let ctx = null; // Canvas rendering context 2D
 let gameManager = null;
-let uiManager = null; // Will be initialized later if needed for complex UI
+let uiManager = null; // UI Manager instance
 let lastTimestamp = 0;
 let deltaTime = 0;
 
 // --- Initialization ---
 
 /**
- * Initializes the game environment.
+ * Initializes the game environment. Called once the window is loaded.
  */
 function init() {
     console.log("Initializing Grimoire Roguelite...");
@@ -28,78 +28,51 @@ function init() {
         return;
     }
 
-    // Set Canvas Size
+    // Set Canvas Size from constants
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
 
-    // Load Persona Lab Data
+    // --- Load Data and Initialize Pools ---
+    // Persona Lab data is loaded first if available
     const personaLabData = getPersonaLabData(); // From utils.js
 
-    // Initialize Card Pool from Persona Lab Data (or defaults)
-    // Ensure starter cards are added even if lab data is null
-    addStarterCardsToBasePool(); // Helper function defined below
-    loadCardsFromPersonaLabData(personaLabData); // From cardData.js
+    // Initialize base card pool (Starters, required Status/Curses, examples)
+    // This happens in cardData.js now when the script loads.
+    // initializeBaseCardPool(); // No longer needed here
 
-    // Initialize Relic Pool (Relics might be unlocked later)
-    initializeRelicPool(); // From relicData.js (currently loads all examples)
+    // Load cards based on Persona Lab data (will overwrite examples if IDs match)
+    const cardsLoadedFromLab = loadCardsFromPersonaLabData(personaLabData); // From cardData.js
+    console.log(`Total cards available after loading: ${Object.keys(BASE_CARD_POOL).length}`);
 
-    // Initialize Enemy Pool
-    initializeEnemyPool(); // From enemyData.js (currently loads all examples)
+    // Initialize Relic Pool (definitions loaded in relicData.js)
+    // initializeRelicPool(); // Logging happens in relicData.js
+
+    // Initialize Enemy Pool (definitions loaded in enemyData.js)
+    // initializeEnemyPool(); // Logging happens in enemyData.js
 
 
-    // Initialize Managers
-    // We need GameManager first as it holds the overall state
-    gameManager = new GameManager(personaLabData); // Pass Lab data for meta-progression checks
+    // --- Initialize Managers ---
+    // GameManager holds the overall state and references other managers/data
+    gameManager = new GameManager(personaLabData);
 
-    // UIManager could be initialized here if needed for global UI elements
-    // uiManager = new UIManager(ctx);
+    // UIManager handles rendering specific UI elements like tooltips
+    uiManager = new UIManager(ctx, gameManager);
+    gameManager.uiManager = uiManager; // Give GameManager a reference if needed, though UIManager usually reads from GM
 
     console.log("Initialization Complete.");
 
-    // Set initial game state (e.g., show main menu or start run setup)
-    // For now, let's jump directly into setting up a run for testing
-    gameManager.changeState(GameState.RUN_SETUP);
+    // --- Setup Input Listeners ---
+    setupInputListeners();
 
-    // Start the game loop
+    // --- Set Initial Game State ---
+    // Start with the Main Menu (or jump to run setup for testing)
+    gameManager.changeState(GameState.MAIN_MENU);
+    // gameManager.changeState(GameState.RUN_SETUP); // <-- Use this to skip main menu for testing
+
+    // --- Start the Game Loop ---
     lastTimestamp = performance.now();
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop); // Use requestAnimationFrame for smooth looping
 }
-
-/**
- * Helper function to ensure starter cards are defined.
- * Call this before attempting to load from Persona Lab data
- * to guarantee they exist even if the Lab data is empty or invalid.
- */
-function addStarterCardsToBasePool() {
-    // Check if already defined (e.g., directly in cardData.js)
-    if (!getCardDefinition('starter_strike')) {
-        addCardDefinition(new CardDefinition({ /* ... full definition from cardData.js ... */
-            id: 'starter_strike', name: 'Strike', type: CardType.ATTACK, element: Elements.NEUTRAL, cost: 1, rarity: CardRarity.STARTER, description: "Deal 6 Bruise.", effects: { dealBruise: { amount: 6, target: 'enemy', duration: 1 } }, upgrade: { cost: 1, description: "Deal 9 Bruise.", effects: { dealBruise: { amount: 9, target: 'enemy', duration: 1 } }, }, artId: 'starter_strike'
-        }));
-    }
-     if (!getCardDefinition('starter_defend')) {
-        addCardDefinition(new CardDefinition({ /* ... full definition from cardData.js ... */
-            id: 'starter_defend', name: 'Defend', type: CardType.SKILL, element: Elements.NEUTRAL, cost: 1, rarity: CardRarity.STARTER, description: "Gain 5 Guard.", effects: { gainGuard: { amount: 5, target: 'player' } }, upgrade: { cost: 1, description: "Gain 8 Guard.", effects: { gainGuard: { amount: 8, target: 'player' } }, }, artId: 'starter_defend'
-        }));
-    }
-    if (!getCardDefinition('starter_doubt')) {
-        addCardDefinition(new CardDefinition({ /* ... full definition from cardData.js ... */
-             id: 'starter_doubt', name: 'Lingering Doubt', type: CardType.CURSE, element: Elements.NEUTRAL, cost: null, rarity: CardRarity.SPECIAL, description: "Unplayable. Ethereal.", keywords: [StatusEffects.ETHEREAL], effects: {}, artId: 'starter_doubt'
-        }));
-    }
-    if (!getCardDefinition('status_static')) { // Ensure Static card is defined for relics/enemies
-        addCardDefinition(new CardDefinition({
-            id: 'status_static', name: 'Static', type: CardType.STATUS, element: Elements.NEUTRAL, cost: null, rarity: CardRarity.SPECIAL, description: "Unplayable.", keywords: [], effects: {}, artId: 'status_static'
-        }));
-    }
-     if (!getCardDefinition('curse_heavy_heart')) { // Ensure Heavy Heart is defined
-        addCardDefinition(new CardDefinition({
-            id: 'curse_heavy_heart', name: 'Heavy Heart', type: CardType.CURSE, element: Elements.NEUTRAL, cost: null, rarity: CardRarity.SPECIAL, description: "Unplayable. Reduces Insight gain by 1 while in hand.", keywords: [], effects: { passiveInHand: { effectId: 'reduceInsightGain', value: 1 } }, artId: 'curse_heavy_heart'
-        }));
-    }
-    // Add other necessary status/curse cards here if needed
-}
-
 
 // --- Game Loop ---
 
@@ -108,61 +81,81 @@ function addStarterCardsToBasePool() {
  * @param {DOMHighResTimeStamp} timestamp - The current time provided by requestAnimationFrame.
  */
 function gameLoop(timestamp) {
-    // Calculate time elapsed since the last frame
-    deltaTime = (timestamp - lastTimestamp) / 1000; // Delta time in seconds
+    // Calculate delta time (time elapsed since the last frame)
+    deltaTime = (timestamp - lastTimestamp) / 1000; // Convert milliseconds to seconds
     lastTimestamp = timestamp;
 
-    // Cap delta time to prevent large jumps if the tab loses focus
-    deltaTime = Math.min(deltaTime, 1 / 15); // Cap at 15 FPS equivalent minimum
-
-    // --- Input Handling (Placeholder) ---
-    // processInput(); // Would handle mouse clicks, keyboard presses
+    // Cap delta time to prevent large jumps if the tab loses focus or lags
+    const maxDeltaTime = 1 / 15; // Equivalent to a minimum of 15 FPS
+    deltaTime = Math.min(deltaTime, maxDeltaTime);
 
     // --- Update Game State ---
+    // Order matters: Update game logic first
     if (gameManager) {
         gameManager.update(deltaTime);
     }
+    // Update UI elements (like tooltips based on new game state/hover)
+    if (uiManager) {
+        uiManager.update(deltaTime);
+    }
 
     // --- Rendering ---
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear the canvas for the new frame
+    // Note: GameManager or individual state renders might handle clearing/backgrounds
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ctx.fillStyle = '#333'; // Default background
+    // ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Set a background color (redundant if CSS sets it, but good practice)
-    ctx.fillStyle = '#333'; // Match CSS background
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Render game elements based on state
+    // Render game elements based on state (handled by GameManager)
     if (gameManager) {
         gameManager.render(ctx);
     }
 
-    // Render global UI elements (if using a dedicated UIManager)
+    // Render UI elements on top (handled by UIManager)
     // if (uiManager) {
-    //     uiManager.render(ctx);
+    //     uiManager.render(); // UIManager render is called within GameManager.render for layering control
     // }
 
     // Request the next frame
     requestAnimationFrame(gameLoop);
 }
 
-// --- Input Processing (Placeholder) ---
-function processInput() {
-    // TODO: Implement input listeners (mouse clicks, keyboard)
-    // Store input state in a way that gameManager can access it during update.
-    // Example: Check for clicks on specific UI regions or map nodes.
+// --- Input Setup ---
+
+/**
+ * Sets up event listeners for user input (mouse clicks, movement).
+ */
+function setupInputListeners() {
+    if (!canvas) return;
+
+    // Mouse Movement Listener (for hover effects, targeting lines)
+    canvas.addEventListener('mousemove', (event) => {
+        if (gameManager) {
+            gameManager.updateMousePos(event); // Pass the event to GameManager
+        }
+    });
+
+    // Mouse Click Listener
+    canvas.addEventListener('click', (event) => {
+        if (gameManager) {
+            gameManager.registerClick(); // Tell GameManager a click happened at the current mouse pos
+        }
+    });
+
+    // Prevent right-click context menu on the canvas
+    canvas.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+
+    // Keyboard Listeners (Optional - Add if needed for shortcuts, etc.)
+    // window.addEventListener('keydown', (event) => {
+    //     if (gameManager) {
+    //         gameManager.handleKeyboardInput(event.key, event.code);
+    //     }
+    // });
 }
 
-// --- Start the Game ---
-// Wait for the DOM to be fully loaded before initializing
-window.addEventListener('load', init);
 
-// --- Add Input Listeners (Example) ---
-// Need to be added after init typically, or reference global variables correctly.
-// canvas.addEventListener('click', (event) => {
-//     if (gameManager) {
-//         const rect = canvas.getBoundingClientRect();
-//         const mouseX = event.clientX - rect.left;
-//         const mouseY = event.clientY - rect.top;
-//         gameManager.handleInput({ type: 'click', x: mouseX, y: mouseY });
-//     }
-// });
+// --- Start the Game ---
+// Wait for the DOM and all scripts to be fully loaded before initializing
+window.addEventListener('load', init);
