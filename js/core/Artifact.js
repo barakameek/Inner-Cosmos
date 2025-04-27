@@ -1,24 +1,25 @@
 // js/core/Artifact.js
 
 // Import artifact definitions
-import { ARTIFACT_TEMPLATES } from './ArtifactDefinitions.js'; // Adjust path if needed
+import { ARTIFACT_TEMPLATES } from './ArtifactDefinitions.js';
 
 /**
  * Represents a passive artifact item held by the player.
  */
 export class Artifact {
     constructor(artifactId) {
-        const template = ARTIFACT_TEMPLATES[artifactId];
+        const template = ARTIFACT_TEMPLATES?.[artifactId]; // Use optional chaining
+
         if (!template) {
             console.error(`Artifact Error: Template not found for ID: ${artifactId}`);
-            // Create a fallback/error artifact?
+            // Create a fallback/error artifact
             this.id = 'error_artifact';
             this.name = 'Missing Relic';
-            this.description = 'This artifact seems broken.';
+            this.description = 'This artifact definition seems to be missing or broken.';
             this.rarity = 'common';
-            this.trigger = null; // No trigger for error artifact
-            this._effect = () => {}; // No effect
-            this._condition = () => true; // Condition always true (but won't trigger)
+            this.trigger = null;
+            this._effect = () => { console.warn("Tried to execute effect of missing artifact."); };
+            this._condition = () => false; // Condition always false for error artifact
             return;
         }
 
@@ -27,12 +28,14 @@ export class Artifact {
         this.description = template.description;
         this.rarity = template.rarity || 'common';
         this.trigger = template.trigger; // String indicating when the effect might fire (e.g., 'onTurnStart')
+        this.isPassive = template.isPassive || false; // Flag for passive effects handled elsewhere
 
         // Store the effect function and condition function
-        this._effect = template.effect || (() => {}); // The actual function to execute
-        this._condition = template.condition || (() => true); // Condition function, defaults to always true if undefined
+        // Ensure functions exist or provide safe defaults
+        this._effect = typeof template.effect === 'function' ? template.effect : () => {};
+        this._condition = typeof template.condition === 'function' ? template.condition : () => true;
 
-        console.log(`Artifact created: ${this.name}`);
+        // Removed console.log from constructor for cleaner logs
     }
 
     /**
@@ -41,56 +44,39 @@ export class Artifact {
      * @param {string} eventName - The name of the game event occurring (e.g., 'onTurnStart', 'onCardPlay').
      * @param {Player} player - The player object.
      * @param {GameState} gameState - The current game state.
-     * @param {object | null} eventData - Additional data related to the event (e.g., the card played, the status applied).
+     * @param {object | null} eventData - Additional data related to the event (e.g., { card: Card, damageAmount: number, status: object }).
      */
     handleEvent(eventName, player, gameState, eventData = null) {
-        // Check if the event name matches the artifact's trigger
-        if (this.trigger !== eventName) {
-            return; // This artifact doesn't trigger on this event
+        // Ignore passive artifacts or artifacts without a matching trigger
+        if (this.isPassive || this.trigger !== eventName) {
+            return;
         }
 
         // Check if the artifact's specific condition is met
-        // Pass relevant data to the condition function based on the event type
         let conditionMet = false;
         try {
-            switch (eventName) {
-                case 'onCardPlay':
-                    conditionMet = this._condition(eventData.card, player, gameState); // Pass card played
-                    break;
-                case 'onTurnStart':
-                case 'onCombatStart':
-                case 'onCombatEnd':
-                     conditionMet = this._condition(player, gameState);
-                     break;
-                 case 'onDamageTaken':
-                     conditionMet = this._condition(eventData.damageAmount, player, gameState); // Pass damage amount
-                     break;
-                 case 'onStatusAppliedToPlayer':
-                     conditionMet = this._condition(eventData.status, player, gameState); // Pass status object
-                     break;
-                // Add more cases for other potential triggers
-                default:
-                    conditionMet = this._condition(player, gameState, eventData); // Generic fallback
-            }
+            // Pass relevant properties from eventData directly to the condition function
+            // Rely on the condition function defined in ArtifactDefinitions to know what to expect
+            conditionMet = this._condition(player, gameState, eventData);
         } catch (error) {
-            console.error(`Error evaluating condition for artifact ${this.name} on event ${eventName}:`, error);
+            console.error(`Error evaluating condition for artifact ${this.name} (ID: ${this.id}) on event ${eventName}:`, error, "EventData:", eventData);
             conditionMet = false; // Fail safe
         }
 
-
         // If the condition is met, execute the effect
         if (conditionMet) {
+            // console.log(`Artifact Triggered: ${this.name} on ${eventName}`); // Can be noisy
             try {
-                 // Pass relevant data to the effect function
-                 this._effect(player, gameState, eventData?.card || eventData?.status || eventData?.damageAmount || eventData); // Pass specific data if available
+                 // Pass relevant data to the effect function, similar to condition
+                 this._effect(player, gameState, eventData);
             } catch (error) {
-                 console.error(`Error executing effect for artifact ${this.name} on event ${eventName}:`, error);
+                 console.error(`Error executing effect for artifact ${this.name} (ID: ${this.id}) on event ${eventName}:`, error, "EventData:", eventData);
             }
         }
     }
 
     /**
-     * Generates HTML for displaying the artifact (e.g., in UI).
+     * Generates HTML for displaying the artifact (e.g., in UI lists).
      * @returns {string} HTML string representation.
      */
     getDisplayHtml() {
@@ -100,7 +86,22 @@ export class Artifact {
                 <small>${this.description}</small>
             </div>
         `;
-        // TODO: Add tooltip listener here or in UIManager when rendering
     }
+
+     /**
+      * Generates HTML for displaying the artifact in a tooltip.
+      * @returns {string} HTML string representation.
+      */
+     getTooltipHtml() {
+         return `
+            <div class="artifact-tooltip">
+                <div class="tooltip-header"><strong>${this.name}</strong> <em>(${this.rarity})</em></div>
+                <hr>
+                <div class="tooltip-description">${this.description}</div>
+                 ${this.isPassive ? '<hr><div class="tooltip-passive"><i>(Passive Effect)</i></div>' : ''}
+             </div>
+         `;
+         // Note: The actual tooltip listener would be added by the UIManager when rendering this.
+     }
 
 } // End of Artifact class
