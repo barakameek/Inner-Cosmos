@@ -9,13 +9,10 @@ import { ARTIFACT_TEMPLATES } from '../core/ArtifactDefinitions.js'; // Needed i
 // --- Map Generation Constants ---
 // Defines the number of each node type per floor (adjust for balance)
 const NODE_DISTRIBUTION = {
-    // Floor: { combat, elite, event, rest, shop }
-    1: { combat: 7, elite: 1, event: 3, rest: 1, shop: 1, /* Total: 13 */ },
-    2: { combat: 8, elite: 2, event: 4, rest: 1, shop: 1, /* Total: 16 */ },
-    3: { combat: 6, elite: 2, event: 3, rest: 2, shop: 1, /* Total: 14 */ },
-    // Add more floors as needed
+    1: { combat: 9, elite: 1, event: 3, rest: 1, shop: 1, /* Total: 15 */ }, // Increased combat
+    2: { combat: 10, elite: 2, event: 4, rest: 1, shop: 1, /* Total: 18 */ }, // Increased combat
+    3: { combat: 8, elite: 2, event: 3, rest: 2, shop: 1, /* Total: 16 */}, // Increased combat
 };
-
 // Defines potential enemy groups for different node types and floors
 const ENEMY_ENCOUNTERS = {
     // Use enemy IDs defined in Enemy.js
