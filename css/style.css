@@ -657,3 +657,63 @@ button:disabled {
 #enemyArea.drag-over, #playerArea.drag-over {
     background-color: rgba(0, 255, 0, 0.1); /* Faint green glow */
 }
+.enemy-hp-bar-outer {
+    width: 80%;
+    height: 16px;
+    background-color: #555;
+    border-radius: 3px;
+    margin: 4px auto;
+    position: relative;
+    border: 1px solid #444;
+    overflow: hidden;
+}
+
+.enemy-hp-bar-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #c0392b; / * Red HP * /
+    border-radius: 2px;
+    transition: width 0.3s ease-out;
+}
+.enemy-hp-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px black;
+    line-height: 16px; / * Match height * /
+    z-index: 1;
+}
+
+
+.enemy-display.drag-over {
+    background-color: rgba(255, 0, 0, 0.2); / * Reddish glow when dragging card over * /
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+#playerArea.drag-over {
+    background-color: rgba(0, 150, 255, 0.1); / * Bluish glow for player area * /
+}
+
+.highlighted-enemy { / * Style for acting enemy * /
+    box-shadow: 0 0 15px 3px #e74c3c; / * Red glow for acting enemy * /
+}
+.enemy-display.targeted { / * Style for selected target * /
+    border-color: #f1c40f !important; / * Yellow border * /
+    box-shadow: 0 0 15px 3px #f1c40f;
+}
+
+
+/ * Hand Area Styling * /
+#handArea {
+    position: relative; / * Needed for absolute positioning of cards * /
+    overflow: hidden; / * Hide card parts that go outside bounds * /
+     padding-bottom: 20px; / * Ensure space for lifted cards * /
+}
+#handArea .card:hover {
+    transform: rotate(0deg) translateY(-20px) scale(1.15) !important; / * Override fan transform on hover * /
+    z-index: 100 !important; / * Bring hovered card way to the front * /
+}
