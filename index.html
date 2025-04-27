@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Persona Labyrinth</title>
     <!-- Link to the CSS file -->
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Add Font Awesome for Icons -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Assuming style.css is in a 'css' folder -->
+    <!-- Add Font Awesome 6 for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
@@ -17,59 +17,72 @@
         <!-- ===== Game Screens ===== -->
         <!-- ========================== -->
 
-        <!-- Main Menu (Starts Active) -->
-        <div id="mainMenuScreen" class="screen active">
+        <!-- Main Menu (Starts Active by default in CSS/JS) -->
+        <div id="mainMenuScreen" class="screen active"> <!-- Start active -->
             <h1>Persona Labyrinth</h1>
-            <button id="startGameButton">Begin Introspection</button>
-            <button id="loadGameButton">Continue Journey</button> <!-- Functionality Not Implemented -->
-            <button id="metaProgressionButton">View Unlocks</button>
-            <button id="settingsButton">Settings</button> <!-- Functionality Not Implemented -->
+            <p style="margin-bottom: 30px; font-style: italic;">An Introspective Roguelite</p>
+            <button id="startGameButton">Begin New Run</button>
+            <button id="loadGameButton" disabled>Continue Run</button> <!-- Load functionality TBD -->
+            <button id="metaProgressionButton">Meta Progression</button>
+            <button id="settingsButton" disabled>Settings</button> <!-- Settings TBD -->
         </div>
 
         <!-- Map Screen -->
-        <div id="mapScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="mapScreen" class="screen"> <!-- Initially hidden -->
             <h2>The Labyrinth of Self</h2>
-            <div id="mapArea">
-                <!-- SVG Map will be rendered here by UIManager -->
-                <p style="text-align: center; padding: 20px;">Loading Map...</p>
-            </div>
+            <!-- Player Info Display Area -->
             <div id="playerInfoMap">
-                 <!-- Player Info: Floor, HP, Insight, Deck -->
+                 <!-- Populated by UIManager.updatePlayerMapInfo -->
                  Loading Map Info...
+            </div>
+            <!-- Map Rendering Area -->
+            <div id="mapArea">
+                <!-- SVG Map will be rendered here by UIManager/MapManager -->
+                <p style="text-align: center; padding: 20px;">Loading Map...</p>
             </div>
         </div>
 
         <!-- Combat Screen -->
-        <div id="combatScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="combatScreen" class="screen"> <!-- Initially hidden -->
+            <!-- Enemy Area -->
             <div id="enemyArea">
-                <!-- Enemy displays will be rendered here -->
-                 <p>Waiting for combat...</p>
+                <!-- Enemy displays will be rendered here by CombatUI -->
+                 <p>Waiting for combat initiation...</p>
             </div>
+            <!-- Player Area -->
             <div id="playerArea">
+                 <!-- Player Stats Display -->
                  <div id="playerStatsCombat">
-                     <span id="playerHP">HP: ...</span> |
-                     <span id="playerFocus">Focus: ...</span> |
+                     <span id="playerHP">HP: .../...</span>
+                     <span class="info-divider">|</span>
+                     <span id="playerFocus">Focus: .../...</span>
+                     <span class="info-divider">|</span>
                      <span id="playerBlock">Block: ...</span>
                  </div>
+                 <!-- Player Status Effects -->
                  <div id="playerStatusesCombat">Statuses: ...</div>
             </div>
+            <!-- Hand Area -->
             <div id="handArea">
-                <!-- Player's card hand -->
+                <!-- Player's card hand rendered here by CombatUI -->
             </div>
+            <!-- Deck/Discard Info & End Turn Button -->
             <div id="deckDiscardArea">
                  <div id="deckInfo">
-                     <span id="deckCountElement">Deck: ...</span> |
+                     <span id="deckCountElement">Deck: ...</span>
+                     <span class="info-divider">|</span>
                      <span id="discardCountElement">Discard: ...</span>
-                     <!-- Consider adding Exhaust Count -->
-                     <!-- <span id="exhaustCountElement">Exhaust: ...</span> -->
+                     <span class="info-divider">|</span>
+                     <span id="exhaustCountElement">Exhaust: ...</span> <!-- Added exhaust count display -->
                  </div>
-                <button id="endTurnButton">End Turn</button>
+                <button id="endTurnButton" disabled>End Turn</button> <!-- Starts disabled -->
             </div>
         </div>
 
         <!-- Event Screen -->
-        <div id="eventScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="eventScreen" class="screen"> <!-- Initially hidden -->
              <h2>Encounter</h2>
+             <!-- Event content populated by UIManager -->
             <div id="eventText"><p>Loading event...</p></div>
             <div id="eventChoices">
                 <!-- Choices/Buttons will be rendered here by UIManager -->
@@ -77,61 +90,72 @@
         </div>
 
         <!-- Shop Screen -->
-        <div id="shopScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="shopScreen" class="screen"> <!-- Initially hidden -->
             <h2>Integration Hub</h2>
+            <!-- Player Insight Display -->
             <div id="shopInsightDisplay">Insight: ... <i class='fas fa-brain insight-icon'></i></div>
+            <!-- Sections for items -->
             <div id="shopCards" class="shop-section card-grid">
                 <h3>Concepts for Sale:</h3>
-                 <!-- Card items rendered here -->
+                 <!-- Card items rendered here by UIManager -->
                  <p>Loading concepts...</p>
             </div>
             <div id="shopArtifacts" class="shop-section artifact-grid">
                  <h3>Relics for Sale:</h3>
-                 <!-- Artifact items rendered here -->
+                 <!-- Artifact items rendered here by UIManager -->
                   <p>Loading relics...</p>
             </div>
             <div id="shopRemoveService" class="shop-section">
                  <h3>Refinement Service:</h3>
-                 <!-- Removal button rendered here -->
+                 <!-- Removal button rendered here by UIManager -->
+                 <p>Loading service...</p>
             </div>
+            <!-- Leave Button -->
             <button id="leaveShopButton">Leave Hub</button>
         </div>
 
         <!-- Rest Site Screen -->
-        <div id="restSiteScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="restSiteScreen" class="screen"> <!-- Initially hidden -->
             <h2>Sanctuary</h2>
             <div id="restUsedIndicator">Choose one action:</div>
+            <!-- Action Buttons -->
             <button id="restHealButton">Restore Integrity (Heal 30%)</button>
-            <button id="restMeditateButton">Meditate (Upgrade Card)</button>
-            <button id="restJournalButton">Journal (Remove Card)</button>
+            <button id="restMeditateButton">Meditate (Upgrade Concept)</button>
+            <button id="restJournalButton">Let Go (Remove Concept)</button>
+            <!-- Leave Button -->
             <button id="leaveRestSiteButton">Leave</button>
         </div>
 
         <!-- Reward Screen -->
-        <div id="rewardScreen" class="screen"> <!-- Initially hidden via CSS -->
+        <div id="rewardScreen" class="screen"> <!-- Initially hidden -->
             <h2>Spoils of Introspection</h2>
+             <!-- Insight Gained -->
             <div id="rewardInsight">Insight Gained: ...</div>
+            <!-- Card Choices -->
             <div id="rewardCards" class="card-grid">
                 <h3>Choose a Concept:</h3>
                 <p>Processing...</p>
-                <!-- Card choices will be rendered here -->
+                <!-- Card choices will be rendered here by UIManager -->
             </div>
+             <!-- Artifact Choices -->
             <div id="rewardArtifacts" class="artifact-grid">
                 <h3>Choose a Relic:</h3>
                  <p>Processing...</p>
-                <!-- Artifact choices will be rendered here -->
+                <!-- Artifact choices will be rendered here by UIManager -->
             </div>
+            <!-- Skip/Continue Button -->
             <button id="rewardSkipButton">Continue</button>
         </div>
 
         <!-- Meta Progression Screen -->
-         <div id="metaScreen" class="screen"> <!-- Initially hidden via CSS -->
+         <div id="metaScreen" class="screen"> <!-- Initially hidden -->
              <h2>Meta Progression / Unlocks</h2>
-             <p>View unlocked concepts, artifacts, permanent upgrades here...</p>
+             <!-- Content Area -->
              <div id="metaContent">
-                 <!-- Unlocks and upgrade info rendered here -->
+                 <!-- Unlocks and upgrade info rendered here by UIManager -->
                  <p>Loading meta progress...</p>
              </div>
+             <!-- Back Button -->
              <button id="backToMenuButton">Back to Menu</button>
          </div>
 
@@ -141,23 +165,25 @@
         <!-- ========================== -->
 
         <!-- Tooltip (Initially Hidden, Positioned by JS) -->
-        <div id="tooltip" style="display: none; position: absolute; border: 1px solid black; background-color: lightyellow; padding: 5px; z-index: 200;"></div>
+        <div id="tooltip"></div> <!-- Style in CSS -->
 
         <!-- General Modal Popup (Initially Hidden) -->
-        <div id="modalPopup" class="modal" style="display: none;">
+        <div id="modalPopup" class="modal"> <!-- Style in CSS -->
              <div class="modal-content">
-                 <span class="close-button">×</span>
-                 <p id="modalText"></p>
-                 <div id="modalChoices"></div>
+                 <span class="close-button" title="Close">×</span>
+                 <div id="modalText">Modal text goes here.</div> <!-- Use div for better formatting -->
+                 <div id="modalChoices">
+                      <!-- Buttons added by JS -->
+                 </div>
              </div>
          </div>
 
          <!-- Card Selection Modal (Initially Hidden) -->
-         <div id="cardSelectionModal" class="modal card-select-modal" style="display: none;">
+         <div id="cardSelectionModal" class="modal card-select-modal"> <!-- Style in CSS -->
               <div class="modal-content">
                   <h3 id="cardSelectionTitle">Select a Card</h3>
                   <div id="cardSelectionGrid" class="card-grid">
-                      <!-- Cards to select will be rendered here -->
+                      <!-- Cards to select will be rendered here by UIManager -->
                        <p>Loading cards...</p>
                   </div>
                   <button id="cardSelectionCancel">Cancel</button>
@@ -166,11 +192,11 @@
 
          <!-- Notification Area (Positioned by CSS) -->
         <div id="notificationArea">
-            <!-- Notifications appear here -->
+            <!-- Notifications added by JS -->
         </div>
         <!-- Action Feedback Area (Positioned by CSS) -->
         <div id="actionFeedbackArea">
-            <!-- Action feedback appears here -->
+            <!-- Action feedback added by JS -->
         </div>
 
 
