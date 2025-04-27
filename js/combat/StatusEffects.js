@@ -2,7 +2,7 @@
 
 /**
  * Defines the properties and potentially utility functions for status effects.
- * This acts as a registry or definition source.
+ * This acts as a registry or definition source for UI and potentially logic checks.
  */
 
 export const STATUS_EFFECTS = {
@@ -12,10 +12,10 @@ export const STATUS_EFFECTS = {
         name: 'Strength',
         type: 'buff',
         description: 'Increases Attack damage dealt by the amount.',
-        icon: 'fa-solid fa-dumbbell', // Font Awesome class example
+        icon: 'fa-solid fa-dumbbell',
         stacking: true, // Amount stacks
-        durationBased: false, // Effect based on amount, duration often pseudo-permanent (99)
-        persists: false // Does it last between combats? Usually no.
+        durationBased: false, // Effect based on amount, duration typically 99 (combat long)
+        persists: false // Does it last between combats? No.
     },
     'Dexterity': {
         id: 'Dexterity',
@@ -31,19 +31,19 @@ export const STATUS_EFFECTS = {
         id: 'Regen',
         name: 'Regeneration',
         type: 'buff',
-        description: 'At the end of turn, heal Integrity equal to the amount.',
+        description: 'At the end of your turn, heal Integrity equal to the amount.',
         icon: 'fa-solid fa-heart-pulse',
         stacking: true, // Amount stacks
-        durationBased: true, // Duration also matters
+        durationBased: true, // Duration also matters (ticks down)
         persists: false
     },
     'Intangible': {
         id: 'Intangible',
         name: 'Intangible',
         type: 'buff',
-        description: 'Reduces all incoming Attack damage to 1 for the duration.',
+        description: 'Reduces all incoming Attack damage to 1. Fades at end of turn.',
         icon: 'fa-solid fa-ghost',
-        stacking: false, // Usually doesn't stack amount, duration might refresh
+        stacking: false, // Duration might refresh, amount usually 1
         durationBased: true,
         persists: false // Typically lasts only 1 turn
     },
@@ -51,42 +51,63 @@ export const STATUS_EFFECTS = {
         id: 'Metallicize',
         name: 'Metallicize',
         type: 'buff',
-        description: 'At the end of turn, gain Block equal to the amount.',
-        icon: 'fa-solid fa-industry', // Example icon
+        description: 'At the end of your turn, gain Block equal to the amount.',
+        icon: 'fa-solid fa-cubes-stacked', // Changed icon
         stacking: true,
         durationBased: false, // Amount persists, duration likely permanent for combat (99)
         persists: false
     },
-     'ProtocolActive': { // Example custom buff
+     'ProtocolActive': { // Example custom buff from D/s
          id: 'ProtocolActive',
          name: 'Protocol Active',
          type: 'buff',
-         description: 'Enhances specific actions while active. Increases Block gained.',
+         description: 'Enhances specific actions while active (e.g., increases Block gained).',
          icon: 'fa-solid fa-scroll',
          stacking: true, // Amount might increase effect
          durationBased: true, // Can have a duration or be permanent (99)
          persists: false
      },
-     'FocusNextTurn': { // From artifact example
+     'FocusNextTurn': { // From Shadow Insight artifact
          id: 'FocusNextTurn',
          name: 'Focused',
          type: 'buff',
          description: 'Gain Focus equal to the amount at the start of your next turn.',
          icon: 'fa-solid fa-bolt-lightning',
-         stacking: true,
-         durationBased: true, // Usually lasts 1 turn
+         stacking: true, // Amount stacks
+         durationBased: true, // Usually lasts 1 turn cycle (applied, triggers next turn, removed)
          persists: false
      },
-     'TempMaxHP': { // Complex status example
-         id: 'TempMaxHP',
-         name: 'Temporary Vitality',
+     'TemporaryHP': { // For Stubborn Psyche artifact (Simplified Version)
+         id: 'TemporaryHP',
+         name: 'Temporary HP',
          type: 'buff',
-         description: 'Temporarily increases Max Integrity by the amount for this combat.',
+         description: 'Increases maximum Integrity temporarily (effect removed end of combat).', // Actual HP buffing needs Player logic
          icon: 'fa-solid fa-heart-circle-plus',
-         stacking: true,
+         stacking: true, // Amount represents the HP buff
          durationBased: false, // Lasts until end of combat
-         persists: false
+         persists: false // Removed after combat
      },
+     'MirrorShieldUsed': { // Internal flag for Mirror Shield artifact
+          id: 'MirrorShieldUsed',
+          name: 'Mirror Shield Used',
+          type: 'internal', // Not displayed directly to player usually
+          description: 'Internal flag: Mirror Shield artifact has triggered this combat.',
+          icon: 'fa-solid fa-ban', // Hidden icon
+          stacking: false,
+          durationBased: false, // Lasts combat (duration 99)
+          persists: false
+     },
+     // --- Example: Retain Status ---
+      'Retain': {
+           id: 'Retain',
+           name: 'Retain',
+           type: 'buff',
+           description: 'This card is not discarded at the end of turn.',
+           icon: 'fa-solid fa-hand-holding',
+           stacking: false,
+           durationBased: true, // Lasts until played or end of combat potentially
+           persists: false
+      },
 
 
     // --- Debuffs ---
@@ -94,9 +115,9 @@ export const STATUS_EFFECTS = {
         id: 'Weak',
         name: 'Weak',
         type: 'debuff',
-        description: 'Deals 25% less Attack damage for the duration.',
-        icon: 'fa-solid fa-hand-dots', // Example icon
-        stacking: false, // Duration refreshes, amount usually irrelevant (just presence)
+        description: 'Deals 25% less Attack damage.',
+        icon: 'fa-solid fa-hand-dots', // Using this for weak/less impact
+        stacking: false, // Duration refreshes
         durationBased: true,
         persists: false
     },
@@ -104,8 +125,8 @@ export const STATUS_EFFECTS = {
         id: 'Vulnerable',
         name: 'Vulnerable',
         type: 'debuff',
-        description: 'Takes 50% more damage from Attacks for the duration.',
-        icon: 'fa-solid fa-heart-crack',
+        description: 'Takes 50% more damage from Attacks.',
+        icon: 'fa-solid fa-shield-slash', // Broken shield metaphor
         stacking: false,
         durationBased: true,
         persists: false
@@ -114,8 +135,8 @@ export const STATUS_EFFECTS = {
         id: 'Frail',
         name: 'Frail',
         type: 'debuff',
-        description: 'Gains 25% less Block for the duration.',
-        icon: 'fa-solid fa-shield-slash', // Custom concept - requires icon
+        description: 'Gains 25% less Block.',
+        icon: 'fa-solid fa-bone', // Brittle/Frail metaphor
         stacking: false,
         durationBased: true,
         persists: false
@@ -124,10 +145,10 @@ export const STATUS_EFFECTS = {
         id: 'Poison',
         name: 'Poison',
         type: 'debuff',
-        description: 'At the start of turn, takes damage equal to the amount, then decreases amount by 1.',
+        description: 'At the start of turn, takes damage equal to the amount, then amount decreases by 1.',
         icon: 'fa-solid fa-skull-crossbones',
         stacking: true, // Amount stacks
-        durationBased: false, // Effect based on amount, not turns directly
+        durationBased: false, // Effect tied to amount, not turns directly
         persists: false
     },
     'Burn': {
@@ -135,7 +156,7 @@ export const STATUS_EFFECTS = {
          name: 'Burn',
          type: 'debuff',
          description: 'At the start of turn, takes damage equal to the amount.',
-         icon: 'fa-solid fa-fire',
+         icon: 'fa-solid fa-fire-flame-curved', // More dynamic fire icon
          stacking: true, // Amount can stack
          durationBased: true, // Duration ticks down
          persists: false
@@ -155,8 +176,8 @@ export const STATUS_EFFECTS = {
          name: 'Entangle',
          type: 'debuff',
          description: 'Increases the cost of cards played by the amount.',
-         icon: 'fa-solid fa-link-slash', // Custom concept
-         stacking: true, // Amount stacks
+         icon: 'fa-solid fa-link-slash',
+         stacking: true, // Amount stacks (+1 cost per stack)
          durationBased: true,
          persists: false
      },
@@ -165,9 +186,9 @@ export const STATUS_EFFECTS = {
           name: 'Stunned',
           type: 'debuff',
           description: 'Cannot perform actions for 1 turn.',
-          icon: 'fa-solid fa-star-half-stroke', // Example icon
+          icon: 'fa-solid fa-star-half-stroke', // Dizzy/Stunned icon
           stacking: false,
-          durationBased: true, // Lasts 1 turn, removed after skipping
+          durationBased: true, // Lasts 1 turn, removed after skipping action
           persists: false
       },
 
@@ -175,24 +196,10 @@ export const STATUS_EFFECTS = {
 };
 
 /**
- * Optional: Utility function to get status effect definition.
+ * Utility function to get status effect definition by ID.
  * @param {string} statusId - The ID of the status effect.
  * @returns {object | null} The status effect definition or null if not found.
  */
 export function getStatusEffectDefinition(statusId) {
     return STATUS_EFFECTS[statusId] || null;
 }
-
-// Optional: Functions to calculate modified damage/block based on statuses
-// These are currently implemented within Player/Enemy applyModifiers, but could be centralized here.
-/*
-export function calculateModifiedDamage(baseDamage, activeStatuses) {
-    let modified = baseDamage;
-    if (activeStatuses.some(s => s.id === 'Weak')) modified = Math.floor(modified * 0.75);
-    if (activeStatuses.some(s => s.id === 'Strength')) {
-        const str = activeStatuses.find(s => s.id === 'Strength');
-        modified += str?.amount || 0;
-    }
-    return Math.max(0, modified);
-}
-*/
