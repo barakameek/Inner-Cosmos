@@ -1,19 +1,23 @@
 // js/ui/CombatUI.js
 
-// Import base classes if needed for type hinting or static methods (usually not needed for UI rendering)
-import { Card } from '../core/Card.js';
-import { Enemy } from '../combat/Enemy.js';
-import { Player } from '../core/Player.js';
+// Import base classes if needed (usually not for UI rendering)
+// import { Card } from '../core/Card.js';
+// import { Enemy } from '../combat/Enemy.js';
+// import { Player } from '../core/Player.js';
+
 // Import status definitions for tooltips/icons
-import { getStatusEffectDefinition } from '../combat/StatusEffects.js';
+import { getStatusEffectDefinition } from '../combat/StatusEffects.js'; // Correct path if StatusEffects is in js/combat
 
 /**
  * Manages rendering and interactions specifically for the Combat Screen UI.
  */
 export class CombatUI {
     constructor(uiManager, gameState) {
-        this.uiManager = uiManager; // Reference back to the main UIManager
-        this.gameState = gameState; // Reference to the game state for data access
+        if (!uiManager) throw new Error("CombatUI requires a UIManager instance.");
+        if (!gameState) throw new Error("CombatUI requires a GameState instance.");
+
+        this.uiManager = uiManager;
+        this.gameState = gameState;
 
         // Get references to specific combat screen elements managed by UIManager
         this.combatScreen = document.getElementById('combatScreen');
@@ -22,17 +26,18 @@ export class CombatUI {
         this.handArea = document.getElementById('handArea');
         this.deckCountElement = document.getElementById('deckCountElement');
         this.discardCountElement = document.getElementById('discardCountElement');
-        this.exhaustCountElement = document.getElementById('exhaustCountElement'); // Add if you track exhaust count
+        this.exhaustCountElement = document.getElementById('exhaustCountElement'); // Ensure this exists in HTML if used
         this.endTurnButton = document.getElementById('endTurnButton');
 
-        // Player Stats Elements (ensure these IDs exist within #playerArea in index.html)
+        // Player Stats Elements
         this.playerHPElement = document.getElementById('playerHP');
         this.playerFocusElement = document.getElementById('playerFocus');
         this.playerBlockElement = document.getElementById('playerBlock');
-        this.playerStatusesElement = document.getElementById('playerStatusesCombat'); // Ensure specific ID
+        this.playerStatusesElement = document.getElementById('playerStatusesCombat');
 
-        // Targeting State (managed by CombatManager, accessed via gameState)
-        // this.currentTarget = null; // No need to store target here, get from CombatManager via GameState
+        if (!this.combatScreen || !this.enemyArea || !this.playerArea || !this.handArea || !this.endTurnButton || !this.playerHPElement || !this.playerFocusElement || !this.playerBlockElement || !this.playerStatusesElement || !this.deckCountElement || !this.discardCountElement) {
+            console.error("CombatUI Error: One or more required combat screen elements not found in the DOM.");
+        }
 
         this._setupCombatListeners();
         console.log("CombatUI initialized.");
@@ -42,7 +47,7 @@ export class CombatUI {
     _setupCombatListeners() {
         if (this.endTurnButton) {
             this.endTurnButton.onclick = () => {
-                // Call end turn logic on the CombatManager via GameState
+                if (!this.gameState?.combatManager?.playerTurn) return; // Prevent clicks when not player turn
                 this.gameState?.combatManager?.endPlayerTurn();
             };
         }
@@ -50,23 +55,27 @@ export class CombatUI {
     }
 
     /**
-     * Updates the entire combat UI. Called by UIManager or CombatManager.
-     * @param {Player} player
-     * @param {Enemy[]} enemies
-     * @param {boolean} isPlayerTurn
+     * Updates the entire combat UI based on the current GameState.
+     * @param {Player} player - The current player object.
+     * @param {Enemy[]} enemies - Array of current enemy objects.
+     * @param {boolean} isPlayerTurn - Indicates if it's the player's turn.
      */
     update(player, enemies, isPlayerTurn) {
         if (!this.combatScreen || !player || !enemies) {
              console.error("CombatUI Update failed: Missing screen, player, or enemies.");
              return;
         }
-        // console.log("CombatUI: Updating..."); // Can be noisy
+        // console.log("CombatUI: Updating..."); // Noisy
+
         this.updatePlayerInfo(player);
-        this.renderEnemies(enemies, isPlayerTurn); // Pass turn state for potential UI changes
-        this.renderHand(player.deckManager.hand, isPlayerTurn); // Pass turn state
+        this.renderEnemies(enemies, isPlayerTurn);
+        this.renderHand(player.deckManager.hand, isPlayerTurn);
         this.updateDeckDiscardCounts(player.deckManager);
         this.updateEndTurnButton(isPlayerTurn);
-        this.styleTurnIndicator(isPlayerTurn); // Update visual turn indication
+        this.styleTurnIndicator(isPlayerTurn);
+
+        // Ensure drop zones are updated after rendering enemies/player area
+        this._setupDropZones();
     }
 
     /** Updates player HP, Focus, Block, Statuses */
@@ -85,7 +94,11 @@ export class CombatUI {
         if (!deckManager) return;
         if (this.deckCountElement) this.deckCountElement.textContent = `Deck: ${deckManager.getDrawPileCount()}`;
         if (this.discardCountElement) this.discardCountElement.textContent = `Discard: ${deckManager.getDiscardPileCount()}`;
-        if (this.exhaustCountElement) this.exhaustCountElement.textContent = `Exhaust: ${deckManager.getExhaustPileCount()}`;
+        if (this.exhaustCountElement) { // Check if element exists
+            this.exhaustCountElement.textContent = `Exhaust: ${deckManager.getExhaustPileCount()}`;
+        } else {
+             // console.warn("Exhaust count element not found.");
+        }
     }
 
     /** Updates End Turn button state */
@@ -95,8 +108,8 @@ export class CombatUI {
 
     /** Styles elements based on whose turn it is */
     styleTurnIndicator(isPlayerTurn) {
-        if (this.playerArea) this.playerArea.style.borderColor = isPlayerTurn ? '#3498db' : '#567';
-        if (this.enemyArea) this.enemyArea.style.borderColor = !isPlayerTurn ? '#e74c3c' : '#567';
+        if (this.playerArea) this.playerArea.style.borderColor = isPlayerTurn ? '#3498db' : '#566573'; // Adjusted inactive color
+        if (this.enemyArea) this.enemyArea.style.borderColor = !isPlayerTurn ? '#e74c3c' : '#566573'; // Adjusted inactive color
     }
 
     /** Renders all current enemies */
@@ -105,232 +118,359 @@ export class CombatUI {
         this.enemyArea.innerHTML = ''; // Clear previous
 
         enemies.forEach((enemy) => {
+            if (!enemy) return; // Skip if enemy data is somehow null
+
             const enemyDiv = document.createElement('div');
             enemyDiv.className = 'enemy-display';
-            enemyDiv.dataset.enemyId = enemy.id;
-            enemyDiv.style.opacity = enemy.currentHp <= 0 ? 0.4 : 1; // More opacity for dead
-             // Highlight based on CombatManager's target state
-             const isTargeted = this.gameState?.combatManager?.currentTarget?.id === enemy.id;
+            enemyDiv.dataset.enemyId = enemy.id; // Use unique instance ID
+            enemyDiv.style.opacity = enemy.currentHp <= 0 ? 0.4 : 1;
+
+            // Highlight based on CombatManager's target state (accessed via gameState)
+            const currentTargetId = this.gameState?.combatManager?.currentTarget?.id;
+            const isTargeted = currentTargetId === enemy.id;
              enemyDiv.style.borderColor = isTargeted ? '#f1c40f' : '#ccc';
-             if (isTargeted) enemyDiv.classList.add('targeted'); // Add class for potential CSS animation/glow
+             if (isTargeted) enemyDiv.classList.add('targeted');
+
 
             // --- Create Sub-Elements ---
             const name = document.createElement('div'); name.className = 'enemy-name'; name.textContent = enemy.name;
-            const hpBarOuter = document.createElement('div'); hpBarOuter.className = 'enemy-hp-bar-outer';
-            const hpBarInner = document.createElement('div'); hpBarInner.className = 'enemy-hp-bar-inner';
-            const hpText = document.createElement('div'); hpText.className = 'enemy-hp-text';
+
+            // --- HP Bar ---
+             const hpBarOuter = document.createElement('div');
+             hpBarOuter.className = 'enemy-hp-bar-outer';
+             const hpBarInner = document.createElement('div');
+             hpBarInner.className = 'enemy-hp-bar-inner';
              hpBarInner.style.width = `${Math.max(0, (enemy.currentHp / enemy.maxHp) * 100)}%`;
+             const hpText = document.createElement('div'); // Separate text element overlay
+             hpText.className = 'enemy-hp-text';
              hpText.textContent = `${enemy.currentHp} / ${enemy.maxHp}`;
-             hpBarOuter.appendChild(hpBarInner); hpBarOuter.appendChild(hpText);
+             hpBarOuter.appendChild(hpBarInner);
+             hpBarOuter.appendChild(hpText); // Text on top
 
-            const block = document.createElement('div'); block.className = 'enemy-block'; block.textContent = enemy.currentBlock > 0 ? `Block: ${enemy.currentBlock}` : '';
-            const intent = document.createElement('div'); intent.className = 'enemy-intent'; intent.innerHTML = this.getIntentText(enemy.currentIntent, enemy); // Use innerHTML for icons
-            const statuses = document.createElement('div'); statuses.className = 'enemy-statuses';
-            this.renderStatuses(enemy.activeStatusEffects, statuses, 'enemy'); // Use helper
+            const block = document.createElement('div'); block.className = 'enemy-block'; block.textContent = enemy.currentBlock > 0 ? `Block: ${enemy.currentBlock}` : ''; block.style.minHeight = '1.2em'; // Prevent layout shift
 
-            // Append elements
-            enemyDiv.appendChild(intent); // Intent at top?
+            const intent = document.createElement('div'); intent.className = 'enemy-intent'; intent.innerHTML = this.getIntentText(enemy.currentIntent, enemy); intent.style.minHeight = '1.2em';
+
+            const statuses = document.createElement('div'); statuses.className = 'enemy-statuses'; statuses.style.minHeight = '1.5em'; // Space for statuses
+            this.renderStatuses(enemy.activeStatusEffects, statuses, 'enemy');
+
+            // Append elements (Intent at top makes sense)
+            enemyDiv.appendChild(intent);
             enemyDiv.appendChild(name);
             enemyDiv.appendChild(hpBarOuter);
             enemyDiv.appendChild(block);
             enemyDiv.appendChild(statuses);
 
-            // Click listener for targeting
-             if (enemy.currentHp > 0) {
-                 enemyDiv.style.cursor = 'crosshair'; // Indicate targetable
-                 enemyDiv.addEventListener('click', () => {
-                     if (this.gameState?.combatManager?.playerTurn) {
-                         this.gameState.combatManager.setSelectedTarget(enemy);
-                         // Re-render enemies to update highlighting immediately
-                         this.renderEnemies(this.gameState.combatManager.enemies, true);
-                     }
+             // Add tooltip listener using main UIManager
+             enemyDiv.addEventListener('mouseover', (event) => { let ttText = `${enemy.name} | HP: ${enemy.currentHp}/${enemy.maxHp}`; if (enemy.currentBlock > 0) ttText += ` | Block: ${enemy.currentBlock}`; this.uiManager.showTooltip(ttText, event.clientX, event.clientY); });
+             enemyDiv.addEventListener('mouseout', () => this.uiManager.hideTooltip());
+             enemyDiv.addEventListener('mousemove', (event) => this.uiManager.updateTooltipPosition(event.clientX, event.clientY));
+
+
+            // Click listener for targeting (only if alive and player's turn)
+             if (enemy.currentHp > 0 && isPlayerTurn) {
+                 enemyDiv.style.cursor = 'crosshair';
+                 enemyDiv.addEventListener('click', (e) => {
+                      e.stopPropagation(); // Prevent potential event bubbling issues
+                     this.gameState?.combatManager?.setSelectedTarget(enemy);
+                     // Note: setSelectedTarget now triggers re-render in CombatManager via CombatUI call
                  });
-             } else { enemyDiv.style.cursor = 'default'; }
+             } else {
+                 enemyDiv.style.cursor = 'default';
+             }
 
             this.enemyArea.appendChild(enemyDiv);
         });
     }
 
     /** Renders status effects into a container element */
-    renderStatuses(activeEffects, containerElement, targetType = 'player') { // targetType for styling
-        containerElement.innerHTML = 'Statuses: '; // Clear previous
+    renderStatuses(activeEffects, containerElement, targetType = 'player') {
+        if (!containerElement) return;
+        containerElement.innerHTML = ''; // Clear previous content
+        const statusLabel = document.createElement('span');
+        statusLabel.textContent = 'Statuses: ';
+        containerElement.appendChild(statusLabel);
+
         if (activeEffects && activeEffects.length > 0) {
              activeEffects.forEach(effect => {
                  const definition = getStatusEffectDefinition(effect.id);
+                 if (!definition) { // Handle unknown statuses gracefully
+                      console.warn(`Status definition not found for ID: ${effect.id}`);
+                      const effectSpan = document.createElement('span');
+                      effectSpan.className = `status-effect ${targetType}-status status-unknown`;
+                      effectSpan.innerHTML = `<i class="fa-solid fa-question-circle"></i> ${effect.id}`;
+                      effectSpan.title = `Unknown Status: ${effect.id}`;
+                      containerElement.appendChild(effectSpan);
+                      return;
+                 }
+
                  const effectSpan = document.createElement('span');
                  effectSpan.className = `status-effect ${targetType}-status status-${effect.id.toLowerCase()}`;
 
-                 // Determine display value
+                 // Determine display value (amount for stacking, duration otherwise if > 1 and not 99)
                  let displayValue = "";
-                 if (definition?.stacking && effect.amount > 1) displayValue = effect.amount;
-                 else if (definition?.durationBased && effect.duration > 1 && effect.duration !== 99) displayValue = effect.duration;
+                 const isStacking = definition.stacking;
+                 const isDurationBased = definition.durationBased;
+                 if (isStacking && effect.amount > 1) displayValue = effect.amount;
+                 else if (isDurationBased && effect.duration > 1 && effect.duration !== 99) displayValue = effect.duration;
 
                  // Use Icon + Value/Duration
-                 effectSpan.innerHTML = `<i class="${definition?.icon || 'fa-solid fa-question-circle'}"></i>${displayValue ? ` ${displayValue}` : ''}`;
-                 effectSpan.title = `${definition?.name || effect.id}: ${definition?.description || 'Unknown effect.'}`; // Basic tooltip via title attribute
+                 effectSpan.innerHTML = `<i class="${definition.icon || 'fa-solid fa-circle-question'}"></i>${displayValue ? ` ${displayValue}` : ''}`;
+                 // Basic tooltip via title attribute
+                 effectSpan.title = `${definition.name}: ${definition.description}`;
 
-                 // Add advanced tooltip listener using main UIManager? Optional.
+                 // TODO: Add advanced tooltip listener using main UIManager?
                  // effectSpan.addEventListener('mouseover', (e) => this.uiManager.showTooltip(...));
                  // effectSpan.addEventListener('mouseout', () => this.uiManager.hideTooltip());
 
                  containerElement.appendChild(effectSpan);
              });
         } else {
-            containerElement.innerHTML += " <span class='no-statuses'>None</span>";
+            const noStatusSpan = document.createElement('span');
+            noStatusSpan.className = 'no-statuses';
+            noStatusSpan.textContent = 'None';
+            containerElement.appendChild(noStatusSpan);
         }
     }
 
 
     /** Generates descriptive text/HTML for an enemy's intent. */
     getIntentText(intent, enemy) {
-        if (!intent || enemy.currentHp <= 0 || enemy.hasStatus('Stunned')) {
-            return '<i class="fas fa-question"></i> ???';
+        if (!intent || !enemy || enemy.currentHp <= 0 || enemy.hasStatus('Stunned')) {
+            return '<i class="fas fa-question"></i> ???'; // Default unknown/stunned intent
         }
-        let text = ''; let icon = 'fa-solid fa-question'; let value = '';
+
+        let text = ''; // Additional text like status effect names
+        let icon = 'fa-solid fa-question'; // Default icon
+        let value = ''; // Numerical value or main description part
 
         // Calculate predicted values including enemy's Strength/Weak for damage/block
-        const intentValue = intent.baseValue || intent.attackValue || intent.blockValue || 0;
-        let predictedValue = intentValue;
-         if (intent.type.includes('attack')) predictedValue = enemy.applyModifiers('damageDealt', intentValue);
-         else if (intent.type.includes('block')) predictedValue = enemy.applyModifiers('blockGain', intentValue);
+        // IMPORTANT: Use the BASE value from the intent object, NOT the pre-calculated one
+        // because buffs/debuffs on the enemy might change between intent determination and execution.
+        // We show the *potential* effect based on *current* enemy stats.
+        const baseIntentValue = intent.baseValue ?? intent.attackValue ?? intent.blockValue ?? 0;
+        let predictedValue = baseIntentValue; // Start with base
 
-
-        switch (intent.type) {
-            case 'attack':
-                icon = 'fa-solid fa-gavel'; value = predictedValue;
-                 if(intent.status) text += ` + ${intent.status}`; // Append status info
-                break;
-            case 'multi_attack':
-                icon = 'fa-solid fa-gavel'; value = `${predictedValue} x ${intent.count || '?'}`;
-                 if(intent.status && intent.applyStatusOnce) text += ` + ${intent.status}`;
-                 break;
-            case 'block':
-                icon = 'fa-solid fa-shield-alt'; value = predictedValue;
-                break;
-            case 'attack_block':
-                const attackVal = enemy.applyModifiers('damageDealt', intent.attackValue || 0);
-                const blockVal = enemy.applyModifiers('blockGain', intent.blockValue || 0);
-                icon = 'fa-solid fa-gavel'; value = `${attackVal} & <i class="fas fa-shield-alt"></i> ${blockVal}`; // Embed second icon
-                break;
-            case 'debuff':
-                icon = 'fa-solid fa-arrow-down'; value = intent.status || 'Debuff';
-                break;
-            case 'buff': case 'power_up':
-                 icon = 'fa-solid fa-arrow-up'; value = intent.status || 'Buff';
-                 break;
-            case 'special':
-                icon = 'fa-solid fa-star'; value = intent.description || intent.id || 'Special';
-                break;
-             case 'none':
-                  icon = 'fa-solid fa-minus-circle'; value = intent.description || 'Waiting';
-                  break;
-            default: value = 'Unknown';
+        try {
+            if (intent.type.includes('attack')) {
+                 predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue); // Calculate damage with current buffs/debuffs
+                 icon = 'fa-solid fa-gavel'; // Sword/Attack icon
+                 value = predictedValue;
+                 if(intent.status) text += ` + ${intent.status}`; // Append status info if attack applies one
+            } else if (intent.type.includes('block')) {
+                 predictedValue = enemy.applyModifiers('blockGain', baseIntentValue); // Calculate block with current buffs/debuffs
+                 icon = 'fa-solid fa-shield-halved'; // Shield icon
+                 value = predictedValue;
+            } else {
+                 // Handle non-damage/block intents
+                 switch (intent.type) {
+                     case 'multi_attack':
+                         predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue);
+                         icon = 'fa-solid fa-gavel'; value = `${predictedValue} x ${intent.count || '?'}`;
+                         if(intent.status && intent.applyStatusOnce) text += ` + ${intent.status}`;
+                         break;
+                     case 'attack_block':
+                         const attackVal = enemy.applyModifiers('damageDealt', intent.attackValue || 0);
+                         const blockVal = enemy.applyModifiers('blockGain', intent.blockValue || 0);
+                         icon = 'fa-solid fa-gavel'; value = `${attackVal} & <i class="fas fa-shield-halved"></i> ${blockVal}`; // Embed second icon
+                         break;
+                     case 'debuff':
+                         icon = 'fa-solid fa-arrow-down'; value = intent.status || 'Debuff'; text = ` (${intent.duration || 1}t)`; // Show duration
+                         break;
+                     case 'buff': case 'power_up':
+                         icon = 'fa-solid fa-arrow-up'; value = intent.status || 'Buff';
+                          // Show amount if > 1 for stacking buffs
+                          if (intent.amount > 1 && ['Strength', 'Dexterity'].includes(intent.status)) text = ` +${intent.amount}`;
+                         break;
+                     case 'special':
+                         icon = 'fa-solid fa-star'; value = intent.description || intent.id || 'Special';
+                         break;
+                     case 'none':
+                         icon = 'fa-solid fa-circle-minus'; value = intent.description || 'Waiting';
+                         break;
+                     default: value = 'Unknown Action';
+                 }
+            }
+        } catch (error) {
+             console.error(`Error calculating intent text for ${enemy.name}:`, error, intent);
+             return '<i class="fas fa-exclamation-triangle"></i> Error';
         }
+
         return `<i class="${icon}"></i> ${value}${text}`;
     }
 
 
-    /** Renders the player's hand */
+    /** Renders the player's hand with fanning layout */
     renderHand(handCards, isPlayerTurn) {
         if (!this.handArea) return;
         this.handArea.innerHTML = ''; // Clear previous
 
-        // --- Calculate Card Positions for Fanning ---
-         const numCards = handCards.length;
-         const maxWidth = this.handArea.clientWidth * 0.9; // Use 90% of width
-         const cardWidth = 120; // From CSS
-         const overlap = numCards > 6 ? Math.min(60, cardWidth * 0.6) : 20; // Overlap more if many cards, min 20px gap
-         const totalWidth = cardWidth + (numCards - 1) * (cardWidth - overlap);
-         let startX = (this.handArea.clientWidth - Math.min(totalWidth, maxWidth)) / 2; // Center the hand
-         let cardSpacing = cardWidth - overlap;
+        const numCards = handCards.length;
+        if (numCards === 0) return; // Nothing to render
 
-         // Adjust spacing if total width exceeds max width
-         if (totalWidth > maxWidth) {
-             cardSpacing = (maxWidth - cardWidth) / (numCards - 1 || 1);
-         }
+        const containerWidth = this.handArea.clientWidth;
+        const cardWidth = 120; // From CSS
+        const cardHeight = 180; // From CSS
 
+        // --- Calculate Overlap and Spacing ---
+        // Aim for less overlap with fewer cards, more with many
+        const maxOverlapRatio = 0.6; // Max 60% overlap
+        const minOverlapRatio = 0.1; // Min 10% overlap (max 90% visible)
+        const overlapThreshold = 6; // Start significant overlapping after this many cards
+        const overlapRatio = numCards > overlapThreshold
+            ? minOverlapRatio + (maxOverlapRatio - minOverlapRatio) * Math.min(1, (numCards - overlapThreshold) / 5) // Gradually increase overlap
+            : minOverlapRatio;
+        const overlapPixels = cardWidth * overlapRatio;
+        const cardSpacing = cardWidth - overlapPixels;
+
+        const totalHandWidth = cardWidth + (numCards - 1) * cardSpacing;
+        const maxRenderWidth = containerWidth * 0.95; // Use 95% of width to avoid edge clipping
+
+        let finalSpacing = cardSpacing;
+        let finalTotalWidth = totalHandWidth;
+
+        // If the calculated width exceeds the container, compress spacing
+        if (totalHandWidth > maxRenderWidth) {
+            finalSpacing = (maxRenderWidth - cardWidth) / (numCards - 1 || 1); // Avoid division by zero if only 1 card
+            finalTotalWidth = maxRenderWidth;
+        }
+
+        const startX = (containerWidth - finalTotalWidth) / 2; // Center the hand horizontally
+
+        // --- Calculate Arc/Fan ---
+        const maxAngle = 30; // Max total arc angle
+        const anglePerCard = numCards > 1 ? Math.min(maxAngle / (numCards - 1), 8) : 0; // Limit angle per card
+        const startAngle = numCards > 1 ? - (numCards - 1) * anglePerCard / 2 : 0;
+        const arcRadius = finalTotalWidth * 1.5; // Adjust for desired arc flatness
+        const arcLift = 30; // How much the center lifts compared to edges
+
+        // --- Render Cards ---
         handCards.forEach((card, index) => {
             const cardElement = this.uiManager.createCardElement(card); // Use main UIManager's creator
+            if (!cardElement) return; // Skip if card creation failed
             cardElement.dataset.handIndex = index;
 
-            // Apply positioning for fanning effect
+            // Calculate position and rotation for fan
+            const currentAngle = startAngle + index * anglePerCard;
+            const rotation = currentAngle;
+             // Calculate y-offset for arc (simple parabola)
+            const normalizedIndex = numCards > 1 ? (index / (numCards - 1)) - 0.5 : 0; // -0.5 to 0.5
+            const yOffset = arcLift * (1 - (normalizedIndex * 2)**2); // Parabolic lift, max at center
+
             cardElement.style.position = 'absolute';
-            cardElement.style.left = `${startX + index * cardSpacing}px`;
-            cardElement.style.bottom = `10px`; // Position near bottom
-            // Optional: Add slight rotation/vertical offset for arc
-             const angleRange = 20; // Max angle deviation
-             const angle = numCards > 1 ? ((index / (numCards - 1)) - 0.5) * angleRange : 0; // Angle from -range/2 to +range/2
-             const yOffset = Math.abs(angle) * 0.5; // Lift edges slightly
-             cardElement.style.transform = `rotate(${angle}deg) translateY(-${yOffset}px)`;
-             cardElement.style.zIndex = 10 + index; // Ensure stacking order is reasonable
+            cardElement.style.left = `${startX + index * finalSpacing}px`;
+            cardElement.style.bottom = `${10 + yOffset}px`; // Base position + arc lift
+            cardElement.style.transform = `rotate(${rotation}deg)`;
+            cardElement.style.zIndex = 10 + index; // Basic stacking
+             // Add hover effect adjustments (ensure hover style handles this)
+             cardElement.addEventListener('mouseenter', () => cardElement.style.zIndex = 100);
+             cardElement.addEventListener('mouseleave', () => cardElement.style.zIndex = 10 + index);
 
 
-             // Re-attach drag listeners IF it's player turn
-             if (isPlayerTurn) {
+             // Attach drag listeners IF it's player turn AND card is playable
+             if (isPlayerTurn && card.cost !== null) { // Check if playable cost
                 this._attachCardDragListeners(cardElement, card);
              } else {
                 cardElement.draggable = false;
                 cardElement.style.cursor = 'default';
+                 if (card.cost !== null && player.currentFocus < card.cost) {
+                      cardElement.style.filter = 'grayscale(70%) brightness(0.8)'; // Dim unplayable cards
+                 }
              }
 
             this.handArea.appendChild(cardElement);
         });
-
-        // Re-setup drop zones (might be redundant if called elsewhere, but safe)
-        this._setupDropZones();
     }
 
      /** Attaches drag listeners to a card element */
      _attachCardDragListeners(cardElement, card) {
+        if (!cardElement || !card) return;
          cardElement.draggable = true;
          cardElement.style.cursor = 'grab';
 
          cardElement.ondragstart = (event) => {
-             if (!this.gameState?.combatManager?.playerTurn) { event.preventDefault(); return; }
-             this.uiManager.draggedCard = card; // Set on main UIManager
+             // Double-check turn state and playability (e.g., focus cost)
+             if (!this.gameState?.combatManager?.playerTurn || (card.cost !== null && this.gameState.player.currentFocus < card.cost)) {
+                  event.preventDefault(); return;
+             }
+             this.uiManager.draggedCard = card;
              this.uiManager.draggedCardElement = cardElement;
-             event.dataTransfer.setData('text/plain', card.id);
+             event.dataTransfer.setData('text/plain', card.id); // Use unique instance ID
              event.dataTransfer.effectAllowed = 'move';
              cardElement.style.opacity = '0.5';
              cardElement.style.cursor = 'grabbing';
+             // Optional: Add a class for global dragging styles
+             document.body.classList.add('dragging-card');
          };
 
          cardElement.ondragend = (event) => {
-             if (this.uiManager.draggedCardElement) this.uiManager.draggedCardElement.style.opacity = '1';
+             if (this.uiManager.draggedCardElement) {
+                 this.uiManager.draggedCardElement.style.opacity = '1';
+                 this.uiManager.draggedCardElement.style.cursor = 'grab'; // Reset cursor
+             }
              this.uiManager.draggedCard = null;
              this.uiManager.draggedCardElement = null;
-             this.uiManager.clearEnemyHighlights(); // Use main UIManager method
-             cardElement.style.cursor = 'grab';
+             this.uiManager.clearEnemyHighlights(); // Clear any lingering highlights
+             document.body.classList.remove('dragging-card'); // Remove global class
          };
      }
 
     /** Sets up drop zones on enemies/player area */
      _setupDropZones() {
-        if (!this.enemyArea || !this.playerArea || !this.gameState || !this.gameState.combatManager || !this.uiManager) return;
+        if (!this.enemyArea || !this.playerArea || !this.gameState?.combatManager || !this.uiManager) return;
 
          const combatManager = this.gameState.combatManager;
          const uiManager = this.uiManager; // Use reference
 
-         const dropHandler = (event, targetEnemy = null) => {
+         const dropHandler = (event, target = null) => { // Target can be Enemy or Player instance
              event.preventDefault();
-             event.currentTarget.classList.remove('drag-over'); // Remove highlight on drop
-             if (uiManager.draggedCard) {
-                  // Pass card and specific target (or null) to CombatManager
-                  combatManager.handlePlayerCardPlay(uiManager.draggedCard, targetEnemy);
+             event.currentTarget.classList.remove('drag-over');
+             const draggedCard = uiManager.draggedCard; // Get from main manager
+             if (draggedCard) {
+                 // Pass card and specific target (Enemy instance or null for player area drop)
+                 combatManager.handlePlayerCardPlay(draggedCard, target instanceof Enemy ? target : null);
              }
-             uiManager.draggedCard = null; // Clear drag state on main UIManager
-             uiManager.draggedCardElement = null;
-             uiManager.clearEnemyHighlights();
+              // Clear drag state regardless of success, handled in handlePlayerCardPlay
+              // uiManager.draggedCard = null;
+              // uiManager.draggedCardElement = null;
+              // uiManager.clearEnemyHighlights(); // Done in handlePlayerCardPlay
          };
 
          const dragOverHandler = (event) => {
              event.preventDefault();
-             event.dataTransfer.dropEffect = 'move';
-             event.currentTarget.classList.add('drag-over'); // Add highlight
+             if (uiManager.draggedCard) {
+                 const card = uiManager.draggedCard;
+                 const currentTargetElement = event.currentTarget;
+                 const targetIsPlayerArea = currentTargetElement === this.playerArea;
+                 let isValidTarget = false;
+
+                 if (targetIsPlayerArea) {
+                      // Valid to drop on player area if card doesn't require enemy target
+                      isValidTarget = !card.requiresTarget || card.targetType === 'self';
+                 } else { // Dropping on enemy
+                      // Valid if card requires enemy target
+                      isValidTarget = card.requiresTarget && card.targetType === 'enemy';
+                 }
+
+                 if (isValidTarget) {
+                     event.dataTransfer.dropEffect = 'move';
+                     currentTargetElement.classList.add('drag-over');
+                     // Optionally highlight specific enemy if dropping on it
+                     if (!targetIsPlayerArea) uiManager.highlightEnemy(currentTargetElement.dataset.enemyId, true);
+                 } else {
+                     event.dataTransfer.dropEffect = 'none'; // Indicate invalid drop
+                     currentTargetElement.classList.remove('drag-over');
+                 }
+             } else {
+                  event.dataTransfer.dropEffect = 'none';
+             }
          };
 
          const dragLeaveHandler = (event) => {
-             event.currentTarget.classList.remove('drag-over'); // Remove highlight
+             event.currentTarget.classList.remove('drag-over');
+              // Optionally clear specific enemy highlight if leaving it
+             const targetIsPlayerArea = event.currentTarget === this.playerArea;
+              if (!targetIsPlayerArea) uiManager.highlightEnemy(event.currentTarget.dataset.enemyId, false);
          };
 
          // Apply to individual living enemy elements
@@ -339,7 +479,7 @@ export class CombatUI {
              const enemy = combatManager.enemies.find(e => e.id === enemyId);
              if (enemy && enemy.currentHp > 0) {
                  enemyEl.ondragover = dragOverHandler;
-                 enemyEl.ondrop = (event) => dropHandler(event, enemy);
+                 enemyEl.ondrop = (event) => dropHandler(event, enemy); // Pass enemy instance
                  enemyEl.ondragleave = dragLeaveHandler;
              } else { // Clear listeners on dead enemies
                   enemyEl.ondragover = null; enemyEl.ondrop = null; enemyEl.ondragleave = null;
@@ -348,14 +488,14 @@ export class CombatUI {
 
          // Apply to player area (for self/non-targeted)
          this.playerArea.ondragover = dragOverHandler;
-         this.playerArea.ondrop = (event) => dropHandler(event, null);
+         this.playerArea.ondrop = (event) => dropHandler(event, this.gameState.player); // Pass player for self-target validation? Or null? Null is safer.
          this.playerArea.ondragleave = dragLeaveHandler;
      }
 
      /** Clear highlighting class from enemies */
      clearEnemyHighlights() {
         this.enemyArea?.querySelectorAll('.enemy-display').forEach(el => {
-             el.classList.remove('targeted'); // Remove target class
+             el.classList.remove('targeted'); // Remove target selection class
              el.classList.remove('highlighted-enemy'); // Remove acting highlight class
              el.style.borderColor = '#ccc'; // Reset border
          });
@@ -363,12 +503,18 @@ export class CombatUI {
 
       /** Add/Remove highlight for acting enemy */
       highlightEnemy(enemyInstanceId, highlighted = true) {
-        this.clearEnemyHighlights(); // Clear previous highlights first
+        // console.log(`Highlighting enemy ${enemyInstanceId}: ${highlighted}`); // Debug
+        // Don't clear other highlights here, allow selection highlight to persist
+        // this.clearEnemyHighlights();
         const enemyElement = this.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${enemyInstanceId}"]`);
         if (enemyElement) {
-            if (highlighted) enemyElement.classList.add('highlighted-enemy');
-            // Don't remove here, clearEnemyHighlights handles removal
+            if (highlighted) {
+                enemyElement.classList.add('highlighted-enemy'); // Add specific class for acting highlight
+            } else {
+                enemyElement.classList.remove('highlighted-enemy');
+            }
         }
      }
 
 } // End of CombatUI class
+
