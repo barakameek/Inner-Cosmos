@@ -598,6 +598,91 @@ const elementalInsights = [
 // - grimoireShelves: Lab-specific UI element.
 // - onboarding... : Lab-specific tutorial data.
 
+const quizQuestions = [
+    // Question 1: Interaction Style
+    {
+        id: "q_interaction",
+        text: "When connecting intimately, your natural inclination is towards:",
+        choices: [
+            { text: "Taking the lead, guiding the energy.", value: 'lead' },      // Interaction, RoleFocus (High)
+            { text: "Following the flow, adapting to your partner.", value: 'follow' }, // Psychological, RoleFocus (Low)
+            { text: "A fluid exchange, shifting roles freely.", value: 'switch' }   // Cognitive, Interaction
+        ]
+    },
+    // Question 2: Sensory Preference
+    {
+        id: "q_sensory",
+        text: "Which sensation offers the most profound release or connection for you?",
+        choices: [
+            { text: "Gentle, comforting touch and warmth.", value: 'gentle' },  // Sensory, Psychological
+            { text: "Intense pressure, sharp focus, or impact.", value: 'intense' }, // Sensory, Interaction
+            { text: "The beauty of intricate patterns (visual/tactile).", value: 'pattern' } // Sensory, Cognitive
+        ]
+    },
+    // Question 3: Psychological Driver
+    {
+        id: "q_psychological",
+        text: "The deepest 'why' behind your desire often stems from:",
+        choices: [
+            { text: "Seeking profound emotional connection and trust.", value: 'connection' }, // Psychological, Relational
+            { text: "Exploring power dynamics and testing limits.", value: 'power' }, // Psychological, Interaction, RoleFocus
+            { text: "Expressing creativity and escaping the mundane.", value: 'expression' } // Psychological, Cognitive
+        ]
+    },
+    // Question 4: Cognitive Engagement
+    {
+        id: "q_cognitive",
+        text: "During intimacy, your mind is most engaged by:",
+        choices: [
+            { text: "Immersive fantasy worlds and specific scenarios.", value: 'fantasy' }, // Cognitive, Attraction
+            { text: "Witty banter, clever wordplay, or shared ideas.", value: 'banter' }, // Cognitive, Interaction
+            { text: "Analyzing the dynamic and psychological undercurrents.", value: 'analysis' } // Cognitive, Psychological
+        ]
+    },
+    // Question 5: Relational Comfort
+    {
+        id: "q_relational",
+        text: "You feel most authentic and comfortable exploring intimacy within:",
+        choices: [
+            { text: "A deeply committed, exclusive bond.", value: 'mono' },      // Relational, Psychological
+            { text: "Multiple connections, navigated ethically.", value: 'poly' },     // Relational, Cognitive
+            { text: "Spontaneous encounters, free from defined structure.", value: 'casual' } // Relational, Attraction
+        ]
+    }
+];
+
+// --- NEW: Mirror Quiz Reward Mapping ---
+// Maps question ID -> choice value -> { cards: [concept IDs], att: [Element Keys] }
+// Card IDs should correspond to concepts defined above.
+const QUIZ_MAP = {
+    q_interaction: {
+        lead:   { cards: [4], att: ['I', 'RF'] },      // Dominance (Psych), +I, +RF
+        follow: { cards: [5], att: ['P', 'RF'] },      // Submission (Psych), +P, +RF (Low implied, add 1 point)
+        switch: { cards: [6], att: ['C', 'I'] }        // Switching, +C, +I
+    },
+    q_sensory: {
+        gentle:  { cards: [2], att: ['S', 'P'] },      // Sensual Touch, +S, +P
+        intense: { cards: [7], att: ['S', 'I'] },      // Impact Play (Light), +S, +I
+        pattern: { cards: [16], att: ['S', 'C'] }      // Rope Bondage (Shibari/Kinbaku), +S, +C
+    },
+    q_psychological: {
+        connection: { cards: [15], att: ['P', 'R'] },    // Deep Emotional Intimacy, +P, +R
+        power:      { cards: [11], att: ['P', 'I', 'RF'] },// Command / Control Dynamics, +P, +I, +RF
+        expression: { cards: [13], att: ['P', 'C'] }    // Role-Playing (Scenario), +P, +C
+    },
+    q_cognitive: {
+        fantasy: { cards: [14], att: ['C', 'A'] },    // Fantasy Immersion, +C, +A
+        banter:  { cards: [32], att: ['C', 'I'] },    // Dirty Talk (counts as banter), +C, +I
+        analysis:{ cards: [60], att: ['C', 'P'] }    // Sapiosexuality (fits analysis theme), +C, +P
+    },
+    q_relational: {
+        mono:   { cards: [31], att: ['R', 'P'] },      // Cuddling / Affection (fits committed vibe), +R, +P
+        poly:   { cards: [/*New Poly Card ID? e.g., 25?*/], att: ['R', 'C'] }, // Requires a specific Poly concept card
+        casual: { cards: [1], att: ['R', 'A'] }       // Vanilla Sex (fits casual/spontaneous), +R, +A
+    }
+};
+// Note: Ensure card IDs referenced in QUIZ_MAP (like 25 for Poly) actually exist in the `concepts` array. You might need to add/adjust concepts.
+
 
 // --- FINAL EXPORT BLOCK ---
 export {
@@ -616,7 +701,10 @@ export {
 
     // Roguelite Specific Data
     milestones, // Overhauled for roguelite progression
+
+    // >> NEWLY ADDED FOR MIRROR QUIZ <<
+    quizQuestions,
+    QUIZ_MAP
 };
 
-console.log("data.js successfully loaded & revised for Roguelite. (v5.0)");
-// --- END OF FILE data.js ---
+console.log("data.js successfully loaded & includes Mirror Quiz data. (v5.1)");
