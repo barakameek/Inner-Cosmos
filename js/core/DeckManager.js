@@ -23,10 +23,10 @@ export class DeckManager {
         this.discardPile = [];
         this.exhaustPile = []; // Cards removed for the rest of combat
 
-        this.maxHandSize = 10; // Configurable maximum hand size (Consider moving to Player or Config if needed globally)
+        this.maxHandSize = 10; // Configurable maximum hand size
 
         console.log(`DeckManager initialized with ${this.masterDeck.length} master cards.`);
-        // Initialize draw pile for the first combat
+        // Initialize draw pile for the first combat (shuffle happens in reset)
         this.resetForCombat();
     }
 
@@ -49,7 +49,10 @@ export class DeckManager {
         return conceptIds
             .map(id => {
                 try {
-                    return new Card(id); // Create Card instances
+                    const card = new Card(id); // Create Card instances
+                    // Assign unique ID upon creation if not already done reliably?
+                    // card.instanceId = card.instanceId || `cardinst_${id}_${Math.random().toString(36).substring(2, 9)}`;
+                    return card;
                 } catch (error) {
                     console.error(`DeckManager Error: Failed to create card with ID ${id}:`, error);
                     return null; // Return null on error during card creation
@@ -66,15 +69,25 @@ export class DeckManager {
     resetForCombat() {
         console.log("DeckManager: Resetting piles for combat.");
         // Create fresh copies for the draw pile by mapping over the masterDeck
-        // This ensures that if Cards ever have state, we get new instances.
-        this.drawPile = this.masterDeck.map(card => new Card(card.conceptId)); // Recreate cards from conceptId
+        this.drawPile = this.masterDeck.map(card => {
+            try {
+                // Recreate card from conceptId to ensure clean state (e.g., remove upgrades if needed, though upgrades are usually permanent in master)
+                // Or, if upgrades modify the master deck, just copy the instance: return { ...card }; // Shallow copy if Card state is simple
+                // Let's recreate from concept ID for safety, assuming Card constructor handles base state correctly.
+                return new Card(card.conceptId);
+            } catch (error) {
+                 console.error(`Error recreating card ${card.conceptId} during combat reset:`, error);
+                 return null;
+            }
+        }).filter(card => card && card.conceptId !== -1); // Filter out errors
+
         this.shuffle(this.drawPile);
 
         this.hand = [];
         this.discardPile = [];
         this.exhaustPile = [];
 
-        // Initial UI update might be needed here or handled by caller (GameState/CombatManager)
+        // Trigger UI update via player reference if available
         this.playerRef?.gameStateRef?.uiManager?.updateDeckDiscardCounts(this);
     }
 
@@ -105,7 +118,7 @@ export class DeckManager {
         for (let i = 0; i < numToDraw; i++) {
             if (this.hand.length >= this.maxHandSize) {
                 console.log("DeckManager: Hand is full.");
-                this.playerRef?.triggerArtifacts('onHandFull'); // Trigger artifact
+                this.playerRef?.triggerArtifacts('onHandFull', { handSize: this.hand.length }); // Trigger artifact
                 break; // Stop drawing
             }
 
@@ -124,6 +137,7 @@ export class DeckManager {
             }
 
             // Draw one card instance from the draw pile
+            // Assuming draw pile is like standard deck, top card is end of array
             const drawnCard = this.drawPile.pop();
             if (drawnCard) {
                 this.hand.push(drawnCard);
@@ -162,7 +176,6 @@ export class DeckManager {
             // console.log(`DeckManager: Discarded ${discardedCard.name} from hand.`); // Noisy
             // UI updates handled by caller (e.g., Player.playCard -> CombatManager -> UIManager)
         } else {
-            // Log current hand IDs for easier debugging if card not found
             const currentHandIds = this.hand.map(c => `${c.name}(${c.id})`).join(', ');
             console.warn(`DeckManager: Card ${card.name} (ID: ${card.id}) not found in hand to discard. Current hand: [${currentHandIds}]`);
         }
@@ -222,10 +235,16 @@ export class DeckManager {
          let newCard;
          try {
              if (cardOrId instanceof Card) {
-                 newCard = cardOrId; // Assume it's a valid instance already
-                 // Optionally, recreate from conceptId to ensure clean state?
-                 // newCard = new Card(cardOrId.conceptId);
+                 // If it's already a card instance, add it directly (assuming it's intended for the master deck)
+                 newCard = cardOrId;
+                 // We might want to ensure it's not already in the master deck by instance ID?
+                 if (this.masterDeck.some(c => c.id === newCard.id)) {
+                     console.warn(`DeckManager: Attempted to add card instance ${newCard.name} (${newCard.id}) which is already in the master deck.`);
+                     // Optionally return the existing instance or null? Return null for now.
+                     return null;
+                 }
              } else if (typeof cardOrId === 'number') {
+                 // Create a new card instance from the concept ID
                  newCard = new Card(cardOrId);
                  if (newCard.conceptId === -1) { // Check for error card from constructor
                      console.error(`DeckManager: Failed to create valid card from concept ID ${cardOrId}`);
@@ -243,9 +262,8 @@ export class DeckManager {
 
          this.masterDeck.push(newCard);
          console.log(`DeckManager: Added '${newCard.name}' (ID: ${newCard.id}) to master deck. Total: ${this.masterDeck.length}.`);
-         // Note: Does not add to draw/discard pile immediately during combat.
-         // 'onCardAdded' trigger is handled by the Player class AFTER calling this.
-         return newCard; // Return instance
+         // Note: 'onCardAdded' trigger and UI updates (like Deck Portrait) are handled by the Player class AFTER calling this.
+         return newCard; // Return the added/created instance
      }
 
     /**
@@ -262,10 +280,9 @@ export class DeckManager {
         if (index > -1) {
             const [removedCard] = this.masterDeck.splice(index, 1);
             console.log(`DeckManager: Removed '${removedCard.name}' (ID: ${removedCard.id}) from master deck. Total: ${this.masterDeck.length}.`);
-             // 'onCardRemove' trigger handled by Player class AFTER calling this.
+             // Note: 'onCardRemove' trigger and UI updates are handled by the Player class AFTER calling this.
             return true;
         } else {
-            // It might be useful to log the current master deck IDs here for debugging
             const currentMasterIds = this.masterDeck.map(c => `${c.name}(${c.id})`).join(', ');
             console.warn(`DeckManager: Card '${cardToRemove.name}' (ID: ${cardToRemove.id}) not found in master deck for removal. Current master deck: [${currentMasterIds}]`);
             return false;
@@ -285,6 +302,69 @@ export class DeckManager {
     getDrawPileCount() { return this.drawPile.length; }
     getDiscardPileCount() { return this.discardPile.length; }
     getHandCount() { return this.hand.length; }
-    getExhaustPileCount() { return this.exhaustPile.length; } // Added getter
+    getExhaustPileCount() { return this.exhaustPile.length; }
+
+    // --- NEW METHODS for Scry ---
+
+    /**
+     * Returns the top 'amount' cards from the draw pile without removing them.
+     * Handles reshuffling if necessary.
+     * @param {number} amount - The number of cards to peek at.
+     * @returns {Card[]} An array of the top card instances (empty if none available).
+     */
+    peekDrawPile(amount) {
+        if (amount <= 0) return [];
+
+        // Check if reshuffle is needed to satisfy the peek amount
+        if (this.drawPile.length < amount && this.discardPile.length > 0) {
+            console.log("DeckManager: Reshuffling discard to peek.");
+            this.playerRef?.triggerArtifacts('onReshuffle', { count: this.discardPile.length });
+            this.drawPile = this.shuffle([...this.discardPile]); // Add discard pile to draw pile
+            this.discardPile = []; // Empty discard pile
+            this.playerRef?.gameStateRef?.uiManager?.updateDeckDiscardCounts(this); // Update UI counts
+        }
+
+        // Return the top 'amount' cards (last elements of the array) without modifying the array
+        const peekAmount = Math.min(amount, this.drawPile.length); // Don't try to peek more than available
+        if (peekAmount === 0) return [];
+
+        // slice(-N) gets the last N elements. Reverse to get them in draw order (top card first).
+        return this.drawPile.slice(-peekAmount).reverse();
+    }
+
+    /**
+     * Finds a specific card instance assumed to be at the top of the draw pile
+     * and moves it to the discard pile. Used by Scry discard action.
+     * @param {Card} cardToDiscard - The specific card instance chosen for discarding during Scry.
+     * @returns {boolean} True if the card was found at the top and moved, false otherwise.
+     */
+    moveTopDrawCardToDiscard(cardToDiscard) {
+        if (!cardToDiscard || !cardToDiscard.id) {
+             console.warn("DeckManager: Invalid card provided to moveTopDrawCardToDiscard.");
+             return false;
+        }
+
+        // Check if the draw pile is empty
+        if (this.drawPile.length === 0) {
+             console.warn(`DeckManager: Draw pile empty, cannot discard ${cardToDiscard.name} from Scry.`);
+             return false;
+        }
+
+        // Verify the card is indeed at the top (last element) before removing
+        const topCard = this.drawPile[this.drawPile.length - 1];
+        if (topCard && topCard.id === cardToDiscard.id) {
+            const [movedCard] = this.drawPile.splice(this.drawPile.length - 1, 1); // Remove from top (end)
+            this.discardPile.push(movedCard);
+            console.log(`DeckManager: Moved ${movedCard.name} from Scry (top of draw) to discard.`);
+             // Trigger discard artifact? Scry discard might be different. Let's skip for now.
+             // this.playerRef?.triggerArtifacts('onCardDiscard', { card: movedCard, reason: 'scry' });
+             return true;
+        } else {
+             // This indicates a logic error in the Scry implementation or card handling
+             console.error(`DeckManager Error: Card ${cardToDiscard.name} (ID: ${cardToDiscard.id}) was chosen to discard from Scry, but it wasn't the top card of the draw pile! Top card was ${topCard?.name} (ID: ${topCard?.id}).`);
+             // Attempt to find and remove it anyway? Safer not to.
+             return false;
+        }
+    }
 
 } // End of DeckManager class
