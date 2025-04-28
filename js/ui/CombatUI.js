@@ -2,9 +2,14 @@
 
 // Import base classes if needed for type hinting or static methods
 import { Enemy } from '../combat/Enemy.js';
-import { Player } from '../core/Player.js';
+import { Player } from '../core/Player.js'; // May not be needed if player object is always passed in
 // Import status definitions for tooltips/icons
 import { getStatusEffectDefinition } from '../combat/StatusEffects.js';
+
+// Import constants if needed (e.g., threshold from Player.js, though better passed in)
+// Defined directly here for simplicity, or could be imported/passed
+const ROLE_FOCUS_THRESHOLD = 10;
+
 
 /**
  * Manages rendering and interactions specifically for the Combat Screen UI.
@@ -84,8 +89,8 @@ export class CombatUI {
         this.updatePlayerInfo(player);
         // Render enemies and their intents/statuses
         this.renderEnemies(enemies, isPlayerTurn);
-        // Render the player's hand
-        this.renderHand(player.deckManager.hand, isPlayerTurn);
+        // Render the player's hand (Passing player needed for RF check)
+        this.renderHand(player.deckManager.hand, isPlayerTurn, player);
         // Update deck/discard/exhaust counts
         this.updateDeckDiscardCounts(player.deckManager);
         // Enable/disable end turn button
@@ -190,6 +195,7 @@ export class CombatUI {
                       e.stopPropagation(); // Prevent click bubbling to combatScreen listener
                      this.gameState?.combatManager?.setSelectedTarget(enemy);
                      // Re-render enemies immediately to show target highlight change
+                     // Note: Calling renderEnemies directly might be slightly inefficient, but ensures immediate feedback
                      this.renderEnemies(this.gameState?.combatManager?.enemies || [], true);
                  });
              }
@@ -203,85 +209,50 @@ export class CombatUI {
         if (!containerElement) return;
         containerElement.innerHTML = ''; // Clear previous content
 
-        // Optional: Add a label prefix
-        // const statusLabel = document.createElement('span'); statusLabel.textContent = 'Statuses: '; containerElement.appendChild(statusLabel);
-
         if (activeEffects && activeEffects.length > 0) {
              activeEffects.forEach(effect => {
                  // Skip internal flags like Core Traits
                  if (effect.id.startsWith('CoreTrait_')) return;
 
                  const definition = getStatusEffectDefinition(effect.id);
-                 if (!definition) {
-                      console.warn(`Status definition missing for ID: ${effect.id}`);
-                      const effectSpan = document.createElement('span');
-                      effectSpan.className = `status-effect ${targetType}-status status-unknown`;
-                      effectSpan.innerHTML = `<i class="fa-solid fa-question-circle"></i> ${effect.id}`;
-                      effectSpan.title = `Unknown Status: ${effect.id}`; containerElement.appendChild(effectSpan); return;
-                 }
+                 if (!definition) { /* ... handle unknown status ... */ console.warn(`Status definition missing for ID: ${effect.id}`); const effectSpan = document.createElement('span'); effectSpan.className = `status-effect ${targetType}-status status-unknown`; effectSpan.innerHTML = `<i class="fa-solid fa-question-circle"></i> ${effect.id}`; effectSpan.title = `Unknown Status: ${effect.id}`; containerElement.appendChild(effectSpan); return; }
                  const effectSpan = document.createElement('span');
                  effectSpan.className = `status-effect ${targetType}-status status-${effect.id.toLowerCase()}`;
-                 // Determine display value (amount or duration)
-                 let displayValue = "";
-                 const isStacking = definition.stacking;
-                 const isDurationBased = definition.durationBased;
-                 const isInfinite = effect.duration === 99;
-                 // Prioritize amount for stacking effects if > 1
-                 if (isStacking && effect.amount > 1) {
-                     displayValue = effect.amount;
-                 }
-                 // Show duration for non-stacking or duration-based effects, unless infinite
-                 else if (!isStacking && isDurationBased && !isInfinite && effect.duration > 0) {
-                      displayValue = effect.duration;
-                 }
-                 // No display value needed for non-stacking, non-duration (like Weak 1 turn) or infinite duration single stacks
-
+                 let displayValue = ""; const isStacking = definition.stacking; const isDurationBased = definition.durationBased; const isInfinite = effect.duration === 99;
+                 if (isStacking && effect.amount > 1) { displayValue = effect.amount; }
+                 else if (!isStacking && isDurationBased && !isInfinite && effect.duration > 0) { displayValue = effect.duration; }
                  effectSpan.innerHTML = `<i class="${definition.icon || 'fa-solid fa-circle-question'}"></i>${displayValue ? ` ${displayValue}` : ''}`;
                  effectSpan.title = `${definition.name}: ${definition.description}`; // Tooltip
                  containerElement.appendChild(effectSpan);
              });
-        } else {
-            // Optional: Display 'None' if no statuses
-            // const noStatusSpan = document.createElement('span'); noStatusSpan.className = 'no-statuses'; noStatusSpan.textContent = 'None'; containerElement.appendChild(noStatusSpan);
         }
+        // Optional: Display 'None' if no statuses (removed for cleaner look)
     }
 
     /** Generates descriptive text/HTML for an enemy's intent. */
     getIntentText(intent, enemy) {
-        // ... (Keep existing getIntentText logic) ...
         if (!intent || !enemy || enemy.currentHp <= 0 || enemy.hasStatus('Stunned')) { return '<i class="fas fa-question"></i> ???'; }
         let text = ''; let icon = 'fa-solid fa-question'; let value = '';
         const baseIntentValue = intent.baseValue ?? intent.attackValue ?? intent.blockValue ?? 0;
         let predictedValue = baseIntentValue;
-
-        try {
-            if (intent.type.includes('attack')) { predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue); icon = 'fa-solid fa-gavel'; value = predictedValue; if(intent.status && intent.statusDuration > 0) text += ` (+${intent.status})`; } // Simplified status text
-            else if (intent.type.includes('block')) { predictedValue = enemy.applyModifiers('blockGain', baseIntentValue); icon = 'fa-solid fa-shield-halved'; value = predictedValue; }
-            else {
-                 switch (intent.type) {
-                     case 'multi_attack': predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue); icon = 'fa-solid fa-gavel'; value = `${predictedValue} x ${intent.count || '?'}`; if(intent.status && intent.applyStatusOnce) text += ` (+${intent.status})`; break;
-                     case 'attack_block': const attackVal = enemy.applyModifiers('damageDealt', intent.attackValue || 0); const blockVal = enemy.applyModifiers('blockGain', intent.blockValue || 0); icon = 'fa-solid fa-gavel'; value = `${attackVal} & <i class="fas fa-shield-halved"></i> ${blockVal}`; break;
-                     case 'debuff': icon = 'fa-solid fa-arrow-down'; value = intent.status || 'Debuff'; text = ` (${intent.duration || 1}t)`; break;
-                     case 'buff': case 'power_up': icon = 'fa-solid fa-arrow-up'; value = intent.status || 'Buff'; if (intent.amount > 1 && ['Strength', 'Dexterity'].includes(intent.status)) text = ` +${intent.amount}`; break;
-                     case 'special': icon = 'fa-solid fa-star'; value = intent.description || intent.id || 'Special'; break;
-                     case 'none': icon = 'fa-solid fa-circle-minus'; value = intent.description || 'Waiting'; break;
-                     default: value = 'Unknown Action';
-                 }
-            }
-        } catch (error) { console.error(`Error calculating intent text for ${enemy.name}:`, error, intent); return '<i class="fas fa-exclamation-triangle"></i> Error'; }
-        // Add vulnerable icon if player has vulnerable status applied by this intent
-        // This requires slightly more complex logic checking intent.status vs player statuses
+        try { if (intent.type.includes('attack')) { predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue); icon = 'fa-solid fa-gavel'; value = predictedValue; if(intent.status && intent.statusDuration > 0) text += ` (+${intent.status})`; } else if (intent.type.includes('block')) { predictedValue = enemy.applyModifiers('blockGain', baseIntentValue); icon = 'fa-solid fa-shield-halved'; value = predictedValue; } else { switch (intent.type) { case 'multi_attack': predictedValue = enemy.applyModifiers('damageDealt', baseIntentValue); icon = 'fa-solid fa-gavel'; value = `${predictedValue} x ${intent.count || '?'}`; if(intent.status && intent.applyStatusOnce) text += ` (+${intent.status})`; break; case 'attack_block': const attackVal = enemy.applyModifiers('damageDealt', intent.attackValue || 0); const blockVal = enemy.applyModifiers('blockGain', intent.blockValue || 0); icon = 'fa-solid fa-gavel'; value = `${attackVal} & <i class="fas fa-shield-halved"></i> ${blockVal}`; break; case 'debuff': icon = 'fa-solid fa-arrow-down'; value = intent.status || 'Debuff'; text = ` (${intent.duration || 1}t)`; break; case 'buff': case 'power_up': icon = 'fa-solid fa-arrow-up'; value = intent.status || 'Buff'; if (intent.amount > 1 && ['Strength', 'Dexterity'].includes(intent.status)) text = ` +${intent.amount}`; break; case 'special': icon = 'fa-solid fa-star'; value = intent.description || intent.id || 'Special'; break; case 'none': icon = 'fa-solid fa-circle-minus'; value = intent.description || 'Waiting'; break; default: value = 'Unknown Action'; } } } catch (error) { console.error(`Error calculating intent text for ${enemy.name}:`, error, intent); return '<i class="fas fa-exclamation-triangle"></i> Error'; }
         return `<i class="${icon}"></i> ${value}${text}`;
     }
 
 
-    /** Renders the player's hand with fanning layout */
-    renderHand(handCards, isPlayerTurn) {
-        // ... (Keep existing renderHand logic for fanning/drag listeners) ...
-        // Important: ensure createCardElement used here is from this.uiManager
-        if (!this.handArea || !this.uiManager) return;
-        this.handArea.innerHTML = '';
-        const numCards = handCards.length; if (numCards === 0) return;
+    /** Renders the player's hand with fanning layout (MODIFIED for RF Limelight) */
+    renderHand(handCards, isPlayerTurn, player) { // Added player parameter
+        if (!this.handArea || !this.uiManager || !player) { // Ensure player is available
+             console.error("Cannot render hand: Missing elements or player data.");
+             return;
+        }
+        this.handArea.innerHTML = ''; // Clear previous hand
+        // const player = this.gameState.player; // Get player reference directly
+        const currentFocus = player.currentFocus ?? 0;
+        const playerRF = player.attunements?.RoleFocus ?? 0; // Get player RoleFocus
+
+        const numCards = handCards.length; if (numCards === 0) return; // Exit if no cards
+        // --- Layout Calculation Logic ---
         const containerWidth = this.handArea.clientWidth; const cardWidth = 125; // Use card width from CSS potentially
         const maxOverlapRatio = 0.6; const minOverlapRatio = 0.1; const overlapThreshold = 6;
         const overlapRatio = numCards > overlapThreshold ? minOverlapRatio + (maxOverlapRatio - minOverlapRatio) * Math.min(1, (numCards - overlapThreshold) / 5) : minOverlapRatio;
@@ -293,210 +264,110 @@ export class CombatUI {
         const maxAngle = 30; const anglePerCard = numCards > 1 ? Math.min(maxAngle / (numCards - 1), 8) : 0;
         const startAngle = numCards > 1 ? - (numCards - 1) * anglePerCard / 2 : 0;
         const arcLift = 30; // How much cards lift in the center
+        // --- End Layout Calculation ---
 
         handCards.forEach((card, index) => {
-            if (!card) { console.warn("renderHand encountered undefined card at index", index); return; } // Add check
+            if (!card) { console.warn("renderHand encountered undefined card at index", index); return; }
             const cardElement = this.uiManager.createCardElement(card); // Use UIManager to create element
-            if (!cardElement) return;
+            if (!cardElement) return; // Skip if card element failed creation
             cardElement.dataset.handIndex = index; // Store index if needed
+
+            // --- Positioning Logic ---
             const currentAngle = startAngle + index * anglePerCard; const rotation = currentAngle;
             const normalizedIndex = numCards > 1 ? (index / (numCards - 1)) - 0.5 : 0; // -0.5 to 0.5
-            const yOffset = arcLift * (1 - (normalizedIndex * 2)**2); // Parabolic lift
+            const yOffset = arcLift * (1 - Math.abs(normalizedIndex * 2)); // Adjust lift calculation slightly for smoother arc
             cardElement.style.position = 'absolute';
             cardElement.style.left = `${startX + index * finalSpacing}px`;
             cardElement.style.bottom = `${10 + yOffset}px`; // Base position + lift
             cardElement.style.transform = `rotate(${rotation}deg)`;
             cardElement.style.zIndex = 10 + index; // Base Z-index
+            // --- End Positioning Logic ---
 
-            // Hover effects managed by CSS now (#handArea .card:hover)
-            // cardElement.addEventListener('mouseenter', () => cardElement.style.zIndex = 100);
-            // cardElement.addEventListener('mouseleave', () => cardElement.style.zIndex = 10 + index);
+            // Hover effects managed by CSS (#handArea .card:hover)
 
-             // Draggability and affordability check
-             if (isPlayerTurn && card.cost !== null) { // Check if card is playable
-                 const currentFocus = this.gameState?.player?.currentFocus ?? 0;
-                 const cardCost = card.cost; // Use card's base cost for check, actual play uses modified
-
+            // Draggability and affordability check
+             let canPlay = false;
+             if (isPlayerTurn && card.cost !== null) { // Check if card is potentially playable
+                 const cardCost = card.cost; // Base cost for affordability check
                  if (currentFocus >= cardCost) {
-                      this._attachCardDragListeners(cardElement, card); // Attach drag only if affordable
-                      cardElement.style.filter = 'none'; // Ensure not dimmed
+                      canPlay = true;
+                      this._attachCardDragListeners(cardElement, card);
+                      cardElement.style.filter = 'none';
                       cardElement.style.cursor = 'grab';
                  } else {
-                      cardElement.style.filter = 'grayscale(70%) brightness(0.8)'; // Dim unaffordable
+                      cardElement.style.filter = 'grayscale(70%) brightness(0.8)';
                       cardElement.style.cursor = 'not-allowed';
                       cardElement.draggable = false;
                  }
-             } else { // Not player turn or unplayable card
+             } else { // Not player turn or unplayable card (cost null)
                 cardElement.draggable = false;
                 cardElement.style.cursor = 'default';
-                if (!isPlayerTurn) {
-                     cardElement.style.filter = 'grayscale(70%) brightness(0.8)'; // Dim all on enemy turn
+                if (!isPlayerTurn && card.cost !== null) {
+                     cardElement.style.filter = 'grayscale(70%) brightness(0.8)';
                 } else {
-                     cardElement.style.filter = 'none'; // Ensure playable cards aren't dimmed if cost is null
+                     cardElement.style.filter = 'none'; // Keep unplayable cards undimmed unless enemy turn
                 }
              }
+
+             // --- Add RF Limelight Visual ---
+             // Check if player meets threshold AND the card is a Power card
+             if (isPlayerTurn && card.cardType === 'Power' && playerRF >= ROLE_FOCUS_THRESHOLD) {
+                 cardElement.classList.add('rf-limelight-active'); // Add class for CSS styling
+                 cardElement.title += " (RoleFocus Limelight)"; // Add indicator to tooltip
+             } else {
+                  cardElement.classList.remove('rf-limelight-active'); // Ensure class is removed otherwise
+             }
+             // --- End RF Limelight Visual ---
+
             this.handArea.appendChild(cardElement);
         });
     }
 
+
      /** Attaches drag listeners to a card element */
      _attachCardDragListeners(cardElement, card) {
-         // ... (Keep existing _attachCardDragListeners logic) ...
          if (!cardElement || !card) return;
          cardElement.draggable = true; // Already checked affordability before calling this
 
          cardElement.ondragstart = (event) => {
-             // Double check conditions just in case state changed rapidly
-             if (!this.gameState?.combatManager?.playerTurn || (card.cost !== null && (this.gameState?.player?.currentFocus ?? 0) < card.cost)) {
-                 event.preventDefault();
-                 return;
-             }
-             // Set drag data
-             this.uiManager.draggedCard = card;
-             this.uiManager.draggedCardElement = cardElement;
-             try {
-                 event.dataTransfer.setData('text/plain', card.id); // Use card instance ID
-                 event.dataTransfer.effectAllowed = 'move';
-             } catch (e) { console.error("Error setting drag data:", e); } // Catch potential errors
-
-             // Visual feedback
-             cardElement.style.opacity = '0.5';
-             cardElement.style.cursor = 'grabbing';
-             document.body.classList.add('dragging-card'); // Global cursor change
+             if (!this.gameState?.combatManager?.playerTurn || (card.cost !== null && (this.gameState?.player?.currentFocus ?? 0) < card.cost)) { event.preventDefault(); return; }
+             this.uiManager.draggedCard = card; this.uiManager.draggedCardElement = cardElement; try { event.dataTransfer.setData('text/plain', card.id); event.dataTransfer.effectAllowed = 'move'; } catch (e) { console.error("Error setting drag data:", e); }
+             cardElement.style.opacity = '0.5'; cardElement.style.cursor = 'grabbing'; document.body.classList.add('dragging-card');
          };
-
          cardElement.ondragend = (event) => {
-             if (this.uiManager.draggedCardElement) { // Restore appearance
-                 this.uiManager.draggedCardElement.style.opacity = '1';
-                 this.uiManager.draggedCardElement.style.cursor = 'grab';
-             }
-             // Clear drag state
-             this.uiManager.draggedCard = null;
-             this.uiManager.draggedCardElement = null;
-             // Clear any lingering dropzone highlights
-             this.clearDropZoneHighlights();
-             document.body.classList.remove('dragging-card'); // Restore global cursor
+             if (this.uiManager.draggedCardElement) { this.uiManager.draggedCardElement.style.opacity = '1'; this.uiManager.draggedCardElement.style.cursor = 'grab'; }
+             this.uiManager.draggedCard = null; this.uiManager.draggedCardElement = null; this.clearDropZoneHighlights(); document.body.classList.remove('dragging-card');
          };
      }
 
     /** Sets up drop zones on enemies/player area */
      _setupDropZones() {
-         // ... (Keep existing _setupDropZones logic) ...
-         // Ensure it uses the most up-to-date references and checks enemy HP
         if (!this.enemyArea || !this.playerArea || !this.gameState?.combatManager || !this.uiManager) return;
          const combatManager = this.gameState.combatManager; const uiManager = this.uiManager;
-
-         const dropHandler = (event, target = null) => {
-             event.preventDefault();
-             event.currentTarget.classList.remove('drag-over');
-             this.clearDropZoneHighlights(event.currentTarget); // Clear specific highlight
-             const draggedCard = uiManager.draggedCard;
-             if (draggedCard) {
-                 // Pass Enemy instance if target is enemy, otherwise null (implies self/player target)
-                 combatManager.handlePlayerCardPlay(draggedCard, target instanceof Enemy ? target : null);
-             }
-             // Clear global drag state AFTER handling play attempt
-             uiManager.draggedCard = null; uiManager.draggedCardElement = null;
-         };
-         const dragOverHandler = (event) => {
-             event.preventDefault();
-             const draggedCard = uiManager.draggedCard;
-             if (!draggedCard) { event.dataTransfer.dropEffect = 'none'; return; }
-
-             const currentTargetElement = event.currentTarget;
-             const targetIsPlayerArea = currentTargetElement === this.playerArea;
-             let enemyTarget = null;
-             if (!targetIsPlayerArea) {
-                 const enemyId = currentTargetElement.dataset.enemyId;
-                 enemyTarget = combatManager.enemies.find(e => e.id === enemyId);
-             }
-
-             // Determine if the drop is valid based on card targeting requirements
-             let isValidTarget = false;
-             if (targetIsPlayerArea) {
-                 // Valid if card requires NO target, or specifically targets SELF
-                 isValidTarget = !draggedCard.requiresTarget || draggedCard.targetType === 'self';
-             } else if (enemyTarget) {
-                 // Valid if card requires a target AND targets enemies AND this enemy is alive
-                 isValidTarget = draggedCard.requiresTarget && draggedCard.targetType === 'enemy' && enemyTarget.currentHp > 0;
-             }
-
-             // Provide visual feedback
-             if (isValidTarget) {
-                 event.dataTransfer.dropEffect = 'move';
-                 currentTargetElement.classList.add('drag-over');
-                 // Highlight enemy specifically if it's the target
-                 if (enemyTarget) uiManager.highlightEnemy(enemyTarget.id, true);
-             } else {
-                 event.dataTransfer.dropEffect = 'none';
-                 currentTargetElement.classList.remove('drag-over');
-                 if (enemyTarget) uiManager.highlightEnemy(enemyTarget.id, false); // Ensure unhighlighted if invalid
-             }
-         };
-         const dragLeaveHandler = (event) => {
-             event.currentTarget.classList.remove('drag-over');
-             const targetIsPlayerArea = event.currentTarget === this.playerArea;
-             // Only unhighlight enemy if leaving that specific enemy element
-             if (!targetIsPlayerArea) {
-                 const enemyId = event.currentTarget.dataset.enemyId;
-                 uiManager.highlightEnemy(enemyId, false);
-             }
-         };
-
-         // Apply to individual living enemy elements
-         this.enemyArea.querySelectorAll('.enemy-display').forEach(enemyEl => {
-             const enemyId = enemyEl.dataset.enemyId; const enemy = combatManager.enemies.find(e => e.id === enemyId);
-             // Only attach listeners to living enemies
-             if (enemy && enemy.currentHp > 0) {
-                 enemyEl.ondragover = dragOverHandler;
-                 enemyEl.ondrop = (event) => dropHandler(event, enemy); // Pass the specific enemy object
-                 enemyEl.ondragleave = dragLeaveHandler;
-             } else {
-                 // Remove listeners from dead enemies to prevent interaction
-                 enemyEl.ondragover = null; enemyEl.ondrop = null; enemyEl.ondragleave = null;
-             }
-         });
-         // Apply to player area
-         this.playerArea.ondragover = dragOverHandler;
-         this.playerArea.ondrop = (event) => dropHandler(event, null); // Drop on player area passes null target (handled by validateTarget)
-         this.playerArea.ondragleave = dragLeaveHandler;
+        const dropHandler = (event, target = null) => { event.preventDefault(); event.currentTarget.classList.remove('drag-over'); this.clearDropZoneHighlights(event.currentTarget); const draggedCard = uiManager.draggedCard; if (draggedCard) { combatManager.handlePlayerCardPlay(draggedCard, target instanceof Enemy ? target : null); } uiManager.draggedCard = null; uiManager.draggedCardElement = null; };
+        const dragOverHandler = (event) => { event.preventDefault(); const draggedCard = uiManager.draggedCard; if (!draggedCard) { event.dataTransfer.dropEffect = 'none'; return; } const currentTargetElement = event.currentTarget; const targetIsPlayerArea = currentTargetElement === this.playerArea; let enemyTarget = null; if (!targetIsPlayerArea) { const enemyId = currentTargetElement.dataset.enemyId; enemyTarget = combatManager.enemies.find(e => e.id === enemyId); } let isValidTarget = false; if (targetIsPlayerArea) { isValidTarget = !draggedCard.requiresTarget || draggedCard.targetType === 'self'; } else if (enemyTarget) { isValidTarget = draggedCard.requiresTarget && draggedCard.targetType === 'enemy' && enemyTarget.currentHp > 0; } if (isValidTarget) { event.dataTransfer.dropEffect = 'move'; currentTargetElement.classList.add('drag-over'); if (enemyTarget) uiManager.highlightEnemy(enemyTarget.id, true); } else { event.dataTransfer.dropEffect = 'none'; currentTargetElement.classList.remove('drag-over'); if (enemyTarget) uiManager.highlightEnemy(enemyTarget.id, false); } };
+        const dragLeaveHandler = (event) => { event.currentTarget.classList.remove('drag-over'); const targetIsPlayerArea = event.currentTarget === this.playerArea; if (!targetIsPlayerArea) { const enemyId = event.currentTarget.dataset.enemyId; uiManager.highlightEnemy(enemyId, false); } };
+        this.enemyArea.querySelectorAll('.enemy-display').forEach(enemyEl => { const enemyId = enemyEl.dataset.enemyId; const enemy = combatManager.enemies.find(e => e.id === enemyId); if (enemy && enemy.currentHp > 0) { enemyEl.ondragover = dragOverHandler; enemyEl.ondrop = (event) => dropHandler(event, enemy); enemyEl.ondragleave = dragLeaveHandler; } else { enemyEl.ondragover = null; enemyEl.ondrop = null; enemyEl.ondragleave = null; } });
+        this.playerArea.ondragover = dragOverHandler; this.playerArea.ondrop = (event) => dropHandler(event, null); this.playerArea.ondragleave = dragLeaveHandler;
      }
 
-     /** Clear highlighting classes from drop zones */
+     /** Clear highlighting class from drop zones */
      clearDropZoneHighlights(excludeElement = null) {
          this.playerArea?.classList.remove('drag-over');
-         this.enemyArea?.querySelectorAll('.enemy-display.drag-over').forEach(el => {
-            if (el !== excludeElement) {
-                 el.classList.remove('drag-over');
-            }
-         });
-         // Also clear general enemy highlights unless the target is being set
-         if (!this.gameState?.combatManager?.currentTarget) {
-             this.clearEnemyHighlights();
-         }
+         this.enemyArea?.querySelectorAll('.enemy-display.drag-over').forEach(el => { if (el !== excludeElement) { el.classList.remove('drag-over'); } });
+         if (!this.gameState?.combatManager?.currentTarget) { this.clearEnemyHighlights(); }
      }
 
      /** Clear ONLY target highlighting class from enemies */
      clearEnemyHighlights() {
-        this.enemyArea?.querySelectorAll('.enemy-display').forEach(el => {
-             el.classList.remove('targeted', 'highlighted-enemy'); // Remove both targeting and acting highlights
-             // Reset border to default (might need adjustment based on other states)
-             // el.style.borderColor = 'var(--color-border)'; // Or get default from CSS
-         });
+        this.enemyArea?.querySelectorAll('.enemy-display').forEach(el => { el.classList.remove('targeted', 'highlighted-enemy'); });
      }
 
       /** Add/Remove highlight for acting enemy */
       highlightEnemy(enemyInstanceId, highlighted = true) {
-        // Clear previous acting highlights first
         this.enemyArea?.querySelectorAll('.highlighted-enemy').forEach(el => el.classList.remove('highlighted-enemy'));
-        // Find the specific enemy element
         const enemyElement = this.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${enemyInstanceId}"]`);
-        if (enemyElement) {
-            if (highlighted) {
-                enemyElement.classList.add('highlighted-enemy'); // Apply acting highlight
-            }
-            // Note: This doesn't affect the 'targeted' class, which is handled separately in renderEnemies
-        }
+        if (enemyElement) { if (highlighted) enemyElement.classList.add('highlighted-enemy'); }
      }
 
 } // End of CombatUI class
