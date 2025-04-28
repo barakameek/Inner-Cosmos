@@ -27,13 +27,50 @@
             <button id="settingsButton" disabled>Settings</button> <!-- Default style -->
         </div>
 
+        <!-- Mirror Quiz Screen (NEW) -->
+        <div id="mirrorQuizScreen" class="screen">
+             <h2>Reflect Within</h2>
+             <div id="quizProgress" style="text-align: center; margin-bottom: 15px; color: var(--color-text-medium);">Question 1 / 5</div>
+             <div id="quizQuestionText" style="font-size: 1.2em; margin-bottom: 30px; text-align: center;">
+                 Loading question...
+             </div>
+             <div id="quizChoices" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                 <!-- Quiz choice buttons will be generated here by UIManager -->
+                 <p>Loading choices...</p>
+             </div>
+             <!-- Optional Back button if needed later -->
+             <!-- <button id="quizBackButton" class="button-secondary" style="margin-top: 30px;">Back</button> -->
+        </div>
+
         <!-- Map Screen -->
         <div id="mapScreen" class="screen">
             <h2>The Labyrinth of Self</h2>
             <!-- Player Info Display Area -->
             <div id="playerInfoMap" aria-live="polite">
                  <!-- Populated by UIManager.updatePlayerMapInfo -->
-                 Loading Map Info...
+                 <!-- Modified to include Attunement Meter -->
+                 <div class="player-map-stats">
+                    <span>Floor: ?</span><span class="info-divider">|</span>
+                    <span>Integrity: .../...</span><span class="info-divider">|</span>
+                    <span>Insight (Run): 0 <i class='fas fa-brain insight-icon'></i></span><span class="info-divider">|</span>
+                    <span>Deck: ...</span>
+                 </div>
+                 <!-- Attunement Meter Placeholder (NEW) -->
+                 <div id="attunementMeter" class="attunement-meter-hud">
+                    <div class="attunement-pip" data-element="A" title="Attraction: 0"></div>
+                    <div class="attunement-pip" data-element="I" title="Interaction: 0"></div>
+                    <div class="attunement-pip" data-element="S" title="Sensory: 0"></div>
+                    <div class="attunement-pip" data-element="P" title="Psychological: 0"></div>
+                    <div class="attunement-pip" data-element="C" title="Cognitive: 0"></div>
+                    <div class="attunement-pip" data-element="R" title="Relational: 0"></div>
+                    <div class="attunement-pip" data-element="RF" title="RoleFocus: 0"></div>
+                 </div>
+            </div>
+            <!-- Deck Portrait Placeholder (NEW) -->
+            <div id="deckPortraitContainer" style="height: 80px; text-align: center; padding: 5px; border-bottom: 1px solid var(--color-border); background-color: rgba(0,0,0,0.1);">
+                <canvas id="deckChart" width="150" height="70" style="max-height: 100%; display: inline-block; vertical-align: middle;"></canvas>
+                <span style="display: inline-block; vertical-align: middle; margin-left: 10px; color: var(--color-text-medium);">Deck Composition</span>
+                <!-- Alt: <div id="deckSvgChartContainer"></div> -->
             </div>
             <!-- Map Rendering Area -->
             <div id="mapArea" role="img" aria-label="Labyrinth Map">
@@ -58,6 +95,16 @@
                      <span id="playerFocus">Focus: .../...</span>
                      <span class="info-divider">|</span>
                      <span id="playerBlock">Block: ...</span>
+                 </div>
+                 <!-- Attunement Meter Placeholder (Combat) (NEW) -->
+                 <div id="attunementMeter" class="attunement-meter-hud combat-meter">
+                    <div class="attunement-pip" data-element="A" title="Attraction: 0"></div>
+                    <div class="attunement-pip" data-element="I" title="Interaction: 0"></div>
+                    <div class="attunement-pip" data-element="S" title="Sensory: 0"></div>
+                    <div class="attunement-pip" data-element="P" title="Psychological: 0"></div>
+                    <div class="attunement-pip" data-element="C" title="Cognitive: 0"></div>
+                    <div class="attunement-pip" data-element="R" title="Relational: 0"></div>
+                    <div class="attunement-pip" data-element="RF" title="RoleFocus: 0"></div>
                  </div>
                  <!-- Player Status Effects -->
                  <div id="playerStatusesCombat" aria-live="polite">Statuses: ...</div>
@@ -173,13 +220,15 @@
          </div>
 
          <!-- Card Selection Modal (Initially Hidden) -->
+         <!-- Modified structure slightly to allow inserting upgrade buttons -->
          <div id="cardSelectionModal" class="modal card-select-modal" role="dialog" aria-modal="true">
               <div class="modal-content">
                   <h3 id="cardSelectionTitle">Select a Card</h3>
                   <div id="cardSelectionGrid" class="card-grid">
                        <p>Loading cards...</p>
                   </div>
-                  <button id="cardSelectionCancel" class="button-cancel">Cancel</button>
+                  <!-- Upgrade buttons will be inserted here by JS if needed -->
+                  <button id="cardSelectionCancel" class="button-cancel" style="margin-top: 15px;">Cancel</button>
               </div>
           </div>
 
