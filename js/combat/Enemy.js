@@ -1,6 +1,6 @@
 // js/combat/Enemy.js
 
-// Import status definitions if needed for lookups or tooltip generation (using tooltip function is better)
+// Import status definitions for checking properties and logging
 import { getStatusEffectDefinition } from './StatusEffects.js';
 
 /**
@@ -36,7 +36,7 @@ export const ENEMY_TEMPLATES = {
         weaknesses: { Relational: 1.5 },
         aiBehavior: 'random_weighted',
         specialAbilities: {
-            fade_away: (self, player, gameState) => self.applyStatus('Intangible', 1, 1, self.enemyType)
+            fade_away: (self, player, gameState) => self.applyStatus('Intangible', 1, 1, self.enemyType) // Logs status apply
         },
         keywords: ['Evasive', 'Buff', 'Temporal'],
     },
@@ -104,9 +104,11 @@ export const ENEMY_TEMPLATES = {
              drain_focus: (self, player, gameState) => {
                 if (player?.currentFocus > 0) {
                     const amount = self.currentIntent?.amount || 1;
-                    player.spendFocus(amount); // Triggers UI update in Player
-                    self.heal(amount * 2); // Triggers heal floating number/UI update in Enemy
-                    console.log(`${self.name} drained ${amount} Focus and healed.`);
+                    player.spendFocus(amount); // Player logs this
+                    self.heal(amount * 2); // Enemy logs this
+                    gameState?.uiManager?.logCombatEvent(`${self.name} drains ${amount} Focus, heals ${amount*2}.`, "enemy"); // Specific log
+                } else {
+                    gameState?.uiManager?.logCombatEvent(`${self.name} tries to drain Focus, but Player has none.`, "info");
                 }
             }
          },
@@ -127,8 +129,8 @@ export const ENEMY_TEMPLATES = {
         specialAbilities: {
              fester: (self, player, gameState) => {
                  if (player) {
-                    player.applyStatus('Poison', 99, 3, self.enemyType); // Triggers player UI update
-                    console.log(`${self.name} applied Poison to the player.`);
+                    gameState?.uiManager?.logCombatEvent(`${self.name} festers, applying Poison.`, "enemy"); // Log special action
+                    player.applyStatus('Poison', 99, 3, self.enemyType); // Player logs status apply
                  }
              }
         },
@@ -152,9 +154,9 @@ export const ENEMY_TEMPLATES = {
          specialAbilities: {
               cycle_strength: (self, player, gameState) => {
                   self.internalCounters.cycleStrengthBonus = (self.internalCounters.cycleStrengthBonus || 0) + 1;
-                  // Apply status which triggers UI update
+                  gameState?.uiManager?.logCombatEvent(`${self.name} strengthens its cycle.`, "enemy"); // Log special action
+                  // Apply status which logs itself and triggers UI update
                   self.applyStatus('Strength', 99, self.internalCounters.cycleStrengthBonus, self.enemyType);
-                  console.log(`${self.name} strengthens its cycle! (+${self.internalCounters.cycleStrengthBonus} Str total)`);
               }
          },
          keywords: ['Elite', 'Scaling', 'Pattern'],
@@ -182,11 +184,9 @@ export const ENEMY_TEMPLATES = {
          name: "Fragmented Identity", maxHp: 110,
          sprite: 'assets/images/enemies/fragment_1.png',
          intentions: [
-             // Aggressive Phase
              { phase: 'Aggressive', type: 'multi_attack', count: 2, baseValue: 8, description: "Assertive Flurry (2x8)" },
              { phase: 'Aggressive', type: 'attack', baseValue: 12, status: 'Vulnerable', statusDuration: 1, target: 'player', description: "Exposing Strike (12 Atk, -Vuln)" },
              { phase: 'Aggressive', type: 'special', id: 'shift_phase', targetPhase: 'Defensive', description: "Shift Aspect (-> Defensive)" },
-             // Defensive Phase
              { phase: 'Defensive', type: 'block', baseValue: 18, description: "Yielding Guard" },
              { phase: 'Defensive', type: 'debuff', status: 'Weak', duration: 2, target: 'player', description: "Defensive Murmur (-Weak)" },
              { phase: 'Defensive', type: 'special', id: 'shift_phase', targetPhase: 'Aggressive', description: "Shift Aspect (-> Aggressive)" },
@@ -199,14 +199,11 @@ export const ENEMY_TEMPLATES = {
              shift_phase: (self, player, gameState) => {
                  const targetPhase = self.currentIntent?.targetPhase || 'Aggressive';
                  self.currentPhase = targetPhase;
-                 console.log(`${self.name} shifts aspect to ${targetPhase}!`);
-                 self.currentIntent = null; // Clear intent to force re-evaluation
-                 self.determineNextIntent(player); // Determine new intent immediately
-                 // --- Trigger UI Update ---
+                 // Log phase shift
+                 gameState?.uiManager?.logCombatEvent(`${self.name} shifts aspect to ${targetPhase}!`, "enemy");
+                 self.currentIntent = null;
+                 self.determineNextIntent(player);
                  gameState?.uiManager?.updateCombatUI(player, gameState.combatManager.enemies, false);
-                 // -----------------------
-                 // Optional: Change sprite/appearance via UI
-                 // gameState?.uiManager?.updateEnemyAppearance(self.id, targetPhase);
              }
          },
          keywords: ['Elite', 'PhaseShift', 'Unpredictable'],
@@ -218,7 +215,7 @@ export const ENEMY_TEMPLATES = {
         sprite: 'assets/images/enemies/shadow_aspect_interaction.png',
         intentions: [
             { type: 'attack', baseValue: 15, description: "Dominating Blow" },
-            { type: 'special', id: 'command_ally', description: "Command Ally (?)" }, // Placeholder
+            { type: 'special', id: 'command_ally', description: "Command Ally (?)" },
             { type: 'debuff', status: 'Entangle', duration: 1, amount: 2, target: 'player', description: "Binding Words (+2 Cost)" },
             { type: 'block', baseValue: 20, description: "Imposing Stance" },
             { type: 'multi_attack', count: 3, baseValue: 6, description: "Flurry of Control (3x6)" },
@@ -226,8 +223,11 @@ export const ENEMY_TEMPLATES = {
         resistances: { Interaction: 0.5, Psychological: 0.7 },
         weaknesses: { Sensory: 1.2, Relational: 1.2 },
         aiBehavior: 'boss_pattern_1',
-        specialAbilities: { // Placeholder
-            command_ally: (self, player, gameState) => { console.log(`${self.name} uses Command Ally (Not Implemented)`); }
+        specialAbilities: {
+            command_ally: (self, player, gameState) => {
+                gameState?.uiManager?.logCombatEvent(`${self.name} uses Command Ally (Not Implemented).`, "enemy");
+                console.log(`${self.name} uses Command Ally (Not Implemented)`);
+             }
         },
         onDeathAction: { type: 'reward', insight: 30, artifactId: 'commanders_presence_i' },
         keywords: ['Boss', 'Control', 'Debuff', 'HighDamage'],
@@ -256,7 +256,7 @@ export class Enemy {
         this.intentions = JSON.parse(JSON.stringify(template.intentions));
         this.currentIntent = null;
         this.currentBlock = 0;
-        this.activeStatusEffects = []; // { id, duration, amount, source }
+        this.activeStatusEffects = [];
 
         this.resistances = { ...(template.resistances || {}) };
         this.weaknesses = { ...(template.weaknesses || {}) };
@@ -270,30 +270,19 @@ export class Enemy {
 
         this.wasDamagedLastTurn = false;
         this.wasDamagedUnblockedLastTurn = false;
-        this.playerRef = null; // Reference set by determineNextIntent/executeTurn
-        this.gameStateRef = null; // Reference set by executeTurn for UI calls
+        this.playerRef = null;
+        this.gameStateRef = null;
 
         this.determineNextIntent();
     }
 
     /** Determines the enemy's action for the upcoming turn. */
     determineNextIntent(player = null) {
-        if (this.currentHp <= 0) {
-            this.currentIntent = null; return;
-        }
+        if (this.currentHp <= 0) { this.currentIntent = null; return; }
         this.playerRef = player || this.playerRef;
-
-        // Reset block (unless kept by specific intent logic - not implemented here)
-        this.currentBlock = 0;
-
-        // Filter intentions based on current phase (if applicable)
+        this.currentBlock = 0; // Reset block
         let phaseIntentions = this.intentions;
-        if (this.currentPhase) {
-             phaseIntentions = this.intentions.filter(intent => !intent.phase || intent.phase === this.currentPhase);
-             if (phaseIntentions.length === 0) { console.warn(`${this.name}: No intentions for phase ${this.currentPhase}. Using all.`); phaseIntentions = this.intentions; }
-        }
-
-        // Filter based on conditions
+        if (this.currentPhase) { phaseIntentions = this.intentions.filter(intent => !intent.phase || intent.phase === this.currentPhase); if (phaseIntentions.length === 0) { console.warn(`${this.name}: No intentions for phase ${this.currentPhase}. Using all.`); phaseIntentions = this.intentions; } }
         const possibleIntents = phaseIntentions.filter(intent => {
              if (!intent.condition) return true;
              switch(intent.condition) {
@@ -308,163 +297,122 @@ export class Enemy {
                  default: console.warn(`Unknown intent condition for ${this.name}: ${intent.condition}`); return true;
              }
         });
-
         let chosenIntent = null;
-        if (possibleIntents.length === 0) {
-             chosenIntent = phaseIntentions.find(i => !i.condition) || this.intentions.find(i => !i.condition);
-             if (!chosenIntent) chosenIntent = {type:'none', description:'Hesitating...'};
-             console.warn(`${this.name} had no valid intents. Fallback: ${chosenIntent.description}`);
-        } else {
-             chosenIntent = this._selectIntentFromPossibles(possibleIntents); // Use helper for AI logic
-        }
-
-        // Reset flags AFTER choosing intent for next turn
-        this.wasDamagedLastTurn = false;
-        this.wasDamagedUnblockedLastTurn = false;
-
+        if (possibleIntents.length === 0) { chosenIntent = phaseIntentions.find(i => !i.condition) || this.intentions.find(i => !i.condition); if (!chosenIntent) chosenIntent = {type:'none', description:'Hesitating...'}; console.warn(`${this.name} had no valid intents. Fallback: ${chosenIntent.description}`); }
+        else { chosenIntent = this._selectIntentFromPossibles(possibleIntents); }
+        this.wasDamagedLastTurn = false; this.wasDamagedUnblockedLastTurn = false;
         this.currentIntent = chosenIntent;
-        // UI update happens in CombatManager after all enemies determine intents
     }
 
     /** Helper function to select intent based on AI behavior */
     _selectIntentFromPossibles(possibleIntents) {
         let chosenIntent = null;
         switch (this.aiBehavior) {
-            case 'sequential_intent':
-            case 'sequential_cycle_powerup':
-                chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length];
-                this.intentCycleIndex++;
-                break;
-            case 'random_intent':
-                chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)];
-                break;
-            case 'random_weighted':
-                // Simple random fallback until weights added
-                chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)];
-                // console.warn(`AI behavior 'random_weighted' not fully implemented for ${this.name}. Using random.`);
-                break;
-            case 'reactive_pattern':
-                const conditionalMove = possibleIntents.find(i => i.condition);
-                if (conditionalMove) { chosenIntent = conditionalMove; }
-                else {
-                    const nonConditional = possibleIntents.filter(i => !i.condition);
-                    if (nonConditional.length > 0) {
-                        chosenIntent = nonConditional[this.intentCycleIndex % nonConditional.length];
-                        this.intentCycleIndex++;
-                    } else {
-                         chosenIntent = possibleIntents[0] || {type:'none', description:'Stuck...'};
-                    }
-                }
-                break;
-             case 'phase_shift':
-                  chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)];
-                 break;
-             case 'boss_pattern_1':
-                 console.warn(`AI behavior 'boss_pattern_1' not implemented for ${this.name}. Using sequential.`);
-                 chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length];
-                 this.intentCycleIndex++;
-                 break;
-            default:
-                console.warn(`Unknown AI behavior '${this.aiBehavior}' for ${this.name}. Using first possible.`);
-                chosenIntent = possibleIntents[0];
+            case 'sequential_intent': case 'sequential_cycle_powerup': chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length]; this.intentCycleIndex++; break;
+            case 'random_intent': chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)]; break;
+            case 'random_weighted': chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)]; break; // Fallback
+            case 'reactive_pattern': const conditionalMove = possibleIntents.find(i => i.condition); if (conditionalMove) { chosenIntent = conditionalMove; } else { const nonConditional = possibleIntents.filter(i => !i.condition); if (nonConditional.length > 0) { chosenIntent = nonConditional[this.intentCycleIndex % nonConditional.length]; this.intentCycleIndex++; } else { chosenIntent = possibleIntents[0] || {type:'none', description:'Stuck...'}; } } break;
+            case 'phase_shift': chosenIntent = possibleIntents[Math.floor(Math.random() * possibleIntents.length)]; break;
+            case 'boss_pattern_1': console.warn(`AI behavior 'boss_pattern_1' not implemented for ${this.name}. Using sequential.`); chosenIntent = possibleIntents[this.intentCycleIndex % possibleIntents.length]; this.intentCycleIndex++; break;
+            default: console.warn(`Unknown AI behavior '${this.aiBehavior}' for ${this.name}. Using first possible.`); chosenIntent = possibleIntents[0];
         }
-        return chosenIntent || {type:'none', description:'Calculating...'}; // Ensure return value
+        return chosenIntent || {type:'none', description:'Calculating...'};
     }
 
 
     /** Executes the enemy's planned action for the *current* turn. */
     executeTurn(player, gameState) {
-        this.playerRef = player; // Ensure reference is fresh
-        this.gameStateRef = gameState; // Store reference for UI calls
+        this.playerRef = player;
+        this.gameStateRef = gameState;
 
-        if (!this.currentIntent || this.currentHp <= 0 || !player) {
-             if (this.currentHp <= 0) this.determineNextIntent(player);
-             return;
-        }
+        if (!this.currentIntent || this.currentHp <= 0 || !player) { if (this.currentHp <= 0) this.determineNextIntent(player); return; }
 
-        // Check for Stun BEFORE ticking effects
+        // --- Log Turn Start ---
+        // Moved actual turn log to CombatManager potentially, but log action start here
+        // this.gameStateRef?.uiManager?.logCombatEvent(`-- ${this.name}'s Action --`, "enemy");
+
+        // Check for Stun
         if (this.hasStatus('Stunned')) {
-            console.log(`${this.name} is Stunned! Turn skipped.`);
-            this.removeStatus('Stunned'); // Triggers UI update
-            // Tick effects AFTER removing stun, so durations decrease
-            this.tickStatusEffects('start', player);
+            this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} is Stunned, turn skipped.`, "warning");
+            this.removeStatus('Stunned'); // Logs removal & updates UI
+            this.tickStatusEffects('start', player); // Tick statuses AFTER removing stun
             this.tickStatusEffects('end', player);
             this.determineNextIntent(player);
-            // No need for extra UI update here, removeStatus and tickStatusEffects handle it
-            return;
+            return; // End turn execution here
         }
 
-        this.tickStatusEffects('start', player); // Tick start effects (Poison etc.)
+        this.tickStatusEffects('start', player); // Handles its own logging/UI updates
 
-        // Re-check if alive after start-of-turn effects
-        if (this.currentHp <= 0) { this.determineNextIntent(player); return; }
+        if (this.currentHp <= 0) { this.determineNextIntent(player); return; } // Re-check life after start effects
 
         const intent = this.currentIntent;
         let baseValue = intent.baseValue || 0;
         let modifiedValue;
 
+        // Log the intended action *before* execution
+        this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} intends ${intent.description || intent.type}.`, "enemy");
+
         try {
             switch (intent.type) {
                 case 'attack':
                     modifiedValue = this.applyModifiers('damageDealt', baseValue);
-                    // Player takes damage, handles its own floating number/UI
-                    player.takeDamage(modifiedValue, this.enemyType);
-                    if (intent.status && player.currentHp > 0) player.applyStatus(intent.status, intent.statusDuration || 1, 1, this.enemyType);
+                    player.takeDamage(modifiedValue, this); // Pass self as source
+                    if (intent.status && player.currentHp > 0) player.applyStatus(intent.status, intent.statusDuration || 1, 1, this);
                     break;
                 case 'multi_attack':
                     const count = intent.count || 1;
                     modifiedValue = this.applyModifiers('damageDealt', baseValue);
                     for(let i = 0; i < count && player.currentHp > 0; i++) {
-                        player.takeDamage(modifiedValue, this.enemyType);
+                        player.takeDamage(modifiedValue, this);
                     }
                     if (intent.status && intent.applyStatusOnce && player.currentHp > 0) {
-                        player.applyStatus(intent.status, intent.statusDuration || 1, 1, this.enemyType);
+                        player.applyStatus(intent.status, intent.statusDuration || 1, 1, this);
                     }
                     break;
                 case 'block':
-                    this.gainBlock(this.applyModifiers('blockGain', baseValue)); // gainBlock handles floating num/UI
+                    this.gainBlock(this.applyModifiers('blockGain', baseValue)); // Logs block gain
                     break;
                 case 'attack_block':
                     const attackVal = this.applyModifiers('damageDealt', intent.attackValue || 0);
-                    if (player.currentHp > 0) player.takeDamage(attackVal, this.enemyType);
+                    if (player.currentHp > 0) player.takeDamage(attackVal, this);
                     const blockVal = this.applyModifiers('blockGain', intent.blockValue || 0);
-                    this.gainBlock(blockVal); // gainBlock handles floating num/UI
+                    this.gainBlock(blockVal); // Logs block gain
                     break;
                 case 'debuff':
                     if (intent.status && intent.target === 'player' && player.currentHp > 0) {
-                        player.applyStatus(intent.status, intent.duration || 1, intent.amount || 1, this.enemyType); // Player handles UI
+                        // Log applying debuff here is clearer than player logging receiving it
+                        this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} applies ${intent.status} to Player.`, "status");
+                        player.applyStatus(intent.status, intent.duration || 1, intent.amount || 1, this);
                     }
                     break;
                 case 'buff':
                 case 'power_up':
-                    if (intent.status) this.applyStatus(intent.status, intent.duration || (intent.type === 'power_up' ? 99 : 1), intent.amount || 1, this.enemyType); // applyStatus handles UI
+                    if (intent.status) this.applyStatus(intent.status, intent.duration || (intent.type === 'power_up' ? 99 : 1), intent.amount || 1, this); // Logs status apply
                     break;
                  case 'special':
-                    this.executeSpecialAbility(intent.id, player, gameState); // Special ability might update UI itself
+                    // Logging handled within executeSpecialAbility or the ability itself
+                    this.executeSpecialAbility(intent.id, player, gameState);
                     break;
                  case 'none':
-                    console.log(`${this.name} is ${intent.description || 'doing nothing'}.`);
+                    this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} is ${intent.description || 'doing nothing'}.`, "info");
                     break;
                 default:
                     console.warn(`Unknown intent type executed by ${this.name}: ${intent.type}`);
             }
         } catch (error) { console.error(`Error executing intent for ${this.name} (Intent: ${JSON.stringify(intent)}):`, error); }
 
-        this.tickStatusEffects('end', player); // Tick end effects
+        this.tickStatusEffects('end', player); // Handles its own logging/UI
 
-        // Determine NEXT intent AFTER all actions and end-of-turn effects
-        // This allows the UI update in CombatManager to show the *next* intent correctly
-        if (this.currentHp > 0) {
-             this.determineNextIntent(player);
-        } else {
-            this.currentIntent = null; // Clear intent if died during end phase
-        }
+        if (this.currentHp > 0) { this.determineNextIntent(player); }
+        else { this.currentIntent = null; } // Clear intent if died
     }
 
 
     /** Handles custom special ability logic from template. */
      executeSpecialAbility(abilityId, player, gameState) {
-         if (!abilityId) { console.warn(`${this.name} tried to execute special ability with no ID.`); return; }
+         if (!abilityId) { return; }
+         // Log generic special use if specific log isn't in the ability itself
+         // this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} uses special ability: ${abilityId}.`, "enemy");
          if (this.specialAbilities && typeof this.specialAbilities[abilityId] === 'function') {
              try { this.specialAbilities[abilityId](this, player, gameState); }
              catch (error) { console.error(`Error executing special ability '${abilityId}' for ${this.name}:`, error); }
@@ -478,17 +426,22 @@ export class Enemy {
         const initialAmount = amount;
         let modifiedAmount = amount;
         let modifiersText = [];
+        let logText = `Takes ${initialAmount} damage`; // Start log text
+        let damageType = 'damage'; // For floating number
 
         // Apply Intangible first
         if (this.hasStatus('Intangible')) {
             modifiedAmount = Math.max(1, modifiedAmount > 0 ? 1 : 0);
             modifiersText.push('Intangible!');
+            logText += ` (Intangible!)`;
         }
 
-        // Apply Vulnerable (takes MORE damage)
+        // Apply Vulnerable
         if (this.hasStatus('Vulnerable')) {
+            const preVuln = modifiedAmount;
             modifiedAmount = Math.floor(modifiedAmount * 1.5);
             modifiersText.push('x1.5 Vuln!');
+            logText += ` (x1.5 Vuln: ${preVuln} -> ${modifiedAmount})`;
         }
 
         // Apply elemental resistances/weaknesses
@@ -500,41 +453,47 @@ export class Enemy {
             if (elementalMultiplier !== 1.0) {
                 modifiedAmount = Math.floor(modifiedAmount * elementalMultiplier);
                 modifiersText.push(`${elementalMultiplier.toFixed(1)}x ${damageSourceElement}`);
+                logText += ` (${elementalMultiplier.toFixed(1)}x ${damageSourceElement})`;
             }
         }
 
         modifiedAmount = Math.max(0, modifiedAmount);
+
         if (modifiedAmount <= 0) {
-             // --- Floating Number (Negated) ---
               if (this.gameStateRef?.uiManager) {
                   const enemyElement = this.gameStateRef.uiManager.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${this.id}"]`);
                   if(enemyElement) this.gameStateRef.uiManager.showFloatingNumber(enemyElement, `Negated!`, 'negate', modifiersText.join(', '));
+                  this.gameStateRef.uiManager.logCombatEvent(`${this.name} damage negated${logText.includes('(') ? logText.substring(logText.indexOf('(')) : ''}.`, "info"); // Log negation
               }
-              // -----------------------------
-              this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn); // Update UI
+              this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
               return 0;
-        } // No damage after modifications
+        }
 
         const blockConsumed = Math.min(this.currentBlock, modifiedAmount);
         const damageAfterBlock = modifiedAmount - blockConsumed;
 
-        // Set flags for AI conditions (BEFORE HP changes)
         this.wasDamagedLastTurn = true;
         if (damageAfterBlock > 0) this.wasDamagedUnblockedLastTurn = true;
 
-        // --- Floating Number (Damage/Block) ---
+        // Floating Numbers
          if (this.gameStateRef?.uiManager) {
              const enemyElement = this.gameStateRef.uiManager.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${this.id}"]`);
              if (enemyElement) {
                  if (blockConsumed > 0) {
                      this.gameStateRef.uiManager.showFloatingNumber(enemyElement, `-${blockConsumed}`, 'blocked', `Blocked ${modifiedAmount}`);
+                     logText += ` (${blockConsumed} blocked)`;
                  }
                  if (damageAfterBlock > 0) {
                      this.gameStateRef.uiManager.showFloatingNumber(enemyElement, `-${damageAfterBlock}`, 'damage', modifiersText.join(', '));
+                     damageType = 'damage';
+                 } else {
+                     damageType = 'blocked';
                  }
              }
          }
-         // ------------------------------------
+
+        // Log AFTER calculations and floating numbers
+        this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} ${logText}.`, damageType);
 
         // Apply damage/block reduction
         if (blockConsumed > 0) this.currentBlock -= blockConsumed;
@@ -544,82 +503,86 @@ export class Enemy {
             this.currentHp = 0;
             this.currentIntent = null;
             this.activeStatusEffects = [];
-            console.log(`${this.name} defeated!`);
+            this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} defeated!`, "info"); // Log defeat
             // On death trigger handled by CombatManager check
         }
 
-        // Update Enemy UI (HP Bar, Block)
+        // Update Enemy UI AFTER applying damage/block
         this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
 
-        // --- Milestone check for defeating enemy ---
          if(this.currentHp <= 0) {
               const debuffs = this.activeStatusEffects.filter(s => getStatusEffectDefinition(s.id)?.type === 'debuff').length;
-              if(debuffs >= 3) {
-                   this.gameStateRef?.triggerMilestoneAction('defeatEnemyWithDebuffs', debuffs);
-              }
+              if(debuffs >= 3) { this.gameStateRef?.triggerMilestoneAction('defeatEnemyWithDebuffs', debuffs); }
          }
 
-        return damageAfterBlock; // Return actual HP damage dealt
+        return damageAfterBlock;
     }
 
 
     /** Adds block to the enemy, considering statuses, and showing floating number. */
     gainBlock(amount) {
          if (amount <= 0) return;
-         const modifiedAmount = this.applyModifiers('blockGain', amount);
-         if (modifiedAmount <= 0) return;
+         const modifiedAmount = this.applyModifiers('blockGain', amount); // Modifiers might log
+         if (modifiedAmount <= 0) {
+             this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} Block gain negated.`, "info");
+             return;
+         }
 
          this.currentBlock += modifiedAmount;
 
-         // --- Floating Number ---
+         // Floating Number
           if (this.gameStateRef?.uiManager) {
              const enemyElement = this.gameStateRef.uiManager.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${this.id}"]`);
               let modifiersText = [];
-              if(this.hasStatus('Dexterity')) modifiersText.push(`+${this.getStatusAmount('Dexterity')} Dex`);
-              // Frail doesn't usually affect enemy block gain, but include if logic changes
-              // if(this.hasStatus('Frail')) modifiersText.push(`-25% Frail`);
+              let modifierLog = "";
+              if(this.hasStatus('Dexterity')) {
+                 const dexAmt = this.getStatusAmount('Dexterity');
+                 if (dexAmt > 0) { modifiersText.push(`+${dexAmt} Dex`); modifierLog += ` (+${dexAmt} Dex)`; }
+              }
+              // Frail doesn't affect enemy block gain
               if(enemyElement) this.gameStateRef.uiManager.showFloatingNumber(enemyElement, `+${modifiedAmount}`, 'block', modifiersText.join(', '));
+              this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} gained ${modifiedAmount} Block${modifierLog}.`, "block"); // Log gain
           }
-          // ---------------------
 
-         // Update Enemy UI (Block display)
+         // Update Enemy UI
          this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
     }
 
 
      // --- Status Effects ---
      applyStatus(statusId, duration, amount = 1, source = null) {
-         if (!statusId) { console.warn("Enemy.applyStatus: Null/undefined ID."); return; }
-
+         if (!statusId) { return; }
          const definition = getStatusEffectDefinition(statusId);
+         if (!definition) { console.warn(`Enemy.applyStatus: No definition for ${statusId}`); return; }
+
          const uiAffectingStatuses = ['Weak', 'Vulnerable', 'Frail', 'Strength', 'Dexterity', 'Entangle'];
          const canBeZero = uiAffectingStatuses.includes(statusId);
-
-         if (!canBeZero && duration <= 0 && amount <= 0 && !['Strength', 'Dexterity'].includes(statusId)) return;
+         if (!canBeZero && duration <= 0 && amount <= 0 && !definition.stacking) return;
+         if (!canBeZero && duration <= 0 && amount <= 0 && definition.stacking && initialAmount <= 0) return;
 
          const existing = this.activeStatusEffects.find(s => s.id === statusId);
          let statusAppliedOrUpdated = false;
-         const sourceId = source?.id || (typeof source === 'string' ? source : 'Unknown');
+         let logMsg = "";
+         const sourceName = source?.name || (typeof source === 'string' ? source : 'Unknown');
 
          if (existing) {
-             if (definition?.stacking) { existing.amount = (existing.amount || 0) + amount; }
-             if (existing.duration !== 99) { existing.duration = Math.max(existing.duration, duration); }
-             existing.source = sourceId;
-             statusAppliedOrUpdated = true;
-             console.log(`${this.name} status updated: ${statusId}. Amt: ${existing.amount}, Dur: ${existing.duration}`);
+             let amtChanged = false; let durChanged = false;
+             if (definition.stacking) { const oldAmt = existing.amount || 0; existing.amount = oldAmt + amount; if(existing.amount !== oldAmt) amtChanged = true; }
+             if (existing.duration !== 99) { const oldDur = existing.duration; const newEffDur = duration > 0 ? Math.max(existing.duration, duration) : existing.duration; existing.duration = newEffDur; if(existing.duration !== oldDur) durChanged = true; }
+             existing.source = sourceName;
+             if (amtChanged || durChanged) { logMsg = `${this.name} Status Updated: ${statusId} (Amt: ${existing.amount}, Dur: ${existing.duration})`; statusAppliedOrUpdated = true; }
          } else {
-             let initialAmount = definition?.stacking ? amount : 1;
-             if (initialAmount <= 0 && duration <= 0 && !canBeZero) return;
-             this.activeStatusEffects.push({ id: statusId, duration: duration, source: sourceId, amount: initialAmount });
-             statusAppliedOrUpdated = true;
-             console.log(`${this.name} applied status: ${statusId}. Amt: ${initialAmount}, Dur: ${duration}`);
+              let initialAmount = definition.stacking ? amount : 1;
+              if (initialAmount <= 0 && duration <= 0 && !canBeZero) return;
+              this.activeStatusEffects.push({ id: statusId, duration: duration, source: sourceName, amount: initialAmount });
+              logMsg = `${this.name} Applied Status: ${statusId} (Amt: ${initialAmount}, Dur: ${duration}) from ${sourceName}`;
+              statusAppliedOrUpdated = true;
          }
 
          if (statusAppliedOrUpdated) {
-             // Update UI immediately
-              this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
-             // Trigger artifacts listening for status application on enemy (if needed later)
-             // this.gameStateRef?.player?.triggerArtifacts('onStatusAppliedToEnemy', { enemy: this, status: { id: statusId, duration, amount } });
+             this.gameStateRef?.uiManager?.logCombatEvent(logMsg, "status"); // Log status change
+             this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
+             // Trigger artifacts if needed
          }
      }
 
@@ -627,9 +590,8 @@ export class Enemy {
          const initialLength = this.activeStatusEffects.length;
          this.activeStatusEffects = this.activeStatusEffects.filter(s => s.id !== statusId);
          if (this.activeStatusEffects.length < initialLength) {
-             console.log(`${this.name} status removed: ${statusId}`);
-             // Update UI immediately
-              this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
+             this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} Status Removed: ${statusId}.`, "status"); // Log removal
+             this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
              return true;
          }
          return false;
@@ -640,74 +602,69 @@ export class Enemy {
 
      /** Process status effects at start or end of turn. */
      tickStatusEffects(phase, player) {
-        const effectsToRemove = [];
-        const statusesAtStartOfTick = [...this.activeStatusEffects];
-        let uiNeedsUpdate = false; // Flag if any visual status changed
+        let uiNeedsUpdate = false;
+        // Iterate backwards for safe removal
+        for (let i = this.activeStatusEffects.length - 1; i >= 0; i--) {
+            const effect = this.activeStatusEffects[i];
+            if (!effect) continue;
 
-        statusesAtStartOfTick.forEach(effect => {
-            if (!this.activeStatusEffects.includes(effect)) return; // Skip if removed mid-tick
             let removeEffectAfterTick = false;
             const initialAmount = effect.amount;
             const initialDuration = effect.duration;
+            const definition = getStatusEffectDefinition(effect.id);
+            let stateChanged = false;
 
-            // --- Start of Turn Effects ---
+            // Start of Turn
              if (phase === 'start') {
                  switch(effect.id) {
                      case 'Poison':
                          if (effect.amount > 0) {
-                             console.log(`${this.name} taking ${effect.amount} Poison damage.`);
-                             this.takeDamage(effect.amount, 'Poison'); // Handles floating num/UI
-                             if (this.currentHp > 0 && this.activeStatusEffects.includes(effect)) { // Check if still alive/effect present
+                             this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} takes ${effect.amount} damage (Poison).`, "damage");
+                             this.takeDamage(effect.amount, 'Poison'); // Handles its own logging/UI
+                             if (this.currentHp > 0 && this.activeStatusEffects.includes(effect)) {
                                  effect.amount--;
                                  if (effect.amount <= 0) removeEffectAfterTick = true;
-                             } else { removeEffectAfterTick = true; } // Died or removed by takeDamage trigger
-                         } else { removeEffectAfterTick = true; }
+                                 stateChanged = true;
+                             } else { removeEffectAfterTick = true; stateChanged = true;}
+                         } else { removeEffectAfterTick = true; stateChanged = true;}
                          break;
                      case 'Burn':
                          if (effect.amount > 0) {
-                             console.log(`${this.name} taking ${effect.amount} Burn damage.`);
-                             this.takeDamage(effect.amount, 'Burn'); // Handles floating num/UI
+                              this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} takes ${effect.amount} damage (Burn).`, "damage");
+                             this.takeDamage(effect.amount, 'Burn'); // Handles its own logging/UI
+                             // Duration ticks end of turn
                          }
                          break;
-                     // Add other enemy start-of-turn effects here
                  }
-             } // --- End Start Phase ---
+             }
 
-             // --- End of Turn Effects & Duration Ticking ---
+             // End of Turn
              if (phase === 'end') {
                   switch(effect.id) {
-                     case 'Regen': if (effect.amount > 0) this.heal(effect.amount); break; // Handles UI/floating
-                     case 'Metallicize': if (effect.amount > 0) this.gainBlock(effect.amount); break; // Handles UI/floating
-                     case 'Intangible': removeEffectAfterTick = true; break;
-                     // Add other enemy end-of-turn effects here
+                     case 'Regen': if (effect.amount > 0) { this.heal(effect.amount); stateChanged = true;} break; // Heal logs itself
+                     case 'Metallicize': if (effect.amount > 0) { this.gainBlock(effect.amount); stateChanged = true;} break; // Block logs itself
+                     case 'Intangible': removeEffectAfterTick = true; this.gameStateRef?.uiManager?.logCombatEvent(`${this.name}'s Intangible wore off.`, "status"); stateChanged = true; break;
                  }
-
-                 // --- Decrement Duration ---
-                 const definition = getStatusEffectDefinition(effect.id);
+                 // Duration Ticking
                  const tickDuration = definition?.durationBased && effect.duration !== 99 && effect.id !== 'Poison';
                  if (tickDuration && this.activeStatusEffects.includes(effect)) {
                      effect.duration--;
-                     if (effect.duration <= 0) removeEffectAfterTick = true;
+                     if (effect.duration <= 0) {
+                          this.gameStateRef?.uiManager?.logCombatEvent(`${this.name}'s ${effect.id} expired.`, "status");
+                          removeEffectAfterTick = true;
+                     }
+                     stateChanged = true;
                  }
-             } // --- End End Phase ---
-
-             // Check if state changed for UI update
-             if (effect.amount !== initialAmount || effect.duration !== initialDuration || removeEffectAfterTick) {
-                 uiNeedsUpdate = true;
              }
 
-             if (removeEffectAfterTick && !effectsToRemove.includes(effect.id)) {
-                 effectsToRemove.push(effect.id);
+             if (removeEffectAfterTick) {
+                 this.activeStatusEffects.splice(i, 1); // Remove directly
+                 stateChanged = true; // Removal is a state change
              }
-        }); // End forEach effect
+             if(stateChanged) uiNeedsUpdate = true;
+        } // End loop
 
-        // Remove expired effects
-        if (effectsToRemove.length > 0) {
-            this.activeStatusEffects = this.activeStatusEffects.filter(e => !effectsToRemove.includes(e.id));
-            uiNeedsUpdate = true; // Removal requires UI update
-        }
-
-        // Update UI once at the end if any status changed visually
+        // Update UI once at the end if any status changed or was removed
         if (uiNeedsUpdate) {
             this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
         }
@@ -718,15 +675,11 @@ export class Enemy {
           if (amount <= 0 || this.currentHp <= 0 || this.currentHp >= this.maxHp) return 0;
           const actualHeal = Math.min(amount, this.maxHp - this.currentHp);
           this.currentHp += actualHeal;
-
-          // --- Floating Number ---
            if (this.gameStateRef?.uiManager) {
               const enemyElement = this.gameStateRef.uiManager.enemyArea?.querySelector(`.enemy-display[data-enemy-id="${this.id}"]`);
               if(enemyElement) this.gameStateRef.uiManager.showFloatingNumber(enemyElement, `+${actualHeal}`, 'heal');
+              this.gameStateRef.uiManager.logCombatEvent(`${this.name} healed ${actualHeal} HP.`, "heal"); // Log heal
            }
-           // ---------------------
-
-          // Update Enemy UI (HP Bar)
           this.gameStateRef?.uiManager?.combatUI?.renderEnemies(this.gameStateRef.combatManager.enemies, this.gameStateRef.combatManager.playerTurn);
           return actualHeal;
       }
@@ -734,21 +687,36 @@ export class Enemy {
     // --- Modifiers ---
      applyModifiers(modifierType, baseValue) {
          let modifiedValue = baseValue;
+         let logParts = []; // For logging
+
          switch(modifierType) {
-            case 'damageDealt': if (this.hasStatus('Weak')) modifiedValue = Math.floor(modifiedValue * 0.75); if (this.hasStatus('Strength')) modifiedValue += this.getStatusAmount('Strength'); break;
-            case 'blockGain': if (this.hasStatus('Dexterity')) modifiedValue += this.getStatusAmount('Dexterity'); if (this.hasStatus('Frail')) modifiedValue = Math.floor(modifiedValue * 0.75); break;
+            case 'damageDealt':
+                if (this.hasStatus('Weak')) { const newVal = Math.floor(modifiedValue * 0.75); if(newVal < modifiedValue) logParts.push("Weak!"); modifiedValue = newVal; }
+                if (this.hasStatus('Strength')) { const strAmt = this.getStatusAmount('Strength'); if(strAmt !== 0) logParts.push(`+${strAmt} Str`); modifiedValue += strAmt; }
+                break;
+            case 'blockGain':
+                if (this.hasStatus('Dexterity')) { const dexAmt = this.getStatusAmount('Dexterity'); if(dexAmt !== 0) logParts.push(`+${dexAmt} Dex`); modifiedValue += dexAmt; }
+                if (this.hasStatus('Frail')) { const newVal = Math.floor(modifiedValue * 0.75); if(newVal < modifiedValue) logParts.push("Frail!"); modifiedValue = newVal; } // Note: Frail usually affects player block gain, but added here for completeness
+                break;
          }
-         return Math.max(0, Math.floor(modifiedValue));
+         modifiedValue = Math.max(0, Math.floor(modifiedValue));
+
+         // Log modifications (Optional, can be verbose)
+         // if (logParts.length > 0 && modifiedValue !== baseValue) {
+         //     this.gameStateRef?.uiManager?.logCombatEvent(`${this.name} ${modifierType} modified: ${baseValue} -> ${modifiedValue} (${logParts.join(', ')})`, "info");
+         // }
+
+         return modifiedValue;
      }
 
      // --- End of Combat Cleanup ---
-     /** Called by CombatManager or GameState when combat ends */
      cleanupCombatStatuses() {
          const initialLength = this.activeStatusEffects.length;
          this.activeStatusEffects = this.activeStatusEffects.filter(effect => {
               const persist = [/*'PermanentEnemyCurse'*/].includes(effect.id);
               return persist;
          });
+         // No logging needed here normally
      }
 
 } // End of Enemy class
