@@ -1,9 +1,10 @@
-// js/main.js - Main Game Initialization and Flow
+// js/main.js - Main Game Initialization and Flow (v5.1 - Mirror Quiz Integration)
 
 // --- Core Imports ---
 import { GameState } from './core/GameState.js';
 import { MetaProgression } from './meta/MetaProgression.js';
 import { UIManager } from './ui/UIManager.js';
+import { QuizManager } from './core/QuizManager.js'; // NEW: Import QuizManager
 
 // Import data - Needed early for defaults maybe, or passed down
 import * as Data from '../data.js'; // Correct path: up from js/ to root
@@ -13,6 +14,7 @@ const personaLabyrinth = {
     gameState: null,
     uiManager: null,
     metaProgression: null,
+    quizManager: null, // Optional: Keep reference if needed outside run start
 };
 window.personaLabyrinth = personaLabyrinth; // Make accessible in browser console
 
@@ -37,7 +39,6 @@ function initGame() {
 
     } catch (error) {
         console.error("FATAL ERROR during game initialization:", error);
-        // Display a user-friendly error message on the page?
         const container = document.getElementById('gameContainer');
         if (container) {
             container.innerHTML = `<div style="padding: 30px; text-align: center; color: red;">
@@ -46,14 +47,13 @@ function initGame() {
                 <p>${error.message}</p>
             </div>`;
         }
-        // Attempt to show main menu even on error, might fail if UI manager failed
         document.getElementById('mainMenuScreen')?.classList?.add('active');
     }
 }
 
-// --- Game Start Function ---
+// --- Game Start Function (Modified for Mirror Quiz) ---
 function startNewRun() {
-    console.log("Starting new run...");
+    console.log("Attempting to start new run...");
     if (!personaLabyrinth.uiManager || !personaLabyrinth.metaProgression) {
         console.error("Cannot start run: UIManager or MetaProgression not initialized.");
         alert("Error: Core managers not ready. Cannot start run.");
@@ -64,31 +64,81 @@ function startNewRun() {
               return; // Abort if user cancels
          }
          console.warn("Abandoning active run to start a new one.");
-         // Optionally call cleanup or endRun(false) on the old gameState?
          personaLabyrinth.gameState.cleanupRun(); // Clean up the old state
+         personaLabyrinth.gameState = null; // Clear reference
     }
 
-    // TODO: Add logic for selecting player archetype/starting deck/ascension level here
-    const playerData = {}; // Placeholder for selected archetype/deck data
-    const selectedAscension = personaLabyrinth.metaProgression.currentAscension || 0; // Get selected ascension
+    // --- Mirror Quiz Logic ---
+    // Create a QuizManager instance for this run attempt
+    const quizManager = new QuizManager();
+    personaLabyrinth.quizManager = quizManager; // Store globally if needed for debugging
 
-    // 1. Create a NEW GameState instance for this run
-    personaLabyrinth.gameState = new GameState(
-        playerData,
-        personaLabyrinth.metaProgression,
-        personaLabyrinth.uiManager
-    );
+    // Define the function that proceeds *after* the quiz is done (or skipped)
+    const proceedToRun = (quizResult) => {
+        console.log("Proceeding to start run...");
+        let playerData = {}; // Base player data for GameState
 
-    // 2. Set references *after* all core objects are created
-    // Link the new GameState to the existing UI and Meta managers
-    personaLabyrinth.uiManager.setReferences(personaLabyrinth.gameState, personaLabyrinth.metaProgression);
-    // Note: Player reference is set within GameState.startRun
+        // Apply quiz results if they exist
+        if (quizResult) {
+            console.log("Applying Quiz Result to Player Data for GameState:", quizResult);
+            // These will be used by the Player constructor via GameState
+            playerData.startingDeck = quizResult.startingDeckIds;
+            playerData.attunements = quizResult.attunementBonus;
+        } else {
+            console.log("Starting run without quiz results (skipped or error). Using defaults.");
+            // Player constructor will use defaults if playerData lacks these keys
+        }
 
-    // 3. Start the run process within GameState
-    // This handles player creation, map generation, initial UI updates, and shows the map screen
-    personaLabyrinth.gameState.startRun(playerData, personaLabyrinth.metaProgression, personaLabyrinth.uiManager);
+        const selectedAscension = personaLabyrinth.metaProgression.currentAscension || 0;
+        // Note: Ascension level isn't passed directly to GameState/Player constructor currently,
+        // MetaProgression holds it, and Player/MapManager read from MetaProgression instance.
 
+        try {
+            // 1. Create a NEW GameState instance for this run, passing merged player data
+            personaLabyrinth.gameState = new GameState(
+                playerData, // Contains quiz results (deck, attunements) if completed
+                personaLabyrinth.metaProgression,
+                personaLabyrinth.uiManager
+            );
+
+            // 2. Set references AFTER all core objects are created
+            // Link GameState to UI/Meta (already done), link UI back to GameState
+            personaLabyrinth.uiManager.setReferences(personaLabyrinth.gameState, personaLabyrinth.metaProgression);
+
+            // 3. Start the run process within GameState
+            // This handles Player creation (using playerData), Map generation, UI updates, etc.
+            personaLabyrinth.gameState.startRun(playerData, personaLabyrinth.metaProgression, personaLabyrinth.uiManager);
+
+            console.log("Run successfully started.");
+
+        } catch (error) {
+             console.error("CRITICAL ERROR during GameState creation or startRun:", error);
+             alert("Error starting the run. Please check console and refresh.");
+             // Attempt to return to main menu safely
+             personaLabyrinth.uiManager?.showScreen('mainMenuScreen');
+             personaLabyrinth.gameState?.cleanupRun(); // Clean up potentially partial state
+             personaLabyrinth.gameState = null;
+        }
+    };
+
+    // Show the quiz screen via UIManager, providing the quiz instance and the callback
+    console.log("Showing Mirror Quiz...");
+    try {
+        personaLabyrinth.uiManager.showMirrorQuiz(quizManager, (result) => {
+            // This callback function is executed by UIManager when the quiz is finished or cancelled
+            proceedToRun(result); // Pass the quiz result (or null if cancelled)
+        });
+    } catch (error) {
+        console.error("Error trying to show Mirror Quiz:", error);
+        alert("Could not start the initial reflection quiz. Starting with defaults.");
+        proceedToRun(null); // Proceed with default start if quiz fails to show
+    }
+    // --- End Mirror Quiz Logic ---
+
+    // Note: The actual creation of GameState and starting the run
+    // now happens *inside* the `proceedToRun` callback function.
 }
+
 
 // --- Load Game Function (Placeholder) ---
 function loadSavedRun() {
@@ -122,8 +172,6 @@ function setupMainMenuListeners() {
 
     if (ui.loadGameButton) {
         ui.loadGameButton.onclick = loadSavedRun;
-        // Disable load button initially if no save exists?
-        // ui.loadGameButton.disabled = !checkIfSaveExists(); // Need save/load mechanism
     } else { console.warn("Load Game button not found."); }
 
     if (ui.metaProgressionButton) {
@@ -135,7 +183,6 @@ function setupMainMenuListeners() {
          ui.settingsButton.disabled = true; // Disable until implemented
     } else { console.warn("Settings button not found."); }
 
-    // Add listener for the 'Back to Menu' button on the Meta screen
     if (ui.backToMenuButton) {
         ui.backToMenuButton.onclick = () => ui.showScreen('mainMenuScreen');
     } else { console.warn("Back to Menu button (Meta Screen) not found."); }
