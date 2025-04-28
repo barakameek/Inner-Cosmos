@@ -19,11 +19,12 @@ export class CombatManager {
         this.isActive = false;
         this.currentTarget = null; // Currently selected enemy target by player
 
-        // NEW: State tracking for the current turn (reset each player turn)
+        // State tracking for the current turn (reset each player turn)
         this.turnState = {
-            attacksPlayedThisTurn: 0,
-            cardsPlayedThisTurn: 0,
-            // Add other turn-specific flags as needed
+            attacksPlayedThisTurn: 0, // Example existing state
+            cardsPlayedThisTurn: 0,   // Example existing state
+            lastCardPlayedType: null, // NEW: Track type of last card for potential combos/sequences
+            // Add other turn-specific flags as needed (e.g., energySpentThisTurn)
         };
 
         console.log("CombatManager initialized.");
@@ -52,17 +53,16 @@ export class CombatManager {
         this.turnNumber = 1;
         this.enemies = [];
         this.currentTarget = null;
+        this.turnState = { attacksPlayedThisTurn: 0, cardsPlayedThisTurn: 0, lastCardPlayedType: null }; // Reset turn state
 
         // --- Spawn Enemies ---
         enemyIds.forEach((id, index) => {
             try {
                 const enemyInstance = new Enemy(id, index); // Create new instance
                 this.enemies.push(enemyInstance);
-                // --- Trigger for Enemy Spawn ---
                 this.gameState.player?.triggerArtifacts('onEnemySpawn', { enemy: enemyInstance });
             } catch (error) {
                  console.error(`CombatManager: Failed to spawn enemy with ID ${id}:`, error);
-                 // Maybe replace with a placeholder or skip? Skipping is safer.
             }
         });
 
@@ -75,7 +75,6 @@ export class CombatManager {
          }
 
         // --- Player Combat Setup ---
-        // Player.startCombat handles deck reset, status clear, drawing initial hand, and 'onCombatStart' artifacts
         this.gameState.player.startCombat();
 
         // --- Initial UI Setup ---
@@ -93,13 +92,8 @@ export class CombatManager {
 
         // --- Player/Enemy Cleanup & Artifacts ---
         if (wasActive) {
-            // Trigger player artifacts BEFORE cleaning statuses
             this.gameState.player?.triggerArtifacts('onCombatEnd', { victory: victory });
-            // Trigger general victory artifact if applicable
-            if (victory) {
-                 this.gameState.player?.triggerArtifacts('onVictory', { floor: this.gameState.currentFloor });
-            }
-            // Clean temporary statuses from player and living enemies
+            if (victory) { this.gameState.player?.triggerArtifacts('onVictory', { floor: this.gameState.currentFloor }); }
             this.gameState.player?.cleanupCombatStatuses();
             this.enemies.forEach(enemy => enemy.cleanupCombatStatuses());
         }
@@ -107,12 +101,9 @@ export class CombatManager {
         // Clear combat state
         this.enemies = [];
         this.currentTarget = null;
-        this.turnState = { attacksPlayedThisTurn: 0, cardsPlayedThisTurn: 0 }; // Reset turn state
+        this.turnState = { attacksPlayedThisTurn: 0, cardsPlayedThisTurn: 0, lastCardPlayedType: null }; // Reset turn state
 
-        // Clear UI elements specific to this combat if necessary (often handled by UIManager switching screens)
-        // this.uiManager?.enemyArea?.replaceChildren(); // Let GameState handling do this via screen change
-
-        // Delegate back to GameState (handles rewards, screen changes, etc.)
+        // Delegate back to GameState
         this.gameState.handleCombatEnd(victory);
     }
 
@@ -124,18 +115,21 @@ export class CombatManager {
         this.currentTarget = null; // Clear target at start of turn
         this.uiManager.clearEnemyHighlights();
 
-         // Reset turn-specific state
-         this.turnState = { attacksPlayedThisTurn: 0, cardsPlayedThisTurn: 0 };
+         // Reset turn-specific state (including lastCardPlayedType)
+         this.turnState = {
+            attacksPlayedThisTurn: 0,
+            cardsPlayedThisTurn: 0,
+            lastCardPlayedType: null,
+         };
 
         try {
-             // Player method handles gaining focus, ticking start statuses, drawing cards, and 'onTurnStart' artifacts
+             // Player method handles gaining focus, ticking start statuses, drawing cards, artifacts, core traits
              this.gameState.player.startTurn();
         } catch (error) {
              console.error("Error during player startTurn sequence:", error);
-             // Potentially handle game-breaking error here
         }
 
-        // Update UI AFTER player turn setup (including draw)
+        // Update UI AFTER player turn setup
         this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
         this.checkCombatEndCondition(); // Check if enemies died from start-of-turn effects
     }
@@ -146,9 +140,10 @@ export class CombatManager {
         console.log("--- Player Turn End ---");
         this.playerTurn = false;
         this.currentTarget = null; // Ensure target is cleared
+        // Do NOT reset turnState here, it resets at the start of the *next* player turn
 
         try {
-             // Player method handles 'onTurnEnd' artifacts, ticking end statuses, discarding hand
+             // Player method handles 'onTurnEnd' artifacts, ticking end statuses, discarding hand, core traits
              this.gameState.player.endTurn();
         } catch (error) {
              console.error("Error during player endTurn sequence:", error);
@@ -170,7 +165,7 @@ export class CombatManager {
         // Determine intents for all living enemies BEFORE any actions resolve
         this.enemies.forEach(enemy => {
             if (enemy.currentHp > 0) {
-                enemy.determineNextIntent(this.gameState.player); // Determine intent based on current player state
+                enemy.determineNextIntent(this.gameState.player);
             }
         });
 
@@ -185,43 +180,43 @@ export class CombatManager {
     async executeEnemyActionsSequentially(enemyIndex) {
         if (!this.isActive || this.playerTurn || enemyIndex >= this.enemies.length) {
             // End of enemy actions for this turn
-            if (this.isActive) { // Check again if combat ended mid-turn
+            if (this.isActive) {
                 console.log("--- Enemy Turn End ---");
                 this.turnNumber++;
-                this.beginPlayerTurn();
+                this.beginPlayerTurn(); // Start next player turn
             }
             return;
         }
 
         const enemy = this.enemies[enemyIndex];
-        let delayMs = 0; // Default delay
+        let delayMs = 0;
 
-        if (enemy.currentHp > 0) {
+        if (enemy && enemy.currentHp > 0) { // Check enemy exists and is alive
             console.log(`Enemy action: ${enemy.name} (${enemy.currentIntent?.description || 'No Intent'})`);
-            this.uiManager.combatUI.highlightEnemy(enemy.id, true); // Highlight acting enemy
+            this.uiManager.combatUI?.highlightEnemy(enemy.id, true); // Highlight acting enemy
 
             try {
                 enemy.executeTurn(this.gameState.player, this.gameState);
-                delayMs = 600; // Delay after successful action
+                delayMs = 600;
             } catch (error) {
                  console.error(`Error during ${enemy.name}'s turn execution:`, error);
-                 delayMs = 100; // Shorter delay on error
+                 delayMs = 100;
             }
 
-            // Update UI immediately after action to show results
+            // Update UI immediately after action
             this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
             this.checkCombatEndCondition(); // Check if player died
 
              // Wait only if combat is still active
              if (this.isActive) {
                 await this.delay(delayMs);
-                this.uiManager.combatUI.highlightEnemy(enemy.id, false); // Unhighlight after delay
+                this.uiManager.combatUI?.highlightEnemy(enemy.id, false); // Unhighlight after delay
              } else {
                  return; // Stop sequence if combat ended
              }
 
-        } else {
-            delayMs = 50; // Shorter delay for dead enemies
+        } else { // Enemy is dead or doesn't exist
+            delayMs = 50;
             await this.delay(delayMs);
         }
 
@@ -236,44 +231,42 @@ export class CombatManager {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    /** Handles the player attempting to play a card (e.g., via drag-drop). */
+    /** Handles the player attempting to play a card (MODIFIED to update turn state). */
     handlePlayerCardPlay(card, droppedTarget = null) {
         if (!this.isActive || !this.playerTurn || !this.gameState?.player || !card) {
             console.warn("handlePlayerCardPlay called in invalid state.");
             return;
         }
 
-        // Use the currently selected target OR the target the card was dropped onto
         const finalTarget = this.currentTarget || droppedTarget;
         const validatedTarget = this.validateTarget(card, finalTarget);
 
-        // Check if targeting is required and if the target is valid
         if (card.requiresTarget && !validatedTarget) {
             this.uiManager.showActionFeedback("Invalid target for card.", "warning");
-            this.currentTarget = null; // Clear selection if invalid
+            this.currentTarget = null;
             this.uiManager.clearEnemyHighlights();
             return; // Abort play
         }
 
-        // Prepare event data for artifact triggers
-        const eventData = { card: card, target: validatedTarget };
-
-        // Attempt to play the card via Player class
-        // Player.playCard handles cost check, effect execution, artifact triggers (onCardPlay, onCardExhaust), and moving card to discard/exhaust
+        // Player.playCard handles cost check, effect execution, artifact triggers, status effects, core traits
         const playedSuccessfully = this.gameState.player.playCard(card, validatedTarget, this.enemies);
 
         // --- Update Combat State & UI ---
         if (playedSuccessfully) {
              // Increment turn state counters AFTER successful play
              this.turnState.cardsPlayedThisTurn++;
-             if (card.keywords.includes('Attack')) {
+             if (card.cardType === 'Attack') { // Use cardType for consistency
                   this.turnState.attacksPlayedThisTurn++;
              }
+             // Record the type of the card just played
+             this.turnState.lastCardPlayedType = card.cardType;
+
+             console.log(`Combat Turn State Updated: Cards=${this.turnState.cardsPlayedThisTurn}, Attacks=${this.turnState.attacksPlayedThisTurn}, LastType=${this.turnState.lastCardPlayedType}`);
 
             this.uiManager.updateCombatUI(this.gameState.player, this.enemies, this.playerTurn);
             this.checkCombatEndCondition(); // Check if combat ended after card effect
         } else {
-            // Feedback for failure (e.g., not enough focus) is handled within Player.playCard or UIManager
+            // Feedback handled within Player.playCard / UIManager
             console.log(`Card play failed: ${card.name}`);
         }
 
@@ -286,43 +279,45 @@ export class CombatManager {
     setSelectedTarget(enemy) {
         if (!this.playerTurn) return; // Can only target on player turn
         if (enemy && enemy.currentHp > 0) {
-            this.currentTarget = enemy;
-            console.log(`Selected target: ${enemy.name}`);
+            if (this.currentTarget === enemy) {
+                 // Clicking the same target again deselects it
+                 this.currentTarget = null;
+                 console.log(`Deselected target: ${enemy.name}`);
+            } else {
+                 this.currentTarget = enemy;
+                 console.log(`Selected target: ${enemy.name}`);
+            }
             // UI highlighting is handled by the renderEnemies call in CombatUI.update or directly
-            this.uiManager.combatUI.renderEnemies(this.enemies, this.playerTurn); // Re-render to show highlight
-        } else {
-            this.currentTarget = null;
-             this.uiManager.combatUI.renderEnemies(this.enemies, this.playerTurn); // Re-render to clear highlight
+            this.uiManager.combatUI?.renderEnemies(this.enemies, this.playerTurn); // Re-render to show/clear highlight
+        } else if (enemy === null) { // Explicitly clearing target
+             this.currentTarget = null;
+             this.uiManager.combatUI?.renderEnemies(this.enemies, this.playerTurn); // Re-render to clear highlight
         }
+        // Ignore clicks on dead enemies
     }
 
     /** Validates if the chosen target is appropriate for the card. */
     validateTarget(card, target) {
-        if (!card) return null; // Should not happen
+        if (!card) return null;
 
-        if (!card.requiresTarget) {
-            return null; // Card doesn't need a target
-        }
-        if (card.targetType === 'self') {
-             // If card targets self, ensure no enemy target is accidentally passed
-             return this.gameState.player; // Always return player for self-target
-        }
+        if (!card.requiresTarget) { return null; } // No target needed
+        if (card.targetType === 'self') { return this.gameState.player; } // Target self
+
         if (card.targetType === 'enemy') {
-             // Check if target exists, is an enemy instance, and is alive
+            // Check if target exists, is an enemy, is alive, and is in the current enemy list
             if (target && target instanceof Enemy && target.currentHp > 0 && this.enemies.includes(target)) {
                  return target; // Valid enemy target
              } else {
                  return null; // Invalid enemy target
              }
         }
-        // Default case if targetType is somehow invalid or not set when required
-        console.warn(`Card ${card.name} requires target, but targetType is unclear or target invalid.`);
+        console.warn(`Card ${card.name} requires target, but targetType unclear or target invalid.`);
         return null;
     }
 
     /** Checks if combat should end (all enemies defeated or player defeated). */
     checkCombatEndCondition() {
-        if (!this.isActive) return; // Don't check if already ending
+        if (!this.isActive) return;
 
         const livingEnemies = this.getActiveEnemies();
         if (livingEnemies.length === 0) {
@@ -341,7 +336,7 @@ export class CombatManager {
 
     /** Getter for the current turn state (used by artifacts etc.) */
     getTurnState() {
-        return { ...this.turnState }; // Return a copy to prevent direct modification
+        return { ...this.turnState }; // Return a copy
     }
 
 } // End CombatManager class
