@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Font Awesome 6 for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harmony Grove Music Studio</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
     <!-- Main container for the game -->
@@ -25,6 +29,40 @@
             <button id="loadGameButton" disabled>Continue Run</button> <!-- Default style -->
             <button id="metaProgressionButton" class="button-secondary">Meta Progression</button> <!-- Example secondary style -->
             <button id="settingsButton" disabled>Settings</button> <!-- Default style -->
+  <header class="hero">
+    <div>
+      <p class="badge">Music Lessons for All Ages • Child Focused</p>
+      <h1>Harmony Grove Music Studio</h1>
+      <p>
+        A calm all-in-one place for booking classes, tracking student growth,
+        managing lesson notes, and seeing every fee movement in one clear view.
+      </p>
+      <div class="hero-actions">
+        <a href="#booking" class="btn primary">Book a Trial Lesson</a>
+        <a href="#portal" class="btn">Student Login</a>
+      </div>
+    </div>
+    <aside class="card instruments-card">
+      <h2>Instruments Taught</h2>
+      <ul>
+        <li>Piano</li>
+        <li>Flute</li>
+        <li>Saxophone</li>
+        <li>Singing</li>
+        <li>+ Optional extras by request</li>
+      </ul>
+    </aside>
+  </header>
+
+  <main>
+    <section id="booking" class="card">
+      <h2>Booking & Calendar</h2>
+      <p>Select preferred lesson times. Taken slots are blocked to prevent double booking.</p>
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <div class="split">
+        <div>
+          <h3>Requested Slots</h3>
+          <ul id="selectedSlots" class="list"></ul>
         </div>
 
         <!-- Mirror Quiz Screen (NEW) -->
@@ -40,6 +78,9 @@
              </div>
              <!-- Optional Back button if needed later -->
              <!-- <button id="quizBackButton" class="button-secondary" style="margin-top: 30px;">Back</button> -->
+        <div>
+          <h3>Teacher Availability Snapshot</h3>
+          <ul id="availabilitySummary" class="list"></ul>
         </div>
 
         <!-- Map Screen -->
@@ -77,6 +118,27 @@
                 <!-- SVG Map will be rendered here by UIManager -->
                 <p style="text-align: center; padding: 20px;">Loading Map...</p>
             </div>
+      </div>
+    </section>
+
+    <section id="portal" class="card">
+      <h2>Student Login</h2>
+      <div class="login-row">
+        <label for="studentSelect">Student</label>
+        <select id="studentSelect"></select>
+        <button id="loadStudent" class="btn primary">Open Dashboard</button>
+      </div>
+      <div id="studentDashboard" class="dashboard hidden">
+        <div class="split">
+          <article class="panel">
+            <h3>Overview</h3>
+            <p id="studentOverview"></p>
+            <p id="studentPrompt" class="alert"></p>
+          </article>
+          <article class="panel">
+            <h3>Current Levels</h3>
+            <ul id="levelsList" class="list"></ul>
+          </article>
         </div>
 
         <!-- Combat Screen -->
@@ -149,6 +211,19 @@
             <div id="shopArtifacts" class="shop-section artifact-grid" aria-label="Relics for Sale">
                  <h3>Relics:</h3>
                   <p>Loading relics...</p>
+        <div class="split">
+          <article class="panel">
+            <h3>Exams & Performances</h3>
+            <ul id="eventsList" class="list"></ul>
+          </article>
+          <article class="panel">
+            <h3>Repertoire Tracker</h3>
+            <p><strong>Learned:</strong> <span id="learnedMusic"></span></p>
+            <p><strong>Current:</strong> <span id="currentMusic"></span></p>
+            <p><strong>Future Wishlist:</strong> <span id="futureMusic"></span></p>
+            <div class="suggestion-row">
+              <input id="musicSuggestion" placeholder="Suggest music to learn" />
+              <button id="addSuggestion" class="btn">Add</button>
             </div>
             <div id="shopRemoveService" class="shop-section" aria-label="Refinement Service">
                  <h3>Refinement:</h3>
@@ -168,6 +243,7 @@
             <button id="restJournalButton" class="button-primary">Let Go (Remove Concept)</button>
             <!-- Leave Button -->
             <button id="leaveRestSiteButton">Leave</button> <!-- Default style -->
+          </article>
         </div>
 
         <!-- Reward Screen -->
@@ -187,6 +263,16 @@
             </div>
             <!-- Skip/Continue Button -->
             <button id="rewardSkipButton" class="button-secondary">Continue</button>
+        <div class="split">
+          <article class="panel">
+            <h3>Fees</h3>
+            <ul id="feeStats" class="list"></ul>
+          </article>
+          <article class="panel">
+            <h3>Lesson Notes & Private Files</h3>
+            <ul id="lessonNotes" class="list"></ul>
+            <ul id="privateFiles" class="list"></ul>
+          </article>
         </div>
 
         <!-- Meta Progression Screen -->
@@ -230,7 +316,42 @@
                   <!-- Upgrade buttons will be inserted here by JS if needed -->
                   <button id="cardSelectionCancel" class="button-cancel" style="margin-top: 15px;">Cancel</button>
               </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Teacher Financial Dashboard</h2>
+      <div class="split">
+        <article class="panel">
+          <h3>Balances by Student</h3>
+          <ul id="balancesList" class="list"></ul>
+        </article>
+        <article class="panel">
+          <h3>Money Movement Breakdown</h3>
+          <ul id="moneyMovement" class="list"></ul>
+        </article>
+      </div>
+      <div class="split">
+        <article class="panel">
+          <h3>Add Fee</h3>
+          <div class="inline-form">
+            <select id="feeStudent"></select>
+            <select id="feeInstrument"></select>
+            <input id="feeAmount" type="number" min="1" placeholder="Amount" />
+            <button id="addFee" class="btn">Record Fee</button>
           </div>
+        </article>
+        <article class="panel">
+          <h3>Record Payment</h3>
+          <div class="inline-form">
+            <select id="paymentStudent"></select>
+            <input id="paymentAmount" type="number" min="1" placeholder="Amount" />
+            <button id="addPayment" class="btn">Record Payment</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
 
          <!-- Notification Area (Positioned by CSS) -->
         <div id="notificationArea" role="status" aria-live="polite">
@@ -246,5 +367,7 @@
 
     <!-- Link to the main JavaScript file (using type="module") -->
     <script type="module" src="js/main.js"></script>
+  <footer>Designed to keep studio admin calm, clear, and child friendly.</footer>
+  <script src="js/main.js"></script>
 </body>
 </html>
