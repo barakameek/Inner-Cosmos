@@ -62,8 +62,17 @@ html, body {
     height: 100%;
     overflow: hidden;
     background-color: var(--color-bg-dark); /* Apply base background */
+  --bg: #f6f8ff;
+  --card: #ffffff;
+  --text: #1f2442;
+  --soft: #67708c;
+  --primary: #5567ff;
+  --accent: #ffe3f5;
+  --danger: #cf3169;
+  --border: #dbe1ff;
 }
 
+* { box-sizing: border-box; }
 body {
     font-family: var(--font-primary);
     color: var(--color-text-light);
@@ -71,6 +80,11 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.4;
 }
 
 /* --- Game Container --- */
@@ -89,6 +103,13 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+.hero {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  background: linear-gradient(145deg, #fff 0%, #eef2ff 80%);
+  border-bottom: 1px solid var(--border);
 }
 
 /* --- Screen Management --- */
@@ -108,6 +129,13 @@ body {
     opacity: 0;
     transition: opacity var(--transition-medium);
     pointer-events: none;
+h1, h2, h3 { margin-top: 0; }
+.badge {
+  display: inline-block;
+  background: var(--accent);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
 }
 /* Webkit scrollbar */
 .screen::-webkit-scrollbar { width: 8px; }
@@ -120,6 +148,12 @@ body {
     opacity: 1;
     z-index: 10;
     pointer-events: auto;
+main {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
 }
 
 /* --- Typography --- */
@@ -130,6 +164,11 @@ body {
     color: var(--color-accent-primary);
     text-align: center;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+.card, .panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
 }
 .screen h2 {
     font-family: var(--font-headings);
@@ -188,6 +227,14 @@ button:disabled {
     filter: grayscale(60%);
     box-shadow: none;
     border-color: transparent;
+.btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  text-decoration: none;
+  color: var(--text);
+  cursor: pointer;
 }
 
 /* Button Variants */
@@ -195,6 +242,10 @@ button:disabled {
     background-color: var(--color-accent-primary);
     color: white;
     border-color: var(--color-accent-primary);
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 .button-primary:hover:not(:disabled) { background-color: #c0392b; border-color: #c0392b; }
 
@@ -202,6 +253,11 @@ button:disabled {
     background-color: var(--color-accent-blue);
     color: white;
     border-color: var(--color-accent-blue);
+.hero-actions { display: flex; gap: 0.6rem; margin-top: 1rem; }
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 .button-secondary:hover:not(:disabled) { background-color: #2980b9; border-color: #2980b9;}
 
@@ -209,6 +265,11 @@ button:disabled {
     background-color: var(--color-accent-green);
     color: white;
     border-color: var(--color-accent-green);
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
 }
 .button-confirm:hover:not(:disabled) { background-color: #27ae60; border-color: #27ae60;}
 
@@ -216,6 +277,11 @@ button:disabled {
     background-color: var(--color-border-light);
     color: var(--color-bg-dark);
     border-color: var(--color-border-light);
+.day-column {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem;
+  background: #fdfdff;
 }
 .button-cancel:hover:not(:disabled) { background-color: #95a5a6; border-color: #95a5a6;}
 
@@ -292,8 +358,18 @@ button:disabled {
     background-color: #ca6f1e; /* Darker orange */
     border-color: #ca6f1e;
     filter: brightness(1.1);
+.slot {
+  width: 100%;
+  margin: 0.3rem 0;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.45rem;
+  cursor: pointer;
 }
 
+.slot.taken { background: #eceff9; color: var(--soft); cursor: not-allowed; }
+.slot.selected { background: #dfe5ff; border-color: var(--primary); }
 
 /* --- Map Screen Layout --- */
 #mapScreen { background-color: var(--color-bg-dark); }
@@ -321,6 +397,8 @@ button:disabled {
 }
 .player-map-stats span { padding: 0 5px; white-space: nowrap; }
 .player-map-stats .info-divider { color: var(--color-border); padding: 0; }
+.list { padding-left: 1.1rem; margin: 0.4rem 0; }
+.list li { margin-bottom: 0.35rem; }
 
 /* >> NEW: Deck Portrait Container << */
 #deckPortraitContainer {
@@ -342,6 +420,11 @@ button:disabled {
     cursor: pointer;
      width: 70px;
      height: 70px;
+.login-row, .inline-form, .suggestion-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 #deckPortraitContainer span {
     display: inline-block;
@@ -364,6 +447,10 @@ button:disabled {
     padding: 5px 0;
     flex-shrink: 0;
     align-items: center;
+input, select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem;
 }
 .attunement-pip {
     width: 15px;
@@ -401,6 +488,9 @@ button:disabled {
 
 /* --- Status Effect Styling --- */
 .status-effect { border: 1px solid; border-radius: 4px; padding: 2px 5px; margin: 2px 3px; font-size: 0.85em; display: inline-block; white-space: nowrap; background-color: rgba(0, 0, 0, 0.4); transition: background-color var(--transition-fast); vertical-align: middle; } .status-effect i { margin-right: 3px; font-size: 0.9em; } .player-status { border-color: var(--color-accent-blue); color: #aed6f1; } .enemy-status { border-color: var(--color-accent-primary); color: #f5b7b1; } .status-effect:hover { filter: brightness(1.2); }
+.alert { color: var(--danger); font-weight: 600; min-height: 1.2em; }
+.hidden { display: none; }
+footer { text-align: center; color: var(--soft); padding: 1.2rem; }
 
 /* --- Card Styling --- */
 .card { border: 2px solid var(--color-border); background: linear-gradient(to bottom, var(--color-bg-light), #405568); color: var(--color-text-light); padding: 8px; width: 125px; height: 185px; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: grab; transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), filter var(--transition-fast); font-size: 0.9em; position: relative; box-shadow: var(--shadow-medium); user-select: none; flex-shrink: 0; }
@@ -419,6 +509,8 @@ button:disabled {
 .card.rf-limelight-active {
     border-color: var(--color-rf-limelight) !important; /* Override other borders */
     box-shadow: 0 0 10px 2px var(--color-rf-limelight), var(--shadow-medium); /* Add glow */
+@media (max-width: 900px) {
+  .hero, .split, .calendar-grid { grid-template-columns: 1fr; }
 }
 .card.rf-limelight-active:hover {
     box-shadow: 0 0 15px 4px var(--color-rf-limelight), var(--shadow-heavy); /* Brighter glow on hover */
